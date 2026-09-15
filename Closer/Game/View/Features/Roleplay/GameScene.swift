@@ -49,13 +49,14 @@ final class GameScene: SKScene {
     private func renderLevelSelection() {
         removeAllChildren()
 
-        let levelSelectionView = LevelSelectionView(
+        let goalDetailView = GoalDetailView(
             sceneSize: size,
+            goal: FlowerGoalData.forgetMeNot,
             isPlayable: { [weak self] levelID in
                 self?.viewModel.isPlayableLevel(levelID) ?? false
             }
         )
-        addChild(levelSelectionView)
+        addChild(goalDetailView)
     }
 
     private func renderChapterTransition() {
@@ -65,7 +66,7 @@ final class GameScene: SKScene {
 
     private func renderHome() {
         removeAllChildren()
-        addChild(HomeView(sceneSize: size))
+        addChild(MapView(sceneSize: size))
     }
 
     private func renderLevel() {

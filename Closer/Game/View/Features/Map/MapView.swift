@@ -1,6 +1,6 @@
 import SpriteKit
 
-final class HomeView: SKNode {
+final class MapView: SKNode {
     init(sceneSize: CGSize) {
         super.init()
 

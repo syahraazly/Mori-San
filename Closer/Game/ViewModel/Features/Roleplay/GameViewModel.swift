@@ -13,7 +13,7 @@ final class GameViewModel {
     }
 
     private let levels = TutorialLevelData.levels
-    private let mainLevels = HomeProgressData.levels
+    private let mainLevels = ForgetMeNotLevelData.levels
     private var pendingLevel: GameLevel?
 
     private(set) var currentLevel: GameLevel

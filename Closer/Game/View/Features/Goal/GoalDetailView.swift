@@ -1,46 +1,30 @@
 import SpriteKit
 
-final class LevelSelectionView: SKNode {
-    init(sceneSize: CGSize, isPlayable: (String) -> Bool) {
+final class GoalDetailView: SKNode {
+    init(sceneSize: CGSize, goal: FlowerGoal, isPlayable: (String) -> Bool) {
         super.init()
 
         let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        title.text = "Choose a memory"
+        title.text = goal.title
         title.fontSize = 28
         title.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
         title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.82)
         addChild(title)
 
         addLevelCategory(
-            title: "HOME",
-            levelIDs: HomeProgressData.levelIDs,
-            yPosition: sceneSize.height * 0.60,
-            sceneWidth: sceneSize.width,
-            isPlayable: isPlayable
-        )
-        addLevelCategory(
-            title: "FAMILY",
-            levelIDs: FamilyLevelData.familyLevelIDs,
-            yPosition: sceneSize.height * 0.31,
+            levelIDs: goal.levelIDs,
+            yPosition: sceneSize.height * 0.50,
             sceneWidth: sceneSize.width,
             isPlayable: isPlayable
         )
     }
 
     private func addLevelCategory(
-        title: String,
         levelIDs: [String],
         yPosition: CGFloat,
         sceneWidth: CGFloat,
         isPlayable: (String) -> Bool
     ) {
-        let categoryLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
-        categoryLabel.text = title
-        categoryLabel.fontSize = 18
-        categoryLabel.fontColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 1.0)
-        categoryLabel.position = CGPoint(x: sceneWidth / 2, y: yPosition + 65)
-        addChild(categoryLabel)
-
         let spacing = sceneWidth / CGFloat(levelIDs.count + 1)
         for (index, levelID) in levelIDs.enumerated() {
             let button = SKShapeNode(rectOf: CGSize(width: 62, height: 62), cornerRadius: 14)

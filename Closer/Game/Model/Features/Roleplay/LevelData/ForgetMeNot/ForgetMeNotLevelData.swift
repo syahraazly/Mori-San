@@ -1,6 +1,6 @@
 import CoreGraphics
 
-enum HomeProgressData {
+enum ForgetMeNotLevelData {
     static let mainLevelOne = GameLevel(
         id: "home-1",
         category: .home,
@@ -78,5 +78,4 @@ enum HomeProgressData {
     )
 
     static let levels = [mainLevelOne, mainLevelTwo]
-    static let levelIDs = ["home-1", "home-2", "home-3"]
 }
