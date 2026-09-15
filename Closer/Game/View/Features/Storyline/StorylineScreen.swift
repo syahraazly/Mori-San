@@ -13,7 +13,7 @@ struct StorylineScreen: View {
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                appFlow.startGame()
+                appFlow.openMap()
             }
         }
     }

@@ -4,28 +4,15 @@ final class GameViewModel {
         case side
     }
 
-    enum Screen {
-        case onboarding
-        case levelSelection
-        case chapterTransition
-        case home
-        case playing
-    }
-
-    private let levels = TutorialLevelData.levels
-    private let mainLevels = ForgetMeNotLevelData.levels
-    private var pendingLevel: GameLevel?
-
-    private(set) var currentLevel: GameLevel
-    private(set) var screen: Screen = .playing
+    private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
     private(set) var moriPlatformID: String
     private(set) var perspectivePOV: PerspectivePOV = .front
 
-    init() {
-        currentLevel = levels[0]
+    init(initialLevel: LevelConfiguration) {
+        currentLevel = initialLevel
         moriPlatformID = currentLevel.player.startingPlatformID
     }
 
@@ -116,71 +103,20 @@ final class GameViewModel {
         hasReachedExit = true
     }
 
-    func showLevelSelection() {
-        screen = .levelSelection
-    }
-
-    func showHome() {
-        screen = .home
-    }
-
-    func startMainLevelOne() {
-        startMainLevel(withID: "home-1")
-    }
-
-    func startMainLevel(withID levelID: String) {
-        guard let level = mainLevels.first(where: { $0.id == levelID }) else { return }
-
-        currentLevel = level
+    func loadLevel(_ configuration: LevelConfiguration) {
+        currentLevel = configuration
         connections = []
         hasReachedExit = false
         moriPlatformID = currentLevel.player.startingPlatformID
         perspectivePOV = .front
-        screen = .playing
+    }
+
+    func restartLevel() {
+        loadLevel(currentLevel)
     }
 
     func togglePerspectivePOV() {
         perspectivePOV = perspectivePOV == .front ? .side : .front
     }
 
-    func startLevel(withID levelID: String) -> Bool {
-        guard let level = levels.first(where: { $0.id == levelID }) else { return false }
-
-        currentLevel = level
-        connections = []
-        hasReachedExit = false
-        moriPlatformID = currentLevel.player.startingPlatformID
-        perspectivePOV = .front
-        screen = .playing
-        return true
-    }
-
-    func isPlayableLevel(_ levelID: String) -> Bool {
-        levels.contains(where: { $0.id == levelID })
-    }
-
-    @discardableResult
-    func prepareNextLevel() -> Bool {
-        guard let currentIndex = levels.firstIndex(where: { $0.id == currentLevel.id }) else { return false }
-        let remainingLevels = levels.dropFirst(currentIndex + 1)
-        guard let nextLevel = remainingLevels.first(where: { $0.category == currentLevel.category }) else {
-            return false
-        }
-
-        pendingLevel = nextLevel
-        screen = .chapterTransition
-        return true
-    }
-
-    func startPreparedLevel() {
-        guard let pendingLevel else { return }
-
-        currentLevel = pendingLevel
-        self.pendingLevel = nil
-        connections = []
-        hasReachedExit = false
-        moriPlatformID = currentLevel.player.startingPlatformID
-        perspectivePOV = .front
-        screen = .playing
-    }
 }

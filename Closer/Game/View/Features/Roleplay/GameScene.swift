@@ -1,7 +1,9 @@
 import SpriteKit
 
 final class GameScene: SKScene {
-    private let viewModel = GameViewModel()
+    private let appFlow: AppFlowViewModel
+    private let viewModel: GameViewModel
+    private var renderedScreen: AppFlowViewModel.Screen?
     private var platformNodes: [String: PlatformNode] = [:]
     private var draggedPlatform: PlatformNode?
     private var dragTouchOffsetX: CGFloat = 0
@@ -11,49 +13,54 @@ final class GameScene: SKScene {
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
 
+    init(size: CGSize, appFlow: AppFlowViewModel) {
+        self.appFlow = appFlow
+        viewModel = GameViewModel(initialLevel: TutorialLevelData.closerLevel)
+        super.init(size: size)
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1.0)
         renderCurrentScreen()
     }
 
+    override func update(_ currentTime: TimeInterval) {
+        renderCurrentScreen()
+    }
+
     private func renderCurrentScreen() {
-        switch viewModel.screen {
-        case .onboarding:
-            renderOnboarding()
-        case .levelSelection:
-            renderLevelSelection()
-        case .chapterTransition:
+        guard renderedScreen != appFlow.screen else { return }
+        renderedScreen = appFlow.screen
+
+        switch appFlow.screen {
+        case .onboarding, .storyline:
+            removeAllChildren()
+        case .map:
+            renderMap()
+        case .goal(let goalID):
+            renderGoal(goalID)
+        case .levelTransition:
             renderChapterTransition()
-        case .home:
-            renderHome()
-        case .playing:
+        case .gameplay(let levelID):
+            guard let configuration = LevelCatalog.configuration(for: levelID) else { return }
+            viewModel.loadLevel(configuration)
             renderLevel()
         }
     }
 
-    private func renderOnboarding() {
+    private func renderGoal(_ goalID: GoalID) {
         removeAllChildren()
-
-        let onboardingView = OnboardingView(
-            sceneSize: size,
-            player: TutorialLevelData.closerLevel.player
-        )
-        addChild(onboardingView)
-
-        onboardingView.play { [weak self] in
-            self?.viewModel.showLevelSelection()
-            self?.renderCurrentScreen()
-        }
-    }
-
-    private func renderLevelSelection() {
-        removeAllChildren()
+        guard goalID == FlowerGoalData.forgetMeNot.id else { return }
 
         let goalDetailView = GoalDetailView(
             sceneSize: size,
             goal: FlowerGoalData.forgetMeNot,
             isPlayable: { [weak self] levelID in
-                self?.viewModel.isPlayableLevel(levelID) ?? false
+                self?.appFlow.isLevelUnlocked(levelID) ?? false
             }
         )
         addChild(goalDetailView)
@@ -64,7 +71,7 @@ final class GameScene: SKScene {
         addChild(ChapterTransitionView(sceneSize: size))
     }
 
-    private func renderHome() {
+    private func renderMap() {
         removeAllChildren()
         addChild(MapView(sceneSize: size))
     }
@@ -116,18 +123,20 @@ final class GameScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
 
-        switch viewModel.screen {
-        case .onboarding:
-            return
-        case .levelSelection:
+        switch appFlow.screen {
+        case .goal:
             startSelectedLevel(at: touch.location(in: self))
-        case .chapterTransition:
-            viewModel.startPreparedLevel()
+        case .levelTransition:
+            if let pendingLevelID = appFlow.pendingLevelID {
+                appFlow.startLevel(pendingLevelID)
+            }
             renderCurrentScreen()
-        case .home:
+        case .map:
             startHomeLevel(at: touch.location(in: self))
-        case .playing:
+        case .gameplay:
             handleGameplayTouch(touch)
+        case .onboarding, .storyline:
+            return
         }
     }
 
@@ -137,9 +146,7 @@ final class GameScene: SKScene {
         while let node = touchedNode {
             if let name = node.name, name.hasPrefix("level-") {
                 let levelID = String(name.dropFirst("level-".count))
-                if viewModel.startLevel(withID: levelID) {
-                    renderCurrentScreen()
-                }
+                appFlow.startLevel(levelID)
                 return
             }
             touchedNode = node.parent
@@ -151,13 +158,11 @@ final class GameScene: SKScene {
 
         while let node = touchedNode {
             if node.name == "begin-home-1" {
-                viewModel.startMainLevelOne()
-                renderCurrentScreen()
+                appFlow.startLevel("home-1")
                 return
             }
             if node.name == "begin-home-2" {
-                viewModel.startMainLevel(withID: "home-2")
-                renderCurrentScreen()
+                appFlow.startLevel("home-2")
                 return
             }
             touchedNode = node.parent
@@ -166,8 +171,6 @@ final class GameScene: SKScene {
 
     private func handleGameplayTouch(_ touch: UITouch) {
         if viewModel.hasReachedExit {
-            viewModel.showLevelSelection()
-            renderCurrentScreen()
             return
         }
 
@@ -237,7 +240,7 @@ final class GameScene: SKScene {
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard viewModel.screen == .playing else { return }
+        guard case .gameplay = appFlow.screen else { return }
         guard viewModel.currentLevel.allowsCompact else { return }
         guard let touch = touches.first, let platform = draggedPlatform else { return }
 
@@ -266,7 +269,7 @@ final class GameScene: SKScene {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard viewModel.screen == .playing else { return }
+        guard case .gameplay = appFlow.screen else { return }
 
         if viewModel.currentLevel.usesPerspective {
             if viewModel.currentLevel.interaction == .perspectiveCompact, didDragPlatform {
@@ -294,7 +297,7 @@ final class GameScene: SKScene {
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard viewModel.screen == .playing else { return }
+        guard case .gameplay = appFlow.screen else { return }
         perspectiveSwipeStart = nil
         draggedPlatform = nil
     }
@@ -476,13 +479,7 @@ final class GameScene: SKScene {
             if completesLevel {
                 self?.viewModel.markExitReached()
                 print("Mori reached the exit")
-
-                if self?.viewModel.prepareNextLevel() == true {
-                    self?.showChapterTransition()
-                } else {
-                    self?.viewModel.showHome()
-                    self?.showHomeTransition()
-                }
+                self?.appFlow.completeLevel(self?.viewModel.currentLevel.id ?? platformID)
             } else {
                 self?.updateInstruction()
             }
@@ -506,22 +503,6 @@ final class GameScene: SKScene {
         addChild(message)
 
         message.run(SKAction.fadeIn(withDuration: 0.2))
-    }
-
-    private func showChapterTransition() {
-        run(SKAction.fadeOut(withDuration: 0.3)) { [weak self] in
-            guard let self else { return }
-            self.alpha = 1
-            self.renderCurrentScreen()
-        }
-    }
-
-    private func showHomeTransition() {
-        run(SKAction.fadeOut(withDuration: 0.3)) { [weak self] in
-            guard let self else { return }
-            self.alpha = 1
-            self.renderCurrentScreen()
-        }
     }
 
     @discardableResult

@@ -29,3 +29,5 @@ struct GameLevel {
         interaction == .compact || interaction == .perspectiveCompact
     }
 }
+
+typealias LevelConfiguration = GameLevel

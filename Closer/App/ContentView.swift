@@ -6,12 +6,12 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             switch appFlow.screen {
-            case .opening:
+            case .onboarding:
                 OnboardingScreen(appFlow: appFlow)
-            case .chapterOne:
+            case .storyline:
                 StorylineScreen(appFlow: appFlow)
-            case .game:
-                SpriteKitGameView()
+            case .map, .goal, .gameplay, .levelTransition:
+                SpriteKitGameView(appFlow: appFlow)
             }
         }
         .animation(.easeInOut(duration: 0.35), value: appFlow.screen)
@@ -19,8 +19,10 @@ struct ContentView: View {
 }
 
 private struct SpriteKitGameView: UIViewControllerRepresentable {
+    let appFlow: AppFlowViewModel
+
     func makeUIViewController(context: Context) -> GameViewController {
-        GameViewController()
+        GameViewController(appFlow: appFlow)
     }
 
     func updateUIViewController(_ uiViewController: GameViewController, context: Context) {}

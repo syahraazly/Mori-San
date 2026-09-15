@@ -26,7 +26,7 @@ struct OnboardingScreen: View {
                         .font(.system(size: 18, weight: .medium))
 
                     Button("Begin") {
-                        appFlow.beginChapterOne()
+                        appFlow.openStoryline()
                     }
                     .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(.white)
