@@ -5,4 +5,5 @@ struct PlatformModel {
     let horizontalPosition: CGFloat
     let size: CGSize
     let isDraggable: Bool
+    let remainsDraggableWhenConnected: Bool
 }
