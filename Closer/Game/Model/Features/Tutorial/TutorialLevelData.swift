@@ -1,9 +1,10 @@
 import CoreGraphics
 
-enum HomeLevelData {
+enum TutorialLevelData {
     static let closerLevel = GameLevel(
-        id: "home-1",
-        category: .home,
+        id: "tutorial-1",
+        category: .tutorial,
+        interaction: .compact,
         platforms: [
             PlatformModel(id: "platformA", horizontalPosition: 0.25, size: CGSize(width: 180, height: 50), isDraggable: false, remainsDraggableWhenConnected: false),
             PlatformModel(id: "platformB", horizontalPosition: 0.75, size: CGSize(width: 160, height: 50), isDraggable: true, remainsDraggableWhenConnected: false)
@@ -14,8 +15,9 @@ enum HomeLevelData {
     )
 
     static let movingBridgeLevel = GameLevel(
-        id: "home-2",
-        category: .home,
+        id: "tutorial-2",
+        category: .tutorial,
+        interaction: .compact,
         platforms: [
             PlatformModel(id: "platformA", horizontalPosition: 0.12, size: CGSize(width: 100, height: 50), isDraggable: false, remainsDraggableWhenConnected: false),
             PlatformModel(id: "platformB", horizontalPosition: 0.50, size: CGSize(width: 100, height: 50), isDraggable: true, remainsDraggableWhenConnected: true),
@@ -27,5 +29,4 @@ enum HomeLevelData {
     )
 
     static let levels = [closerLevel, movingBridgeLevel]
-    static let homeLevelIDs = ["home-1", "home-2", "home-3"]
 }

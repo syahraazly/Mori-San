@@ -9,6 +9,7 @@ final class GameScene: SKScene {
     private var moriNode: PlayerNode?
     private var exitNode: ExitNode?
     private var instructionLabel: SKLabelNode?
+    private var perspectiveSwipeStart: CGPoint?
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1.0)
@@ -21,6 +22,10 @@ final class GameScene: SKScene {
             renderOnboarding()
         case .levelSelection:
             renderLevelSelection()
+        case .chapterTransition:
+            renderChapterTransition()
+        case .home:
+            renderHome()
         case .playing:
             renderLevel()
         }
@@ -31,7 +36,7 @@ final class GameScene: SKScene {
 
         let onboardingView = OnboardingView(
             sceneSize: size,
-            player: HomeLevelData.closerLevel.player
+            player: TutorialLevelData.closerLevel.player
         )
         addChild(onboardingView)
 
@@ -53,6 +58,16 @@ final class GameScene: SKScene {
         addChild(levelSelectionView)
     }
 
+    private func renderChapterTransition() {
+        removeAllChildren()
+        addChild(ChapterTransitionView(sceneSize: size))
+    }
+
+    private func renderHome() {
+        removeAllChildren()
+        addChild(HomeView(sceneSize: size))
+    }
+
     private func renderLevel() {
         removeAllChildren()
         platformNodes.removeAll()
@@ -61,30 +76,40 @@ final class GameScene: SKScene {
         exitNode = nil
 
         let level = viewModel.currentLevel
-        let platformY = size.height * level.platformHeightRatio
-
         for platform in level.platforms {
             let node = PlatformNode(model: platform)
-            node.position = CGPoint(x: size.width * platform.horizontalPosition, y: platformY)
+            node.position = position(for: platform)
             addChild(node)
             platformNodes[platform.id] = node
         }
 
-        guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }),
-              let exitPlatform = level.platforms.first(where: { $0.id == level.exitPlatformID }) else { return }
+        if level.usesPerspective {
+            updatePerspectiveConnections()
+        }
+
+        guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }) else { return }
 
         let mori = PlayerNode(player: level.player)
-        mori.position = CGPoint(x: size.width * startPlatform.horizontalPosition, y: platformY + 55)
+        let startPosition = position(for: startPlatform)
+        mori.position = CGPoint(x: startPosition.x, y: startPosition.y + 55)
         addChild(mori)
         moriNode = mori
 
+        guard level.interaction != .perspective,
+              let exitPlatform = level.platforms.first(where: { $0.id == level.exitPlatformID }) else {
+            return
+        }
+
         let exit = ExitNode()
         exit.position = CGPoint(x: 45, y: 55)
+        exit.zPosition = 10
         platformNodes[exitPlatform.id]?.addChild(exit)
         exitNode = exit
 
-        createInstructionLabel()
-        updateInstruction()
+        if level.interaction == .compact {
+            createInstructionLabel()
+            updateInstruction()
+        }
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -95,6 +120,11 @@ final class GameScene: SKScene {
             return
         case .levelSelection:
             startSelectedLevel(at: touch.location(in: self))
+        case .chapterTransition:
+            viewModel.startPreparedLevel()
+            renderCurrentScreen()
+        case .home:
+            startHomeLevel(at: touch.location(in: self))
         case .playing:
             handleGameplayTouch(touch)
         }
@@ -115,6 +145,24 @@ final class GameScene: SKScene {
         }
     }
 
+    private func startHomeLevel(at location: CGPoint) {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if node.name == "begin-home-1" {
+                viewModel.startMainLevelOne()
+                renderCurrentScreen()
+                return
+            }
+            if node.name == "begin-home-2" {
+                viewModel.startMainLevel(withID: "home-2")
+                renderCurrentScreen()
+                return
+            }
+            touchedNode = node.parent
+        }
+    }
+
     private func handleGameplayTouch(_ touch: UITouch) {
         if viewModel.hasReachedExit {
             viewModel.showLevelSelection()
@@ -123,6 +171,46 @@ final class GameScene: SKScene {
         }
 
         let touchLocation = touch.location(in: self)
+
+        if viewModel.currentLevel.interaction == .perspective {
+            if let platform = platformNode(at: touchLocation) {
+                moveMoriAcrossPerspectivePath(to: platform.model.id)
+                return
+            }
+
+            if platformNode(at: touchLocation) == nil,
+               exitNode(at: touchLocation) == nil,
+               playerNode(at: touchLocation) == nil {
+                perspectiveSwipeStart = touchLocation
+            }
+            return
+        }
+
+        if viewModel.currentLevel.interaction == .perspectiveCompact {
+            if exitNode(at: touchLocation) != nil {
+                moveMori(to: viewModel.currentLevel.exitPlatformID, completesLevel: true)
+                return
+            }
+
+            if let platform = platformNode(at: touchLocation) {
+                if viewModel.canMoveMori(to: platform.model.id) {
+                    moveMoriAcrossPerspectivePath(to: platform.model.id)
+                    return
+                }
+
+                if platform.model.isDraggable {
+                    draggedPlatform = platform
+                    dragTouchOffsetX = touchLocation.x - platform.position.x
+                    didDragPlatform = false
+                }
+                return
+            }
+
+            if playerNode(at: touchLocation) == nil {
+                perspectiveSwipeStart = touchLocation
+            }
+            return
+        }
 
         if exitNode(at: touchLocation) != nil {
             moveMori(to: viewModel.currentLevel.exitPlatformID, completesLevel: true)
@@ -149,6 +237,7 @@ final class GameScene: SKScene {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard viewModel.screen == .playing else { return }
+        guard viewModel.currentLevel.allowsCompact else { return }
         guard let touch = touches.first, let platform = draggedPlatform else { return }
 
         let touchLocation = touch.location(in: self)
@@ -177,6 +266,25 @@ final class GameScene: SKScene {
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard viewModel.screen == .playing else { return }
+
+        if viewModel.currentLevel.usesPerspective {
+            if viewModel.currentLevel.interaction == .perspectiveCompact, didDragPlatform {
+                _ = attemptSnapIfNeeded()
+                draggedPlatform = nil
+                didDragPlatform = false
+                return
+            }
+
+            if let start = perspectiveSwipeStart, let touch = touches.first {
+                let end = touch.location(in: self)
+                if abs(end.x - start.x) >= 35 {
+                    animatePerspectiveChange()
+                }
+            }
+            perspectiveSwipeStart = nil
+            return
+        }
+
         if didDragPlatform {
             _ = attemptSnapIfNeeded()
         }
@@ -186,7 +294,115 @@ final class GameScene: SKScene {
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard viewModel.screen == .playing else { return }
+        perspectiveSwipeStart = nil
         draggedPlatform = nil
+    }
+
+    private func position(for platform: PlatformModel) -> CGPoint {
+        let level = viewModel.currentLevel
+
+        guard level.usesPerspective else {
+            return CGPoint(
+                x: size.width * platform.horizontalPosition,
+                y: size.height * level.platformHeightRatio
+            )
+        }
+
+        let normalizedPosition: CGPoint?
+        switch viewModel.perspectivePOV {
+        case .front:
+            normalizedPosition = platform.frontPosition
+        case .side:
+            normalizedPosition = platform.sidePosition
+        }
+
+        guard let normalizedPosition else {
+            return CGPoint(
+                x: size.width * platform.horizontalPosition,
+                y: size.height * level.platformHeightRatio
+            )
+        }
+
+        return CGPoint(
+            x: size.width * normalizedPosition.x,
+            y: size.height * normalizedPosition.y
+        )
+    }
+
+    private func animatePerspectiveChange() {
+        viewModel.togglePerspectivePOV()
+        updatePerspectiveConnections()
+
+        for platform in viewModel.currentLevel.platforms {
+            guard let node = platformNodes[platform.id] else { continue }
+
+            let destination = position(for: platform)
+            node.removeAction(forKey: "perspectiveMove")
+            node.run(
+                SKAction.move(to: destination, duration: 0.35),
+                withKey: "perspectiveMove"
+            )
+
+            if viewModel.moriPlatformID == platform.id {
+                let moriDestination = CGPoint(x: destination.x, y: destination.y + 55)
+                moriNode?.removeAction(forKey: "perspectiveMove")
+                moriNode?.run(
+                    SKAction.move(to: moriDestination, duration: 0.35),
+                    withKey: "perspectiveMove"
+                )
+            }
+        }
+    }
+
+    private func updatePerspectiveConnections() {
+        let platforms = viewModel.currentLevel.platforms
+        var newConnections: [ConnectionModel] = []
+        let maximumGap: CGFloat = 10
+        let maximumVerticalDifference: CGFloat = 2
+
+        for firstIndex in platforms.indices {
+            for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
+                let firstPlatform = platforms[firstIndex]
+                let secondPlatform = platforms[secondIndex]
+                let firstPosition = position(for: firstPlatform)
+                let secondPosition = position(for: secondPlatform)
+                let horizontalDistance = abs(firstPosition.x - secondPosition.x)
+                let combinedHalfWidths = (firstPlatform.size.width + secondPlatform.size.width) / 2
+                let edgeGap = horizontalDistance - combinedHalfWidths
+                let verticalDifference = abs(firstPosition.y - secondPosition.y)
+
+                if abs(edgeGap) <= maximumGap, verticalDifference <= maximumVerticalDifference {
+                    newConnections.append(
+                        ConnectionModel(
+                            firstPlatformID: firstPlatform.id,
+                            secondPlatformID: secondPlatform.id
+                        )
+                    )
+                }
+            }
+        }
+
+        viewModel.setPerspectiveConnections(newConnections)
+    }
+
+    private func moveMoriAcrossPerspectivePath(to platformID: String) {
+        guard let moriNode,
+              !moriNode.hasActions(),
+              let path = viewModel.connectionPath(from: viewModel.moriPlatformID, to: platformID) else {
+            return
+        }
+
+        let actions = path.dropFirst().compactMap { nextPlatformID -> SKAction? in
+            guard let platform = platformNodes[nextPlatformID] else { return nil }
+            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            return SKAction.move(to: destination, duration: 0.35)
+        }
+
+        guard !actions.isEmpty else { return }
+
+        moriNode.run(SKAction.sequence(actions)) { [weak self] in
+            self?.viewModel.moveMori(to: platformID)
+        }
     }
 
     private func platformNode(at location: CGPoint) -> PlatformNode? {
@@ -215,41 +431,68 @@ final class GameScene: SKScene {
         return nil
     }
 
+    private func playerNode(at location: CGPoint) -> PlayerNode? {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if let player = node as? PlayerNode {
+                return player
+            }
+            touchedNode = node.parent
+        }
+
+        return nil
+    }
+
     private func moveMori(to platformID: String, completesLevel: Bool) {
         guard viewModel.canMoveMori(to: platformID),
               let moriNode,
-              !moriNode.hasActions() else { return }
-
-        let destination: CGPoint
-        if completesLevel, let exitNode {
-            destination = exitNode.convert(CGPoint.zero, to: self)
-        } else if let destinationPlatform = platformNodes[platformID] {
-            destination = CGPoint(
-                x: destinationPlatform.position.x,
-                y: destinationPlatform.position.y + 55
-            )
-        } else {
+              moriNode.action(forKey: "moriMove") == nil,
+              let path = viewModel.connectionPath(from: viewModel.moriPlatformID, to: platformID) else {
             return
         }
 
-        let move = SKAction.move(to: destination, duration: 0.6)
+        var previousPosition = moriNode.position
+        var movementActions: [SKAction] = []
 
-        moriNode.run(move) { [weak self] in
+        for nextPlatformID in path.dropFirst() {
+            guard let platform = platformNodes[nextPlatformID] else { return }
+            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            movementActions.append(movementAction(from: previousPosition, to: destination))
+            previousPosition = destination
+        }
+
+        if completesLevel, let exitNode {
+            let exitDestination = exitNode.convert(CGPoint.zero, to: self)
+            movementActions.append(movementAction(from: previousPosition, to: exitDestination))
+        }
+
+        guard !movementActions.isEmpty else { return }
+
+        movementActions.append(SKAction.run { [weak self] in
             self?.viewModel.moveMori(to: platformID)
 
             if completesLevel {
                 self?.viewModel.markExitReached()
                 print("Mori reached the exit")
 
-                if self?.viewModel.advanceToNextLevel() == true {
-                    self?.renderLevel()
+                if self?.viewModel.prepareNextLevel() == true {
+                    self?.showChapterTransition()
                 } else {
-                    self?.showLevelComplete()
+                    self?.viewModel.showHome()
+                    self?.showHomeTransition()
                 }
             } else {
                 self?.updateInstruction()
             }
-        }
+        })
+        moriNode.run(SKAction.sequence(movementActions), withKey: "moriMove")
+    }
+
+    private func movementAction(from start: CGPoint, to destination: CGPoint) -> SKAction {
+        let distance = hypot(destination.x - start.x, destination.y - start.y)
+        let duration = max(0.15, TimeInterval(distance / 220))
+        return SKAction.move(to: destination, duration: duration)
     }
 
     private func showLevelComplete() {
@@ -262,6 +505,22 @@ final class GameScene: SKScene {
         addChild(message)
 
         message.run(SKAction.fadeIn(withDuration: 0.2))
+    }
+
+    private func showChapterTransition() {
+        run(SKAction.fadeOut(withDuration: 0.3)) { [weak self] in
+            guard let self else { return }
+            self.alpha = 1
+            self.renderCurrentScreen()
+        }
+    }
+
+    private func showHomeTransition() {
+        run(SKAction.fadeOut(withDuration: 0.3)) { [weak self] in
+            guard let self else { return }
+            self.alpha = 1
+            self.renderCurrentScreen()
+        }
     }
 
     @discardableResult
@@ -343,6 +602,8 @@ final class GameScene: SKScene {
         var nearestTarget: (platform: PlatformNode, position: CGPoint, gap: CGFloat)?
 
         for target in platformNodes.values where !target.model.isDraggable {
+            guard abs(draggablePlatform.position.y - target.position.y) <= 2 else { continue }
+
             let gap: CGFloat
             let snappedX: CGFloat
 

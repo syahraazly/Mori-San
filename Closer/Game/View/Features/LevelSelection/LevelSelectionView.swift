@@ -13,7 +13,7 @@ final class LevelSelectionView: SKNode {
 
         addLevelCategory(
             title: "HOME",
-            levelIDs: HomeLevelData.homeLevelIDs,
+            levelIDs: HomeProgressData.levelIDs,
             yPosition: sceneSize.height * 0.60,
             sceneWidth: sceneSize.width,
             isPlayable: isPlayable
