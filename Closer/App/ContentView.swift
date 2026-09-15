@@ -38,7 +38,7 @@ private struct OpeningView: View {
                         HomeSymbol()
                     }
                 } else {
-                    Text("CLOSER")
+                    Text("MORI-SAN")
                         .font(.system(size: 42, weight: .bold))
                     Text("Bring the world closer.")
                         .font(.system(size: 18, weight: .medium))
