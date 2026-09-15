@@ -19,7 +19,7 @@ final class MapView: SKNode {
         addChild(subtitle)
 
         let begin = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        begin.name = "begin-home-1"
+        begin.name = "start-level-home-1"
         begin.text = "Begin"
         begin.fontSize = 20
         begin.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
@@ -27,7 +27,7 @@ final class MapView: SKNode {
         addChild(begin)
 
         let levelTwo = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        levelTwo.name = "begin-home-2"
+        levelTwo.name = "start-level-home-2"
         levelTwo.text = "Level II"
         levelTwo.fontSize = 16
         levelTwo.fontColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 1.0)

@@ -10,4 +10,10 @@ enum FlowerGoalData {
         title: "FORGET ME NOT",
         levelIDs: ["home-1", "home-2", "home-3", "home-4", "home-5"]
     )
+
+    static let goals = [forgetMeNot]
+
+    static func goal(for goalID: GoalID) -> FlowerGoal? {
+        goals.first { $0.id == goalID }
+    }
 }

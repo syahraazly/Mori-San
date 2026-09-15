@@ -91,8 +91,12 @@ final class GameViewModel {
         return nil
     }
 
-    func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
+    func setConnections(_ newConnections: [ConnectionModel]) {
         connections = newConnections
+    }
+
+    func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
+        connections = currentLevel.initialConnections + newConnections
     }
 
     func moveMori(to platformID: String) {

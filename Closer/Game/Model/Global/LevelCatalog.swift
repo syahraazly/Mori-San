@@ -6,9 +6,7 @@ enum LevelCatalog {
     }
 
     static func goalID(for levelID: LevelID) -> GoalID? {
-        FlowerGoalData.forgetMeNot.levelIDs.contains(levelID)
-            ? FlowerGoalData.forgetMeNot.id
-            : nil
+        FlowerGoalData.goals.first { $0.levelIDs.contains(levelID) }?.id
     }
 
     static func nextTutorialLevel(after levelID: LevelID) -> LevelID? {

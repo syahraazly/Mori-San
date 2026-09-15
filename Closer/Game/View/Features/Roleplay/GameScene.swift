@@ -12,6 +12,7 @@ final class GameScene: SKScene {
     private var exitNode: ExitNode?
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
+    private var isRestartingLevel = false
 
     init(size: CGSize, appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
@@ -30,6 +31,15 @@ final class GameScene: SKScene {
 
     override func update(_ currentTime: TimeInterval) {
         renderCurrentScreen()
+
+        guard case .gameplay = appFlow.screen,
+              !isRestartingLevel,
+              let moriNode,
+              !isMoriSupported(moriNode) else {
+            return
+        }
+
+        handleFall()
     }
 
     private func renderCurrentScreen() {
@@ -54,11 +64,11 @@ final class GameScene: SKScene {
 
     private func renderGoal(_ goalID: GoalID) {
         removeAllChildren()
-        guard goalID == FlowerGoalData.forgetMeNot.id else { return }
+        guard let goal = FlowerGoalData.goal(for: goalID) else { return }
 
         let goalDetailView = GoalDetailView(
             sceneSize: size,
-            goal: FlowerGoalData.forgetMeNot,
+            goal: goal,
             isPlayable: { [weak self] levelID in
                 self?.appFlow.isLevelUnlocked(levelID) ?? false
             }
@@ -91,6 +101,8 @@ final class GameScene: SKScene {
             platformNodes[platform.id] = node
         }
 
+        viewModel.setConnections(level.initialConnections)
+
         if level.usesPerspective {
             updatePerspectiveConnections()
         }
@@ -99,17 +111,21 @@ final class GameScene: SKScene {
 
         let mori = PlayerNode(player: level.player)
         let startPosition = position(for: startPlatform)
-        mori.position = CGPoint(x: startPosition.x, y: startPosition.y + 55)
+        mori.position = CGPoint(
+            x: startPosition.x + level.player.startingOffset.x,
+            y: startPosition.y + 55 + level.player.startingOffset.y
+        )
         addChild(mori)
         moriNode = mori
 
+        let exitPlatformID = resolvedExitPlatformID(for: level)
         guard level.interaction != .perspective,
-              let exitPlatform = level.platforms.first(where: { $0.id == level.exitPlatformID }) else {
+              let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) else {
             return
         }
 
         let exit = ExitNode()
-        exit.position = CGPoint(x: 45, y: 55)
+        exit.position = level.exitConfiguration?.offset ?? CGPoint(x: 45, y: 55)
         exit.zPosition = 10
         platformNodes[exitPlatform.id]?.addChild(exit)
         exitNode = exit
@@ -132,7 +148,7 @@ final class GameScene: SKScene {
             }
             renderCurrentScreen()
         case .map:
-            startHomeLevel(at: touch.location(in: self))
+            startMapLevel(at: touch.location(in: self))
         case .gameplay:
             handleGameplayTouch(touch)
         case .onboarding, .storyline:
@@ -153,16 +169,13 @@ final class GameScene: SKScene {
         }
     }
 
-    private func startHomeLevel(at location: CGPoint) {
+    private func startMapLevel(at location: CGPoint) {
         var touchedNode: SKNode? = atPoint(location)
 
         while let node = touchedNode {
-            if node.name == "begin-home-1" {
-                appFlow.startLevel("home-1")
-                return
-            }
-            if node.name == "begin-home-2" {
-                appFlow.startLevel("home-2")
+            if let name = node.name, name.hasPrefix("start-level-") {
+                let levelID = String(name.dropFirst("start-level-".count))
+                appFlow.startLevel(levelID)
                 return
             }
             touchedNode = node.parent
@@ -192,7 +205,7 @@ final class GameScene: SKScene {
 
         if viewModel.currentLevel.interaction == .perspectiveCompact {
             if exitNode(at: touchLocation) != nil {
-                moveMori(to: viewModel.currentLevel.exitPlatformID, completesLevel: true)
+                moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
                 return
             }
 
@@ -217,7 +230,7 @@ final class GameScene: SKScene {
         }
 
         if exitNode(at: touchLocation) != nil {
-            moveMori(to: viewModel.currentLevel.exitPlatformID, completesLevel: true)
+            moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
             return
         }
 
@@ -230,7 +243,7 @@ final class GameScene: SKScene {
 
         guard !viewModel.isConnected
                 || (platform.model.remainsDraggableWhenConnected
-                    && !viewModel.areConnected(platform.model.id, viewModel.currentLevel.exitPlatformID)) else {
+                    && !viewModel.areConnected(platform.model.id, resolvedExitPlatformID(for: viewModel.currentLevel))) else {
             return
         }
 
@@ -448,6 +461,34 @@ final class GameScene: SKScene {
         return nil
     }
 
+    private func resolvedExitPlatformID(for level: LevelConfiguration) -> String {
+        level.exitConfiguration?.platformID ?? level.exitPlatformID
+    }
+
+    private func isMoriSupported(_ mori: PlayerNode) -> Bool {
+        platformNodes.values.contains { platform in
+            let horizontalDistance = abs(mori.position.x - platform.position.x)
+            let verticalDistance = abs(mori.position.y - (platform.position.y + 55))
+            return horizontalDistance <= platform.model.size.width / 2 + 18
+                && verticalDistance <= 12
+        }
+    }
+
+    private func handleFall() {
+        guard let moriNode else { return }
+        isRestartingLevel = true
+        print("Mori fell. Restarting level.")
+
+        let fall = SKAction.moveBy(x: 0, y: -100, duration: 0.22)
+        let disappear = SKAction.fadeOut(withDuration: 0.12)
+        moriNode.run(.sequence([.group([fall, disappear]), .wait(forDuration: 0.15)])) { [weak self] in
+            guard let self else { return }
+            self.viewModel.restartLevel()
+            self.renderLevel()
+            self.isRestartingLevel = false
+        }
+    }
+
     private func moveMori(to platformID: String, completesLevel: Bool) {
         guard viewModel.canMoveMori(to: platformID),
               let moriNode,
@@ -569,11 +610,11 @@ final class GameScene: SKScene {
 
         if !viewModel.isConnected {
             instructionLabel?.text = "Drag Platform B to connect the path"
-        } else if level.exitPlatformID == draggablePlatform.id {
+        } else if resolvedExitPlatformID(for: level) == draggablePlatform.id {
             instructionLabel?.text = "Tap the black hole"
         } else if viewModel.moriPlatformID == level.player.startingPlatformID {
             instructionLabel?.text = "Tap Platform B to move Mori"
-        } else if !viewModel.areConnected(draggablePlatform.id, level.exitPlatformID) {
+        } else if !viewModel.areConnected(draggablePlatform.id, resolvedExitPlatformID(for: level)) {
             instructionLabel?.text = "Drag Platform B to Platform C"
         } else {
             instructionLabel?.text = "Tap the black hole"
@@ -582,8 +623,15 @@ final class GameScene: SKScene {
 
     private func snapTarget(for draggablePlatform: PlatformNode) -> (platform: PlatformNode, position: CGPoint)? {
         var nearestTarget: (platform: PlatformNode, position: CGPoint, gap: CGFloat)?
+        let snapRule = viewModel.currentLevel.snapRules.first {
+            $0.draggablePlatformID == draggablePlatform.model.id
+        }
+        let snapThreshold = snapRule?.threshold ?? GameConstants.Snap.threshold
 
         for target in platformNodes.values where !target.model.isDraggable {
+            if let snapRule, !snapRule.targetPlatformIDs.contains(target.model.id) {
+                continue
+            }
             guard abs(draggablePlatform.position.y - target.position.y) <= 2 else { continue }
 
             let gap: CGFloat
@@ -601,7 +649,7 @@ final class GameScene: SKScene {
                 snappedX = targetLeftEdge - draggablePlatform.model.size.width / 2
             }
 
-            guard gap >= 0, gap <= GameConstants.Snap.threshold else { continue }
+            guard gap >= 0, gap <= snapThreshold else { continue }
 
             if nearestTarget == nil || gap < nearestTarget!.gap {
                 nearestTarget = (target, CGPoint(x: snappedX, y: draggablePlatform.position.y), gap)

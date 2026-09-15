@@ -23,7 +23,7 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func openGoal(_ goalID: GoalID) {
-        guard goalID == FlowerGoalData.forgetMeNot.id else { return }
+        guard FlowerGoalData.goal(for: goalID) != nil else { return }
         screen = .goal(goalID)
     }
 
@@ -50,13 +50,13 @@ final class AppFlowViewModel: ObservableObject {
         guard LevelCatalog.configuration(for: levelID) != nil else { return false }
 
         guard let goalID = LevelCatalog.goalID(for: levelID),
-              goalID == FlowerGoalData.forgetMeNot.id,
-              let levelIndex = FlowerGoalData.forgetMeNot.levelIDs.firstIndex(of: levelID) else {
+              let goal = FlowerGoalData.goal(for: goalID),
+              let levelIndex = goal.levelIDs.firstIndex(of: levelID) else {
             return true
         }
 
         guard levelIndex > 0 else { return true }
-        let previousLevelID = FlowerGoalData.forgetMeNot.levelIDs[levelIndex - 1]
+        let previousLevelID = goal.levelIDs[levelIndex - 1]
         return isLevelCompleted(previousLevelID)
     }
 
@@ -65,7 +65,7 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func isGoalCompleted(_ goalID: GoalID) -> Bool {
-        guard goalID == FlowerGoalData.forgetMeNot.id else { return false }
-        return FlowerGoalData.forgetMeNot.levelIDs.allSatisfy(isLevelCompleted)
+        guard let goal = FlowerGoalData.goal(for: goalID) else { return false }
+        return goal.levelIDs.allSatisfy(isLevelCompleted)
     }
 }
