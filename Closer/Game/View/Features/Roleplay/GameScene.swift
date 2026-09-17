@@ -69,6 +69,7 @@ final class GameScene: SKScene {
         let goalDetailView = GoalDetailView(
             sceneSize: size,
             goal: goal,
+            progress: appFlow.progress,
             isPlayable: { [weak self] levelID in
                 self?.appFlow.isLevelUnlocked(levelID) ?? false
             }
@@ -162,6 +163,7 @@ final class GameScene: SKScene {
         while let node = touchedNode {
             if let name = node.name, name.hasPrefix("level-") {
                 let levelID = String(name.dropFirst("level-".count))
+                guard appFlow.isLevelUnlocked(levelID) else { return }
                 appFlow.startLevel(levelID)
                 return
             }

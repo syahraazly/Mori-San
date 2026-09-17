@@ -1,7 +1,14 @@
 import SpriteKit
 
 final class GoalDetailView: SKNode {
-    init(sceneSize: CGSize, goal: FlowerGoal, isPlayable: (String) -> Bool) {
+    private(set) var progressLabel: SKLabelNode?
+
+    init(
+        sceneSize: CGSize,
+        goal: FlowerGoal,
+        progress: GoalProgress? = nil,
+        isPlayable: (String) -> Bool
+    ) {
         super.init()
 
         let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
@@ -10,6 +17,17 @@ final class GoalDetailView: SKNode {
         title.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
         title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.82)
         addChild(title)
+
+        let completedPetals = progress?.petalCount(for: goal) ?? 0
+        let totalPetals = goal.totalPetals
+        let progressNode = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        progressNode.name = "goal-progress-label"
+        progressNode.text = "\(completedPetals)/\(totalPetals) petals"
+        progressNode.fontSize = 18
+        progressNode.fontColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 1.0)
+        progressNode.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.74)
+        addChild(progressNode)
+        self.progressLabel = progressNode
 
         addLevelCategory(
             levelIDs: goal.levelIDs,
@@ -29,7 +47,8 @@ final class GoalDetailView: SKNode {
         for (index, levelID) in levelIDs.enumerated() {
             let button = SKShapeNode(rectOf: CGSize(width: 62, height: 62), cornerRadius: 14)
             button.name = "level-\(levelID)"
-            button.fillColor = isPlayable(levelID)
+            let playable = isPlayable(levelID)
+            button.fillColor = playable
                 ? SKColor(red: 0.82, green: 0.42, blue: 0.34, alpha: 1.0)
                 : SKColor(red: 0.72, green: 0.68, blue: 0.66, alpha: 1.0)
             button.strokeColor = .white.withAlphaComponent(0.4)
@@ -38,8 +57,8 @@ final class GoalDetailView: SKNode {
             addChild(button)
 
             let number = SKLabelNode(fontNamed: "AvenirNext-Bold")
-            number.text = "\(index + 1)"
-            number.fontSize = 22
+            number.text = levelID
+            number.fontSize = 18
             number.verticalAlignmentMode = .center
             number.fontColor = .white
             button.addChild(number)
