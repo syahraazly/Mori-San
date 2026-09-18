@@ -360,6 +360,7 @@ final class GameScene: SKScene {
 
         if abs(horizontalChange) > 1 {
             didDragPlatform = true
+            viewModel.disconnectSnap(for: platform.model.id)
         }
 
         platform.position.x = constrainedX
@@ -374,7 +375,11 @@ final class GameScene: SKScene {
 
         if viewModel.currentLevel.usesPerspective {
             if viewModel.currentLevel.interaction == .perspectiveCompact, didDragPlatform {
-                _ = attemptSnapIfNeeded()
+                if !attemptSnapIfNeeded() {
+                    viewModel.disconnectSnap(for: draggedPlatform?.model.id)
+                    // Recalculate koneksi berdasarkan posisi aktual setelah drag selesai
+                    updatePerspectiveConnectionsUsingActualPositions()
+                }
                 draggedPlatform = nil
                 didDragPlatform = false
                 return
@@ -391,7 +396,9 @@ final class GameScene: SKScene {
         }
 
         if didDragPlatform {
-            _ = attemptSnapIfNeeded()
+            if !attemptSnapIfNeeded() {
+                viewModel.disconnectSnap(for: draggedPlatform?.model.id)
+            }
         }
         draggedPlatform = nil
         didDragPlatform = false
@@ -399,8 +406,12 @@ final class GameScene: SKScene {
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard case .gameplay = appFlow.screen else { return }
+        if didDragPlatform {
+            viewModel.disconnectSnap(for: draggedPlatform?.model.id)
+        }
         perspectiveSwipeStart = nil
         draggedPlatform = nil
+        didDragPlatform = false
     }
 
     private func position(for platform: PlatformModel) -> CGPoint {
@@ -436,6 +447,7 @@ final class GameScene: SKScene {
 
     private func animatePerspectiveChange() {
         viewModel.togglePerspectivePOV()
+
         updatePerspectiveConnections()
 
         for platform in viewModel.currentLevel.platforms {
@@ -467,39 +479,116 @@ final class GameScene: SKScene {
         }
     }
 
-    private func updatePerspectiveConnections(usingRenderedPositions: Bool = false) {
+    private func updatePerspectiveConnections() {
         let platforms = viewModel.currentLevel.platforms
         var newConnections: [ConnectionModel] = []
-        let maximumGap: CGFloat = 10
+        let maximumGap: CGFloat = 25
         let maximumVerticalDifference: CGFloat = 2
 
         for firstIndex in platforms.indices {
             for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
                 let firstPlatform = platforms[firstIndex]
                 let secondPlatform = platforms[secondIndex]
-                let firstPosition = usingRenderedPositions
-                    ? (platformNodes[firstPlatform.id]?.position ?? position(for: firstPlatform))
-                    : position(for: firstPlatform)
-                let secondPosition = usingRenderedPositions
-                    ? (platformNodes[secondPlatform.id]?.position ?? position(for: secondPlatform))
-                    : position(for: secondPlatform)
+                let firstPosition = position(for: firstPlatform)
+                let secondPosition = position(for: secondPlatform)
                 let horizontalDistance = abs(firstPosition.x - secondPosition.x)
                 let combinedHalfWidths = (firstPlatform.effectiveWidth + secondPlatform.effectiveWidth) / 2
                 let edgeGap = horizontalDistance - combinedHalfWidths
                 let verticalDifference = abs(firstPosition.y - secondPosition.y)
 
                 if abs(edgeGap) <= maximumGap, verticalDifference <= maximumVerticalDifference {
-                    newConnections.append(
-                        ConnectionModel(
-                            firstPlatformID: firstPlatform.id,
-                            secondPlatformID: secondPlatform.id
+                    if !isHopPathBlocked(from: firstPosition, to: secondPosition, excluding: [firstPlatform.id, secondPlatform.id], usingLayoutPositions: true) {
+                        newConnections.append(
+                            ConnectionModel(
+                                firstPlatformID: firstPlatform.id,
+                                secondPlatformID: secondPlatform.id
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
 
         viewModel.setPerspectiveConnections(newConnections)
+    }
+
+    /// Sama seperti updatePerspectiveConnections() tapi menggunakan posisi aktual node
+    /// (bukan posisi layout frontPosition/sidePosition). Dipanggil setelah snap/drag
+    /// agar koneksi benar-benar mencerminkan posisi fisik balok di layar.
+    private func updatePerspectiveConnectionsUsingActualPositions() {
+        let platforms = viewModel.currentLevel.platforms
+        var newConnections: [ConnectionModel] = []
+        let maximumGap: CGFloat = 25
+        let maximumVerticalDifference: CGFloat = 2
+
+        for firstIndex in platforms.indices {
+            for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
+                let firstPlatform = platforms[firstIndex]
+                let secondPlatform = platforms[secondIndex]
+
+                guard let firstNode = platformNodes[firstPlatform.id],
+                      let secondNode = platformNodes[secondPlatform.id] else { continue }
+                let firstPosition = firstNode.position
+                let secondPosition = secondNode.position
+
+                let horizontalDistance = abs(firstPosition.x - secondPosition.x)
+                let combinedHalfWidths = (firstPlatform.effectiveWidth + secondPlatform.effectiveWidth) / 2
+                let edgeGap = horizontalDistance - combinedHalfWidths
+                let verticalDifference = abs(firstPosition.y - secondPosition.y)
+
+                if abs(edgeGap) <= maximumGap, verticalDifference <= maximumVerticalDifference {
+                    if !isHopPathBlocked(from: firstPosition, to: secondPosition, excluding: [firstPlatform.id, secondPlatform.id], usingLayoutPositions: false) {
+                        newConnections.append(
+                            ConnectionModel(
+                                firstPlatformID: firstPlatform.id,
+                                secondPlatformID: secondPlatform.id
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        viewModel.setPerspectiveConnections(newConnections)
+    }
+
+    private func isHopPathBlocked(
+        from start: CGPoint,
+        to end: CGPoint,
+        excluding excludedIDs: Set<String>,
+        usingLayoutPositions: Bool = true
+    ) -> Bool {
+        for (id, node) in platformNodes {
+            if excludedIDs.contains(id) { continue }
+            guard let model = viewModel.currentLevel.platforms.first(where: { $0.id == id }) else { continue }
+            let pos = usingLayoutPositions ? position(for: model) : node.position
+            let cellRects = node.occupiedCellRects(at: pos)
+            for rect in cellRects {
+                let insetRect = rect.insetBy(dx: 2, dy: 2)
+                if lineIntersectsRect(from: start, to: end, rect: insetRect) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private func lineIntersectsRect(from p1: CGPoint, to p2: CGPoint, rect: CGRect) -> Bool {
+        if rect.contains(p1) || rect.contains(p2) { return true }
+
+        let left = lineIntersectsLine(p1: p1, p2: p2, q1: CGPoint(x: rect.minX, y: rect.minY), q2: CGPoint(x: rect.minX, y: rect.maxY))
+        let right = lineIntersectsLine(p1: p1, p2: p2, q1: CGPoint(x: rect.maxX, y: rect.minY), q2: CGPoint(x: rect.maxX, y: rect.maxY))
+        let top = lineIntersectsLine(p1: p1, p2: p2, q1: CGPoint(x: rect.minX, y: rect.maxY), q2: CGPoint(x: rect.maxX, y: rect.maxY))
+        let bottom = lineIntersectsLine(p1: p1, p2: p2, q1: CGPoint(x: rect.minX, y: rect.minY), q2: CGPoint(x: rect.maxX, y: rect.minY))
+
+        return left || right || top || bottom
+    }
+
+    private func lineIntersectsLine(p1: CGPoint, p2: CGPoint, q1: CGPoint, q2: CGPoint) -> Bool {
+        func ccw(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint) -> Bool {
+            return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
+        }
+        return (ccw(p1, q1, q2) != ccw(p2, q1, q2)) && (ccw(p1, p2, q1) != ccw(p1, p2, q2))
     }
 
     private func moveMoriAcrossPerspectivePath(to platformID: String) {
@@ -787,7 +876,9 @@ final class GameScene: SKScene {
             SKAction.scale(to: 1.0, duration: 0.06)
         ])
         platformB.run(.group([move, bounce])) { [weak self] in
-            self?.updatePerspectiveConnections(usingRenderedPositions: true)
+            // Gunakan posisi aktual (bukan layout) agar koneksi terbentuk
+            // berdasarkan posisi fisik balok setelah di-snap
+            self?.updatePerspectiveConnectionsUsingActualPositions()
         }
         HapticManager.playSnapFeedback()
         updateInstruction()

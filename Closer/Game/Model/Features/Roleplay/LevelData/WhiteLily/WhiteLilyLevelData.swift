@@ -89,7 +89,15 @@ enum WhiteLilyLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48))
     )
 
-    // Level 2.3: Introduction of L-shape piece
+    // Level 2.3: Pengenalan L-shape
+    // Layar 390pt. A (1x1, eff=92): center=50.7, right=96.7
+    // B (lShape, eff=132) start x=0.52: center=202.8, left=136.8, right=268.8
+    //   Gap A↔B = 136.8-96.7 = 40.1 > 25 → tidak auto-connect ✓
+    //   Gap B↔C = 293.3-268.8 = 24.5 ≤ 25 → auto-connect via perspectiveConnections ✓
+    // C (1x1, eff=92) x=0.87: center=339.3, left=293.3
+    // Setelah snap B→A: B.center=162.7, B.right=228.7 → gap B↔C=64.6 > 25 (perspConn hilang)
+    //   → initialConnection B↔C mempertahankan link ✓
+    // Puzzle: drag B kiri → snap → A↔B(snap)+B↔C(initial) → hop A→B(petal)→C(exit)
     static let level2_3 = GameLevel(
         id: "2.3",
         category: .family,
@@ -97,53 +105,52 @@ enum WhiteLilyLevelData {
         platforms: [
             PlatformModel(
                 id: "platformA",
-                horizontalPosition: 0.16,
+                horizontalPosition: 0.13,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.16, y: 0.33),
-                sidePosition: CGPoint(x: 0.16, y: 0.55),
+                frontPosition: CGPoint(x: 0.13, y: 0.40),
+                sidePosition: CGPoint(x: 0.13, y: 0.40),
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
-                horizontalPosition: 0.42,
+                horizontalPosition: 0.52,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.42, y: 0.33),
-                sidePosition: CGPoint(x: 0.42, y: 0.33),
+                frontPosition: CGPoint(x: 0.52, y: 0.40),
+                sidePosition: CGPoint(x: 0.52, y: 0.40),
                 shape: .lShape
             ),
             PlatformModel(
                 id: "platformC",
-                horizontalPosition: 0.65,
+                horizontalPosition: 0.87,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.65, y: 0.55),
-                sidePosition: CGPoint(x: 0.65, y: 0.33),
-                shape: .single1x1
-            ),
-            PlatformModel(
-                id: "platformD",
-                horizontalPosition: 0.86,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.86, y: 0.55),
-                sidePosition: CGPoint(x: 0.84, y: 0.55),
+                frontPosition: CGPoint(x: 0.87, y: 0.40),
+                sidePosition: CGPoint(x: 0.87, y: 0.40),
                 shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
-        exitPlatformID: "platformD",
-        platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
+        exitPlatformID: "platformC",
+        platformHeightRatio: 0.40,
+        snapRules: [
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA"], threshold: 50)
+        ],
+        initialConnections: [
+            ConnectionModel(firstPlatformID: "platformB", secondPlatformID: "platformC")
+        ],
+        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: -20, y: 55))
     )
 
-    // Level 2.4: Introduction of Reverse-L shape piece
+    // Level 2.4: Pengenalan Reverse-L shape
+    // Sama dengan 2.3 tapi menggunakan reverseLShape untuk B.
+    // reverseLShape juga eff=132pt, geometri identik.
+    // Puzzle: drag B kiri → snap → A↔B(snap)+B↔C(initial) → hop A→B(petal)→C(exit)
     static let level2_4 = GameLevel(
         id: "2.4",
         category: .family,
@@ -151,53 +158,57 @@ enum WhiteLilyLevelData {
         platforms: [
             PlatformModel(
                 id: "platformA",
-                horizontalPosition: 0.15,
+                horizontalPosition: 0.13,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.15, y: 0.25),
-                sidePosition: CGPoint(x: 0.15, y: 0.50),
+                frontPosition: CGPoint(x: 0.13, y: 0.40),
+                sidePosition: CGPoint(x: 0.13, y: 0.40),
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
-                horizontalPosition: 0.38,
+                horizontalPosition: 0.52,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.38, y: 0.25),
-                sidePosition: CGPoint(x: 0.35, y: 0.40),
+                frontPosition: CGPoint(x: 0.52, y: 0.40),
+                sidePosition: CGPoint(x: 0.52, y: 0.40),
                 shape: .reverseLShape
             ),
             PlatformModel(
                 id: "platformC",
-                horizontalPosition: 0.62,
+                horizontalPosition: 0.87,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.62, y: 0.55),
-                sidePosition: CGPoint(x: 0.58, y: 0.40),
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "platformD",
-                horizontalPosition: 0.86,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.86, y: 0.55),
-                sidePosition: CGPoint(x: 0.81, y: 0.70),
+                frontPosition: CGPoint(x: 0.87, y: 0.40),
+                sidePosition: CGPoint(x: 0.87, y: 0.40),
                 shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
-        exitPlatformID: "platformD",
-        platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
+        exitPlatformID: "platformC",
+        platformHeightRatio: 0.40,
+        snapRules: [
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA"], threshold: 50)
+        ],
+        initialConnections: [
+            ConnectionModel(firstPlatformID: "platformB", secondPlatformID: "platformC")
+        ],
+        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 20, y: 55))
     )
 
-    // Level 2.5: Combining 1x2 and L-shape pieces
+    // Level 2.5: Kombinasi 1x2 bridge + L-shape destination
+    // A (1x1, eff=92) x=0.13: center=50.7, right=96.7
+    // B (1x2, eff=88) start x=0.50: center=195, left=151, right=239
+    //   Gap A↔B = 151-96.7 = 54.3 > 25 → tidak auto-connect ✓
+    //   Gap B↔C = 268-239 = 29 > 25 → tidak auto-connect via perspective ✓ → butuh initialConnection
+    // C (lShape, eff=132) x=0.80: center=312, left=246, right=378
+    //   Setelah snap B→A: B.center=96.7+44=140.7, B.right=184.7
+    //   Gap B↔C = 246-184.7 = 61.3 > 25 → perspConn hilang, initialConnection B↔C bertahan ✓
+    // Puzzle: drag B kiri → snap A → A↔B(snap)+B↔C(initial) → A→B→C(petal+exit)
     static let level2_5 = GameLevel(
         id: "2.5",
         category: .family,
@@ -205,63 +216,57 @@ enum WhiteLilyLevelData {
         platforms: [
             PlatformModel(
                 id: "platformA",
-                horizontalPosition: 0.15,
+                horizontalPosition: 0.13,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.15, y: 0.28),
-                sidePosition: CGPoint(x: 0.15, y: 0.65),
+                frontPosition: CGPoint(x: 0.13, y: 0.40),
+                sidePosition: CGPoint(x: 0.13, y: 0.40),
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
-                horizontalPosition: 0.38,
+                horizontalPosition: 0.50,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.38, y: 0.28),
-                sidePosition: CGPoint(x: 0.30, y: 0.44),
+                frontPosition: CGPoint(x: 0.50, y: 0.40),
+                sidePosition: CGPoint(x: 0.50, y: 0.40),
                 shape: .horizontal1x2
             ),
             PlatformModel(
-                id: "platformTrap",
-                horizontalPosition: 0.60,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.60, y: 0.28),
-                sidePosition: CGPoint(x: 0.75, y: 0.25),
-                shape: .single1x1
-            ),
-            PlatformModel(
                 id: "platformC",
-                horizontalPosition: 0.38,
+                horizontalPosition: 0.80,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.38, y: 0.60),
-                sidePosition: CGPoint(x: 0.53, y: 0.44),
+                frontPosition: CGPoint(x: 0.80, y: 0.40),
+                sidePosition: CGPoint(x: 0.80, y: 0.40),
                 shape: .lShape
-            ),
-            PlatformModel(
-                id: "platformExit",
-                horizontalPosition: 0.85,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.85, y: 0.40),
-                sidePosition: CGPoint(x: 0.76, y: 0.65),
-                shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
-        exitPlatformID: "platformExit",
-        platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformExit", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
+        exitPlatformID: "platformC",
+        platformHeightRatio: 0.40,
+        snapRules: [
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA"], threshold: 50)
+        ],
+        initialConnections: [
+            ConnectionModel(firstPlatformID: "platformB", secondPlatformID: "platformC")
+        ],
+        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: -20, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: -20, y: 55))
     )
 
-    // Level 2.6: Combining 1x3 and Reverse-L pieces in multi-step planning
+    // Level 2.6: Reverse-L bridge + 1x3 destination
+    // A (1x1, eff=92) x=0.13: center=50.7, right=96.7
+    // B (reverseLShape, eff=132) start x=0.52: center=202.8, left=136.8, right=268.8
+    //   Gap A↔B = 136.8-96.7 = 40.1 > 25 → tidak auto-connect ✓
+    // C (1x3, eff=132) x=0.87: center=339.3, left=273.3
+    //   Gap B↔C = 273.3-268.8 = 4.5 ≤ 25 → auto-connect via perspectiveConnections ✓
+    //   Setelah snap B→A: B.center=162.7, B.right=228.7 → gap B↔C=44.6 > 25 → hilang
+    //   → initialConnection B↔C mempertahankan link ✓
+    // Puzzle: drag B kiri → snap → A↔B(snap)+B↔C(initial) → A→B(petal)→C(exit)
     static let level2_6 = GameLevel(
         id: "2.6",
         category: .family,
@@ -269,50 +274,46 @@ enum WhiteLilyLevelData {
         platforms: [
             PlatformModel(
                 id: "platformA",
-                horizontalPosition: 0.14,
+                horizontalPosition: 0.13,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.14, y: 0.35),
-                sidePosition: CGPoint(x: 0.14, y: 0.55),
+                frontPosition: CGPoint(x: 0.13, y: 0.40),
+                sidePosition: CGPoint(x: 0.13, y: 0.40),
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
-                horizontalPosition: 0.36,
+                horizontalPosition: 0.52,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.36, y: 0.35),
-                sidePosition: CGPoint(x: 0.36, y: 0.35),
+                frontPosition: CGPoint(x: 0.52, y: 0.40),
+                sidePosition: CGPoint(x: 0.52, y: 0.40),
                 shape: .reverseLShape
             ),
             PlatformModel(
-                id: "platformBridge",
-                horizontalPosition: 0.60,
+                id: "platformC",
+                horizontalPosition: 0.87,
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.60, y: 0.55),
-                sidePosition: CGPoint(x: 0.60, y: 0.35),
+                frontPosition: CGPoint(x: 0.87, y: 0.40),
+                sidePosition: CGPoint(x: 0.87, y: 0.40),
                 shape: .horizontal1x3
-            ),
-            PlatformModel(
-                id: "platformExit",
-                horizontalPosition: 0.86,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.86, y: 0.55),
-                sidePosition: CGPoint(x: 0.86, y: 0.55),
-                shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
-        exitPlatformID: "platformExit",
-        platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformExit", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformBridge", offset: CGPoint(x: 0, y: 48))
+        exitPlatformID: "platformC",
+        platformHeightRatio: 0.40,
+        snapRules: [
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA"], threshold: 50)
+        ],
+        initialConnections: [
+            ConnectionModel(firstPlatformID: "platformB", secondPlatformID: "platformC")
+        ],
+        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 20, y: 55))
     )
 
     static let goal = FlowerGoal(
