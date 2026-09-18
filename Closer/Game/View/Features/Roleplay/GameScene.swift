@@ -775,31 +775,76 @@ final class GameScene: SKScene {
         return true
     }
 
+    private func isPlacementValid(for draggablePlatform: PlatformNode, at proposedPosition: CGPoint) -> Bool {
+        let proposedRects = draggablePlatform.occupiedCellRects(at: proposedPosition)
+
+        for rect in proposedRects {
+            if rect.minX < GameConstants.Layout.horizontalMargin || rect.maxX > size.width - GameConstants.Layout.horizontalMargin {
+                return false
+            }
+        }
+
+        for target in platformNodes.values where target.model.id != draggablePlatform.model.id && !target.model.isDraggable {
+            let targetRects = target.occupiedCellRects(at: target.position)
+            for pRect in proposedRects {
+                for tRect in targetRects {
+                    let intersection = pRect.intersection(tRect)
+                    if !intersection.isNull && intersection.width > 1 && intersection.height > 1 {
+                        return false
+                    }
+                }
+            }
+        }
+
+        return true
+    }
+
     private func constrainedPlatformX(
         for draggablePlatform: PlatformNode,
         proposedX: CGFloat,
         previousX: CGFloat
     ) -> CGFloat {
-        var constrainedX = proposedX
-        let halfDraggableWidth = draggablePlatform.model.size.width / 2
+        if draggablePlatform.model.shape == .single1x1 {
+            var constrainedX = proposedX
+            let halfDraggableWidth = draggablePlatform.model.size.width / 2
 
-        for target in platformNodes.values where !target.model.isDraggable {
-            if previousX > target.position.x, proposedX < previousX {
-                let nearestRightPosition = target.position.x + target.model.size.width / 2 + halfDraggableWidth
-                if previousX >= nearestRightPosition, proposedX < nearestRightPosition {
-                    constrainedX = max(constrainedX, nearestRightPosition)
+            for target in platformNodes.values where !target.model.isDraggable {
+                if previousX > target.position.x, proposedX < previousX {
+                    let nearestRightPosition = target.position.x + target.model.size.width / 2 + halfDraggableWidth
+                    if previousX >= nearestRightPosition, proposedX < nearestRightPosition {
+                        constrainedX = max(constrainedX, nearestRightPosition)
+                    }
+                }
+
+                if previousX < target.position.x, proposedX > previousX {
+                    let nearestLeftPosition = target.position.x - target.model.size.width / 2 - halfDraggableWidth
+                    if previousX <= nearestLeftPosition, proposedX > nearestLeftPosition {
+                        constrainedX = min(constrainedX, nearestLeftPosition)
+                    }
                 }
             }
 
-            if previousX < target.position.x, proposedX > previousX {
-                let nearestLeftPosition = target.position.x - target.model.size.width / 2 - halfDraggableWidth
-                if previousX <= nearestLeftPosition, proposedX > nearestLeftPosition {
-                    constrainedX = min(constrainedX, nearestLeftPosition)
-                }
+            return constrainedX
+        }
+
+        let proposedPosition = CGPoint(x: proposedX, y: draggablePlatform.position.y)
+        if isPlacementValid(for: draggablePlatform, at: proposedPosition) {
+            return proposedX
+        }
+
+        var candidateX = previousX
+        let step: CGFloat = (proposedX > previousX) ? 1.0 : -1.0
+
+        while (step > 0 ? candidateX < proposedX : candidateX > proposedX) {
+            let nextX = candidateX + step
+            if isPlacementValid(for: draggablePlatform, at: CGPoint(x: nextX, y: draggablePlatform.position.y)) {
+                candidateX = nextX
+            } else {
+                break
             }
         }
 
-        return constrainedX
+        return candidateX
     }
 
     private func createInstructionLabel() {
