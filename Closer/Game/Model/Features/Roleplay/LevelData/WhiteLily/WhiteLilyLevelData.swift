@@ -1,9 +1,9 @@
 import CoreGraphics
 
-enum ForgetMeNotLevelData {
-    static let level1_1 = GameLevel(
-        id: "1.1",
-        category: .home,
+enum WhiteLilyLevelData {
+    static let level2_1 = GameLevel(
+        id: "2.1",
+        category: .family,
         interaction: .perspectiveCompact,
         platforms: [
             PlatformModel(
@@ -41,9 +41,9 @@ enum ForgetMeNotLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let level1_2 = GameLevel(
-        id: "1.2",
-        category: .home,
+    static let level2_2 = GameLevel(
+        id: "2.2",
+        category: .family,
         interaction: .perspectiveCompact,
         platforms: [
             PlatformModel(
@@ -90,9 +90,9 @@ enum ForgetMeNotLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let level1_3 = GameLevel(
-        id: "1.3",
-        category: .home,
+    static let level2_3 = GameLevel(
+        id: "2.3",
+        category: .family,
         interaction: .perspectiveCompact,
         platforms: [
             PlatformModel(
@@ -148,9 +148,9 @@ enum ForgetMeNotLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let level1_4 = GameLevel(
-        id: "1.4",
-        category: .home,
+    static let level2_4 = GameLevel(
+        id: "2.4",
+        category: .family,
         interaction: .perspectiveCompact,
         platforms: [
             PlatformModel(
@@ -206,9 +206,9 @@ enum ForgetMeNotLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let level1_5 = GameLevel(
-        id: "1.5",
-        category: .home,
+    static let level2_5 = GameLevel(
+        id: "2.5",
+        category: .family,
         interaction: .perspectiveCompact,
         platforms: [
             PlatformModel(
@@ -273,19 +273,61 @@ enum ForgetMeNotLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let goal = FlowerGoal(
-        id: "forget-me-not",
-        title: "FORGET ME NOT",
-        levelIDs: ["1.1", "1.2", "1.3", "1.4", "1.5"],
-        petalAssetName: "forget-me-not-petal"
+    static let level2_6 = GameLevel(
+        id: "2.6",
+        category: .family,
+        interaction: .perspectiveCompact,
+        platforms: [
+            PlatformModel(
+                id: "platformA",
+                horizontalPosition: 0.15,
+                size: CGSize(width: 92, height: 44),
+                isDraggable: false,
+                remainsDraggableWhenConnected: false,
+                frontPosition: CGPoint(x: 0.15, y: 0.35),
+                sidePosition: CGPoint(x: 0.15, y: 0.55)
+            ),
+            PlatformModel(
+                id: "platformB",
+                horizontalPosition: 0.38,
+                size: CGSize(width: 92, height: 44),
+                isDraggable: false,
+                remainsDraggableWhenConnected: false,
+                frontPosition: CGPoint(x: 0.38, y: 0.35),
+                sidePosition: CGPoint(x: 0.38, y: 0.35)
+            ),
+            PlatformModel(
+                id: "platformC",
+                horizontalPosition: 0.61,
+                size: CGSize(width: 92, height: 44),
+                isDraggable: false,
+                remainsDraggableWhenConnected: false,
+                frontPosition: CGPoint(x: 0.61, y: 0.55),
+                sidePosition: CGPoint(x: 0.61, y: 0.35)
+            ),
+            PlatformModel(
+                id: "platformD",
+                horizontalPosition: 0.84,
+                size: CGSize(width: 92, height: 44),
+                isDraggable: false,
+                remainsDraggableWhenConnected: false,
+                frontPosition: CGPoint(x: 0.84, y: 0.55),
+                sidePosition: CGPoint(x: 0.84, y: 0.55)
+            )
+        ],
+        player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
+        exitPlatformID: "platformD",
+        platformHeightRatio: 0.35,
+        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48))
     )
 
-    static let levels = [level1_1, level1_2, level1_3, level1_4, level1_5]
+    static let goal = FlowerGoal(
+        id: "chapter-2",
+        title: "CHAPTER 2: WHITE LILY",
+        levelIDs: ["2.1", "2.2", "2.3", "2.4", "2.5", "2.6"],
+        petalAssetName: "white-lily-petal"
+    )
 
-    // Backwards-compatible aliases
-    static let mainLevelOne = level1_1
-    static let mainLevelTwo = level1_2
-    static let mainLevelThree = level1_3
-    static let mainLevelFour = level1_4
-    static let mainLevelFive = level1_5
+    static let levels = [level2_1, level2_2, level2_3, level2_4, level2_5, level2_6]
 }

@@ -56,6 +56,8 @@ final class GameScene: SKScene {
             renderGoal(goalID)
         case .levelTransition:
             renderChapterTransition()
+        case .congratulations(let goalID):
+            renderCongratulations(goalID)
         case .gameplay(let levelID):
             guard let configuration = LevelCatalog.configuration(for: levelID) else { return }
             viewModel.loadLevel(configuration)
@@ -81,6 +83,11 @@ final class GameScene: SKScene {
     private func renderChapterTransition() {
         removeAllChildren()
         addChild(ChapterTransitionView(sceneSize: size))
+    }
+
+    private func renderCongratulations(_ goalID: GoalID) {
+        removeAllChildren()
+        addChild(CongratulationsView(sceneSize: size, goalID: goalID))
     }
 
     private func renderMap() {
@@ -143,8 +150,39 @@ final class GameScene: SKScene {
 
         createInstructionLabel()
         updateInstruction()
+        renderChapterProgressHUD()
 
         checkPetalCollection(at: level.player.startingPlatformID)
+    }
+
+    private func renderChapterProgressHUD() {
+        let levelID = viewModel.currentLevel.id
+        guard let goalID = appFlow.activeGoalID ?? LevelCatalog.goalID(for: levelID),
+              let goal = FlowerGoalData.goal(for: goalID),
+              let currentLevelIndex = goal.levelIDs.firstIndex(where: { LevelCatalog.canonicalID(for: $0) == LevelCatalog.canonicalID(for: levelID) }) else {
+            return
+        }
+
+        let hudContainer = SKNode()
+        hudContainer.name = "chapterProgressHUD"
+        hudContainer.position = CGPoint(x: 24, y: size.height - 40)
+        hudContainer.zPosition = 100
+
+        let icon = SKSpriteNode(imageNamed: goal.petalAssetName)
+        icon.size = CGSize(width: 28, height: 20)
+        icon.position = CGPoint(x: 14, y: 0)
+        hudContainer.addChild(icon)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "\(currentLevelIndex + 1)/\(goal.levelIDs.count)"
+        label.fontSize = 16
+        label.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
+        label.horizontalAlignmentMode = .left
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: 34, y: 0)
+        hudContainer.addChild(label)
+
+        addChild(hudContainer)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -157,6 +195,9 @@ final class GameScene: SKScene {
             if let pendingLevelID = appFlow.pendingLevelID {
                 appFlow.startLevel(pendingLevelID)
             }
+            renderCurrentScreen()
+        case .congratulations:
+            appFlow.openMap()
             renderCurrentScreen()
         case .map:
             startMapLevel(at: touch.location(in: self))
@@ -185,10 +226,16 @@ final class GameScene: SKScene {
         var touchedNode: SKNode? = atPoint(location)
 
         while let node = touchedNode {
-            if let name = node.name, name.hasPrefix("start-level-") {
-                let levelID = String(name.dropFirst("start-level-".count))
-                appFlow.startLevel(levelID)
-                return
+            if let name = node.name {
+                if name.hasPrefix("start-chapter-") {
+                    let chapterID = String(name.dropFirst("start-chapter-".count))
+                    appFlow.startChapter(chapterID)
+                    return
+                } else if name.hasPrefix("start-level-") {
+                    let levelID = String(name.dropFirst("start-level-".count))
+                    appFlow.startLevel(levelID)
+                    return
+                }
             }
             touchedNode = node.parent
         }

@@ -8,28 +8,40 @@ final class AppFlowViewModel: ObservableObject {
         case goal(GoalID)
         case gameplay(LevelID)
         case levelTransition(LevelID)
+        case congratulations(GoalID)
     }
 
     @Published private(set) var screen: Screen = .onboarding
     @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
+    private(set) var activeGoalID: GoalID?
 
     func openStoryline() {
         screen = .storyline
     }
 
     func openMap() {
+        activeGoalID = nil
         screen = .map
     }
 
     func openGoal(_ goalID: GoalID) {
-        guard FlowerGoalData.goal(for: goalID) != nil else { return }
-        screen = .goal(goalID)
+        startChapter(goalID)
+    }
+
+    func startChapter(_ goalID: GoalID) {
+        guard let goal = FlowerGoalData.goal(for: goalID),
+              let firstLevelID = goal.levelIDs.first else { return }
+        activeGoalID = goal.id
+        startLevel(firstLevelID)
     }
 
     func startLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
         guard LevelCatalog.configuration(for: canonicalID) != nil else { return }
+        if activeGoalID == nil {
+            activeGoalID = LevelCatalog.goalID(for: canonicalID)
+        }
         pendingLevelID = nil
         screen = .gameplay(canonicalID)
     }
@@ -41,8 +53,19 @@ final class AppFlowViewModel: ObservableObject {
         if let nextTutorialLevelID = LevelCatalog.nextTutorialLevel(after: canonicalID) {
             pendingLevelID = nextTutorialLevelID
             screen = .levelTransition(nextTutorialLevelID)
-        } else if let goalID = LevelCatalog.goalID(for: canonicalID) {
-            openGoal(goalID)
+            return
+        }
+
+        let targetGoalID = activeGoalID ?? LevelCatalog.goalID(for: canonicalID)
+        if let goalID = targetGoalID,
+           let goal = FlowerGoalData.goal(for: goalID),
+           let currentIndex = goal.levelIDs.firstIndex(where: { LevelCatalog.canonicalID(for: $0) == canonicalID }) {
+            let nextIndex = currentIndex + 1
+            if nextIndex < goal.levelIDs.count {
+                startLevel(goal.levelIDs[nextIndex])
+            } else {
+                screen = .congratulations(goal.id)
+            }
         } else {
             openMap()
         }

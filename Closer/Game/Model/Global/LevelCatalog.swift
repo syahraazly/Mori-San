@@ -1,5 +1,5 @@
 enum LevelCatalog {
-    static let configurations = TutorialLevelData.levels + ForgetMeNotLevelData.levels
+    static let configurations = TutorialLevelData.levels + ForgetMeNotLevelData.levels + WhiteLilyLevelData.levels + KambojaBaliLevelData.levels
 
     static func canonicalID(for levelID: LevelID) -> LevelID {
         switch levelID {
