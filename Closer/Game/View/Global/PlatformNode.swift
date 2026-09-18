@@ -3,6 +3,8 @@ import SpriteKit
 final class PlatformNode: SKShapeNode {
     let model: PlatformModel
 
+    static let cellSize: CGFloat = 44.0
+
     init(model: PlatformModel) {
         self.model = model
         super.init()
@@ -17,25 +19,21 @@ final class PlatformNode: SKShapeNode {
         } else {
             let mutablePath = CGMutablePath()
             let cells = model.shape.occupiedCells
-            let cellWidth: CGFloat = 44
-            let cellHeight: CGFloat = 44
+            let cellSize = PlatformNode.cellSize
 
             let minDx = cells.map { $0.dx }.min() ?? 0
             let maxDx = cells.map { $0.dx }.max() ?? 0
-            let minDy = cells.map { $0.dy }.min() ?? 0
-            let maxDy = cells.map { $0.dy }.max() ?? 0
 
             let totalCols = CGFloat(maxDx - minDx + 1)
-            let totalRows = CGFloat(maxDy - minDy + 1)
-            let offsetX = -(totalCols * cellWidth) / 2
-            let offsetY = -(totalRows * cellHeight) / 2
+            let offsetX = -(totalCols * cellSize) / 2
+            let offsetY = -cellSize / 2
 
             for cell in cells {
                 let cellRect = CGRect(
-                    x: offsetX + CGFloat(cell.dx - minDx) * cellWidth,
-                    y: offsetY + CGFloat(cell.dy - minDy) * cellHeight,
-                    width: cellWidth,
-                    height: cellHeight
+                    x: offsetX + CGFloat(cell.dx - minDx) * cellSize,
+                    y: offsetY + CGFloat(cell.dy) * cellSize,
+                    width: cellSize,
+                    height: cellSize
                 )
                 let cellPath = CGPath(
                     roundedRect: cellRect,
@@ -62,27 +60,85 @@ final class PlatformNode: SKShapeNode {
         }
 
         let cells = model.shape.occupiedCells
-        let cellWidth: CGFloat = 44
-        let cellHeight: CGFloat = 44
+        let cellSize = PlatformNode.cellSize
 
         let minDx = cells.map { $0.dx }.min() ?? 0
         let maxDx = cells.map { $0.dx }.max() ?? 0
-        let minDy = cells.map { $0.dy }.min() ?? 0
-        let maxDy = cells.map { $0.dy }.max() ?? 0
 
         let totalCols = CGFloat(maxDx - minDx + 1)
-        let totalRows = CGFloat(maxDy - minDy + 1)
-        let offsetX = position.x - (totalCols * cellWidth) / 2
-        let offsetY = position.y - (totalRows * cellHeight) / 2
+        let offsetX = position.x - (totalCols * cellSize) / 2
+        let offsetY = position.y - cellSize / 2
 
         return cells.map { cell in
             CGRect(
-                x: offsetX + CGFloat(cell.dx - minDx) * cellWidth,
-                y: offsetY + CGFloat(cell.dy - minDy) * cellHeight,
-                width: cellWidth,
-                height: cellHeight
+                x: offsetX + CGFloat(cell.dx - minDx) * cellSize,
+                y: offsetY + CGFloat(cell.dy) * cellSize,
+                width: cellSize,
+                height: cellSize
             )
         }
+    }
+
+    struct PlayableSurface {
+        let position: CGPoint
+        let cellRect: CGRect
+    }
+
+    func playableSurfaces(at position: CGPoint) -> [PlayableSurface] {
+        if model.shape == .single1x1 {
+            let rect = CGRect(
+                origin: CGPoint(x: position.x - model.size.width / 2, y: position.y - model.size.height / 2),
+                size: model.size
+            )
+            return [
+                PlayableSurface(
+                    position: CGPoint(x: position.x, y: position.y + 55),
+                    cellRect: rect
+                )
+            ]
+        }
+
+        let rects = occupiedCellRects(at: position)
+        let cells = model.shape.occupiedCells
+        let minDx = cells.map { $0.dx }.min() ?? 0
+
+        var topCellsByCol: [Int: CGRect] = [:]
+        for (index, cell) in cells.enumerated() {
+            let col = cell.dx - minDx
+            let cellRect = rects[index]
+            if let existing = topCellsByCol[col] {
+                if cellRect.maxY > existing.maxY {
+                    topCellsByCol[col] = cellRect
+                }
+            } else {
+                topCellsByCol[col] = cellRect
+            }
+        }
+
+        let sortedCols = topCellsByCol.keys.sorted()
+        return sortedCols.compactMap { col in
+            guard let cellRect = topCellsByCol[col] else { return nil }
+            return PlayableSurface(
+                position: CGPoint(x: cellRect.midX, y: cellRect.maxY + 33),
+                cellRect: cellRect
+            )
+        }
+    }
+
+    func landingPosition(approachingFrom fromPosition: CGPoint) -> CGPoint {
+        let surfaces = playableSurfaces(at: position)
+        guard !surfaces.isEmpty else {
+            return CGPoint(x: position.x, y: position.y + 55)
+        }
+        if surfaces.count == 1 {
+            return surfaces[0].position
+        }
+
+        let closest = surfaces.min { a, b in
+            hypot(a.position.x - fromPosition.x, a.position.y - fromPosition.y) <
+            hypot(b.position.x - fromPosition.x, b.position.y - fromPosition.y)
+        }
+        return closest?.position ?? surfaces[0].position
     }
 
     required init?(coder aDecoder: NSCoder) {

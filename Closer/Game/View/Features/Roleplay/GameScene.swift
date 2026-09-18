@@ -36,6 +36,8 @@ final class GameScene: SKScene {
         guard case .gameplay = appFlow.screen,
               !isRestartingLevel,
               let moriNode,
+              moriNode.action(forKey: "moriMove") == nil,
+              moriNode.action(forKey: "perspectiveMove") == nil,
               !isMoriSupported(moriNode) else {
             return
         }
@@ -126,13 +128,14 @@ final class GameScene: SKScene {
             petalNode = petal
         }
 
-        guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }) else { return }
+        guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }),
+              let startPlatformNode = platformNodes[startPlatform.id] else { return }
 
         let mori = PlayerNode(player: level.player)
-        let startPosition = position(for: startPlatform)
+        let initialLanding = startPlatformNode.landingPosition(approachingFrom: startPlatformNode.position)
         mori.position = CGPoint(
-            x: startPosition.x + level.player.startingOffset.x,
-            y: startPosition.y + 55 + level.player.startingOffset.y
+            x: initialLanding.x + level.player.startingOffset.x,
+            y: initialLanding.y + level.player.startingOffset.y
         )
         addChild(mori)
         moriNode = mori
@@ -344,7 +347,7 @@ final class GameScene: SKScene {
 
         let touchLocation = touch.location(in: self)
         let newX = touchLocation.x - dragTouchOffsetX
-        let halfPlatformWidth = platform.model.size.width / 2
+        let halfPlatformWidth = platform.model.effectiveWidth / 2
         let minimumX = halfPlatformWidth + GameConstants.Layout.horizontalMargin
         let maximumX = size.width - halfPlatformWidth - GameConstants.Layout.horizontalMargin
         let screenBoundedX = min(max(newX, minimumX), maximumX)
@@ -446,7 +449,11 @@ final class GameScene: SKScene {
             )
 
             if viewModel.moriPlatformID == platform.id {
-                let moriDestination = CGPoint(x: destination.x, y: destination.y + 55)
+                let currentOffset = CGPoint(
+                    x: (moriNode?.position.x ?? node.position.x) - node.position.x,
+                    y: (moriNode?.position.y ?? (node.position.y + 55)) - node.position.y
+                )
+                let moriDestination = CGPoint(x: destination.x + currentOffset.x, y: destination.y + currentOffset.y)
                 moriNode?.removeAction(forKey: "perspectiveMove")
                 let dx = moriDestination.x - (moriNode?.position.x ?? moriDestination.x)
                 if abs(dx) > 1 {
@@ -460,7 +467,7 @@ final class GameScene: SKScene {
         }
     }
 
-    private func updatePerspectiveConnections() {
+    private func updatePerspectiveConnections(usingRenderedPositions: Bool = false) {
         let platforms = viewModel.currentLevel.platforms
         var newConnections: [ConnectionModel] = []
         let maximumGap: CGFloat = 10
@@ -470,10 +477,14 @@ final class GameScene: SKScene {
             for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
                 let firstPlatform = platforms[firstIndex]
                 let secondPlatform = platforms[secondIndex]
-                let firstPosition = position(for: firstPlatform)
-                let secondPosition = position(for: secondPlatform)
+                let firstPosition = usingRenderedPositions
+                    ? (platformNodes[firstPlatform.id]?.position ?? position(for: firstPlatform))
+                    : position(for: firstPlatform)
+                let secondPosition = usingRenderedPositions
+                    ? (platformNodes[secondPlatform.id]?.position ?? position(for: secondPlatform))
+                    : position(for: secondPlatform)
                 let horizontalDistance = abs(firstPosition.x - secondPosition.x)
-                let combinedHalfWidths = (firstPlatform.size.width + secondPlatform.size.width) / 2
+                let combinedHalfWidths = (firstPlatform.effectiveWidth + secondPlatform.effectiveWidth) / 2
                 let edgeGap = horizontalDistance - combinedHalfWidths
                 let verticalDifference = abs(firstPosition.y - secondPosition.y)
 
@@ -503,7 +514,7 @@ final class GameScene: SKScene {
 
         for nextPlatformID in path.dropFirst() {
             guard let platform = platformNodes[nextPlatformID] else { return }
-            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            let destination = platform.landingPosition(approachingFrom: previousPosition)
             let start = previousPosition
 
             let stepAction = SKAction.run { [weak moriNode] in
@@ -625,10 +636,16 @@ final class GameScene: SKScene {
 
     private func isMoriSupported(_ mori: PlayerNode) -> Bool {
         platformNodes.values.contains { platform in
-            let horizontalDistance = abs(mori.position.x - platform.position.x)
-            let verticalDistance = abs(mori.position.y - (platform.position.y + 55))
-            return horizontalDistance <= platform.model.size.width / 2 + 22
-                && verticalDistance <= 14
+            let surfaces = platform.playableSurfaces(at: platform.position)
+            return surfaces.contains { surface in
+                let horizontalDistance = abs(mori.position.x - surface.position.x)
+                let verticalDistance = abs(mori.position.y - surface.position.y)
+                let tolerance = platform.model.shape == .single1x1
+                    ? (platform.model.size.width / 2 + 22)
+                    : (surface.cellRect.width / 2 + 12)
+                return horizontalDistance <= tolerance
+                    && verticalDistance <= 18
+            }
         }
     }
 
@@ -688,7 +705,7 @@ final class GameScene: SKScene {
 
         for nextPlatformID in path.dropFirst() {
             guard let platform = platformNodes[nextPlatformID] else { return }
-            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            let destination = platform.landingPosition(approachingFrom: previousPosition)
             let start = previousPosition
 
             let faceAction = SKAction.run { [weak moriNode] in
@@ -769,7 +786,9 @@ final class GameScene: SKScene {
             SKAction.scale(to: 1.04, duration: 0.06),
             SKAction.scale(to: 1.0, duration: 0.06)
         ])
-        platformB.run(.group([move, bounce]))
+        platformB.run(.group([move, bounce])) { [weak self] in
+            self?.updatePerspectiveConnections(usingRenderedPositions: true)
+        }
         HapticManager.playSnapFeedback()
         updateInstruction()
         return true
@@ -806,18 +825,19 @@ final class GameScene: SKScene {
     ) -> CGFloat {
         if draggablePlatform.model.shape == .single1x1 {
             var constrainedX = proposedX
-            let halfDraggableWidth = draggablePlatform.model.size.width / 2
+            let halfDraggableWidth = draggablePlatform.model.effectiveWidth / 2
 
             for target in platformNodes.values where !target.model.isDraggable {
+                let halfTargetWidth = target.model.effectiveWidth / 2
                 if previousX > target.position.x, proposedX < previousX {
-                    let nearestRightPosition = target.position.x + target.model.size.width / 2 + halfDraggableWidth
+                    let nearestRightPosition = target.position.x + halfTargetWidth + halfDraggableWidth
                     if previousX >= nearestRightPosition, proposedX < nearestRightPosition {
                         constrainedX = max(constrainedX, nearestRightPosition)
                     }
                 }
 
                 if previousX < target.position.x, proposedX > previousX {
-                    let nearestLeftPosition = target.position.x - target.model.size.width / 2 - halfDraggableWidth
+                    let nearestLeftPosition = target.position.x - halfTargetWidth - halfDraggableWidth
                     if previousX <= nearestLeftPosition, proposedX > nearestLeftPosition {
                         constrainedX = min(constrainedX, nearestLeftPosition)
                     }
@@ -905,15 +925,15 @@ final class GameScene: SKScene {
             let snappedX: CGFloat
 
             if draggablePlatform.position.x >= target.position.x {
-                let targetRightEdge = target.position.x + target.model.size.width / 2
-                let draggableLeftEdge = draggablePlatform.position.x - draggablePlatform.model.size.width / 2
+                let targetRightEdge = target.position.x + target.model.effectiveWidth / 2
+                let draggableLeftEdge = draggablePlatform.position.x - draggablePlatform.model.effectiveWidth / 2
                 gap = draggableLeftEdge - targetRightEdge
-                snappedX = targetRightEdge + draggablePlatform.model.size.width / 2
+                snappedX = targetRightEdge + draggablePlatform.model.effectiveWidth / 2
             } else {
-                let targetLeftEdge = target.position.x - target.model.size.width / 2
-                let draggableRightEdge = draggablePlatform.position.x + draggablePlatform.model.size.width / 2
+                let targetLeftEdge = target.position.x - target.model.effectiveWidth / 2
+                let draggableRightEdge = draggablePlatform.position.x + draggablePlatform.model.effectiveWidth / 2
                 gap = targetLeftEdge - draggableRightEdge
-                snappedX = targetLeftEdge - draggablePlatform.model.size.width / 2
+                snappedX = targetLeftEdge - draggablePlatform.model.effectiveWidth / 2
             }
 
             guard gap >= 0, gap <= snapThreshold else { continue }

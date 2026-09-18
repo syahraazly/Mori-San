@@ -7,6 +7,7 @@ final class GameViewModel {
     private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
+    private(set) var dynamicConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
     private(set) var hasCollectedPetal = false
     private(set) var moriPlatformID: String
@@ -35,19 +36,27 @@ final class GameViewModel {
 
     @discardableResult
     func connect(_ firstPlatformID: String, to secondPlatformID: String) -> Bool {
-        if connections.contains(where: {
+        let newConnection = ConnectionModel(
+            firstPlatformID: firstPlatformID,
+            secondPlatformID: secondPlatformID
+        )
+
+        if dynamicConnections.contains(where: {
             ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
                 || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
         }) {
             return false
         }
 
-        connections = [
-            ConnectionModel(
-                firstPlatformID: firstPlatformID,
-                secondPlatformID: secondPlatformID
-            )
-        ]
+        dynamicConnections.append(newConnection)
+
+        if !connections.contains(where: {
+            ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
+                || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
+        }) {
+            connections.append(newConnection)
+        }
+
         return true
     }
 
@@ -109,7 +118,16 @@ final class GameViewModel {
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
-        connections = currentLevel.initialConnections + newConnections
+        var allConnections = currentLevel.initialConnections
+        for newConn in newConnections {
+            if !allConnections.contains(where: {
+                ($0.firstPlatformID == newConn.firstPlatformID && $0.secondPlatformID == newConn.secondPlatformID)
+                    || ($0.firstPlatformID == newConn.secondPlatformID && $0.secondPlatformID == newConn.firstPlatformID)
+            }) {
+                allConnections.append(newConn)
+            }
+        }
+        connections = allConnections
     }
 
     func moveMori(to platformID: String) {
@@ -123,6 +141,7 @@ final class GameViewModel {
     func loadLevel(_ configuration: LevelConfiguration) {
         currentLevel = configuration
         connections = []
+        dynamicConnections = []
         hasReachedExit = false
         hasCollectedPetal = false
         moriPlatformID = currentLevel.player.startingPlatformID

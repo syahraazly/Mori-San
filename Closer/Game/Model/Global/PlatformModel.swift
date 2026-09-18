@@ -21,9 +21,9 @@ enum BlockShape: String, Equatable {
         case .horizontal1x3:
             return [GridOffset(dx: 0, dy: 0), GridOffset(dx: 1, dy: 0), GridOffset(dx: 2, dy: 0)]
         case .lShape:
-            return [GridOffset(dx: 0, dy: 0), GridOffset(dx: 1, dy: 0), GridOffset(dx: 0, dy: 1)]
+            return [GridOffset(dx: 0, dy: 0), GridOffset(dx: 1, dy: 0), GridOffset(dx: 2, dy: 0), GridOffset(dx: 0, dy: 1)]
         case .reverseLShape:
-            return [GridOffset(dx: 0, dy: 0), GridOffset(dx: 1, dy: 0), GridOffset(dx: 1, dy: 1)]
+            return [GridOffset(dx: 0, dy: 0), GridOffset(dx: 1, dy: 0), GridOffset(dx: 2, dy: 0), GridOffset(dx: 2, dy: 1)]
         }
     }
 }
@@ -56,5 +56,23 @@ struct PlatformModel {
         self.frontPosition = frontPosition
         self.sidePosition = sidePosition
         self.shape = shape
+    }
+
+    var effectiveWidth: CGFloat {
+        if shape == .single1x1 {
+            return size.width
+        }
+        let minDx = shape.occupiedCells.map { $0.dx }.min() ?? 0
+        let maxDx = shape.occupiedCells.map { $0.dx }.max() ?? 0
+        return CGFloat(maxDx - minDx + 1) * 44.0
+    }
+
+    var effectiveHeight: CGFloat {
+        if shape == .single1x1 {
+            return size.height
+        }
+        let minDy = shape.occupiedCells.map { $0.dy }.min() ?? 0
+        let maxDy = shape.occupiedCells.map { $0.dy }.max() ?? 0
+        return CGFloat(maxDy - minDy + 1) * 44.0
     }
 }
