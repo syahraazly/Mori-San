@@ -10,6 +10,7 @@ final class GameScene: SKScene {
     private var didDragPlatform = false
     private var moriNode: PlayerNode?
     private var exitNode: ExitNode?
+    private var petalNode: PetalNode?
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
@@ -93,6 +94,7 @@ final class GameScene: SKScene {
         draggedPlatform = nil
         moriNode = nil
         exitNode = nil
+        petalNode = nil
 
         let level = viewModel.currentLevel
         for platform in level.platforms {
@@ -108,6 +110,15 @@ final class GameScene: SKScene {
             updatePerspectiveConnections()
         }
 
+        // Add Petal if level defines one
+        if let petalConfig = level.petalConfiguration {
+            let petal = PetalNode(platformID: petalConfig.platformID)
+            petal.position = petalConfig.offset
+            petal.zPosition = 10
+            platformNodes[petalConfig.platformID]?.addChild(petal)
+            petalNode = petal
+        }
+
         guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }) else { return }
 
         let mori = PlayerNode(player: level.player)
@@ -120,21 +131,20 @@ final class GameScene: SKScene {
         moriNode = mori
 
         let exitPlatformID = resolvedExitPlatformID(for: level)
-        guard level.interaction != .perspective,
-              let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) else {
-            return
+        if level.interaction != .perspective,
+           let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) {
+            let exit = ExitNode()
+            exit.position = level.exitConfiguration?.offset ?? CGPoint(x: 45, y: 55)
+            exit.zPosition = 10
+            exit.setLocked(viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal)
+            platformNodes[exitPlatform.id]?.addChild(exit)
+            exitNode = exit
         }
 
-        let exit = ExitNode()
-        exit.position = level.exitConfiguration?.offset ?? CGPoint(x: 45, y: 55)
-        exit.zPosition = 10
-        platformNodes[exitPlatform.id]?.addChild(exit)
-        exitNode = exit
+        createInstructionLabel()
+        updateInstruction()
 
-        if level.interaction == .compact {
-            createInstructionLabel()
-            updateInstruction()
-        }
+        checkPetalCollection(at: level.player.startingPlatformID)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -190,6 +200,38 @@ final class GameScene: SKScene {
         }
 
         let touchLocation = touch.location(in: self)
+        let exitPlatformID = resolvedExitPlatformID(for: viewModel.currentLevel)
+
+        // Exit touched
+        if exitNode(at: touchLocation) != nil {
+            if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
+                exitNode?.playShake()
+                showPetalRequiredNotice()
+                return
+            }
+
+            if viewModel.moriPlatformID == exitPlatformID {
+                enterExit()
+                return
+            }
+
+            if viewModel.canMoveMori(to: exitPlatformID) {
+                moveMori(to: exitPlatformID, completesLevel: true)
+            }
+            return
+        }
+
+        // Petal touched
+        if let touchedPetal = petalNode(at: touchLocation) {
+            if viewModel.canMoveMori(to: touchedPetal.platformID) {
+                if viewModel.currentLevel.usesPerspective {
+                    moveMoriAcrossPerspectivePath(to: touchedPetal.platformID)
+                } else {
+                    moveMori(to: touchedPetal.platformID, completesLevel: false)
+                }
+                return
+            }
+        }
 
         if viewModel.currentLevel.interaction == .perspective {
             if let platform = platformNode(at: touchLocation) {
@@ -199,6 +241,7 @@ final class GameScene: SKScene {
 
             if platformNode(at: touchLocation) == nil,
                exitNode(at: touchLocation) == nil,
+               petalNode(at: touchLocation) == nil,
                playerNode(at: touchLocation) == nil {
                 perspectiveSwipeStart = touchLocation
             }
@@ -206,11 +249,6 @@ final class GameScene: SKScene {
         }
 
         if viewModel.currentLevel.interaction == .perspectiveCompact {
-            if exitNode(at: touchLocation) != nil {
-                moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
-                return
-            }
-
             if let platform = platformNode(at: touchLocation) {
                 if viewModel.canMoveMori(to: platform.model.id) {
                     moveMoriAcrossPerspectivePath(to: platform.model.id)
@@ -225,27 +263,25 @@ final class GameScene: SKScene {
                 return
             }
 
-            if playerNode(at: touchLocation) == nil {
+            if playerNode(at: touchLocation) == nil,
+               petalNode(at: touchLocation) == nil {
                 perspectiveSwipeStart = touchLocation
             }
             return
         }
 
-        if exitNode(at: touchLocation) != nil {
-            moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
-            return
-        }
-
-        guard let platform = platformNode(at: touchLocation), platform.model.isDraggable else { return }
+        guard let platform = platformNode(at: touchLocation) else { return }
 
         if viewModel.canMoveMori(to: platform.model.id) {
             moveMori(to: platform.model.id, completesLevel: false)
             return
         }
 
+        guard platform.model.isDraggable else { return }
+
         guard !viewModel.isConnected
                 || (platform.model.remainsDraggableWhenConnected
-                    && !viewModel.areConnected(platform.model.id, resolvedExitPlatformID(for: viewModel.currentLevel))) else {
+                    && !viewModel.areConnected(platform.model.id, exitPlatformID)) else {
             return
         }
 
@@ -365,6 +401,10 @@ final class GameScene: SKScene {
             if viewModel.moriPlatformID == platform.id {
                 let moriDestination = CGPoint(x: destination.x, y: destination.y + 55)
                 moriNode?.removeAction(forKey: "perspectiveMove")
+                let dx = moriDestination.x - (moriNode?.position.x ?? moriDestination.x)
+                if abs(dx) > 1 {
+                    moriNode?.setFacing(right: dx > 0)
+                }
                 moriNode?.run(
                     SKAction.move(to: moriDestination, duration: 0.35),
                     withKey: "perspectiveMove"
@@ -411,17 +451,86 @@ final class GameScene: SKScene {
             return
         }
 
-        let actions = path.dropFirst().compactMap { nextPlatformID -> SKAction? in
-            guard let platform = platformNodes[nextPlatformID] else { return nil }
+        var previousPosition = moriNode.position
+        var actions: [SKAction] = []
+
+        for nextPlatformID in path.dropFirst() {
+            guard let platform = platformNodes[nextPlatformID] else { return }
             let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
-            return SKAction.move(to: destination, duration: 0.35)
+            let start = previousPosition
+
+            let stepAction = SKAction.run { [weak moriNode] in
+                let dx = destination.x - start.x
+                if abs(dx) > 1 {
+                    moriNode?.playWalk(facingRight: dx > 0)
+                } else {
+                    moriNode?.playWalk()
+                }
+            }
+            actions.append(stepAction)
+            actions.append(movementAction(from: previousPosition, to: destination))
+
+            let stepArrival = SKAction.run { [weak self] in
+                self?.viewModel.moveMori(to: nextPlatformID)
+                self?.checkPetalCollection(at: nextPlatformID)
+            }
+            actions.append(stepArrival)
+            previousPosition = destination
         }
 
         guard !actions.isEmpty else { return }
 
-        moriNode.run(SKAction.sequence(actions)) { [weak self] in
-            self?.viewModel.moveMori(to: platformID)
+        actions.append(SKAction.run { [weak self, weak moriNode] in
+            moriNode?.playIdle()
+            self?.updateInstruction()
+        })
+
+        moriNode.run(SKAction.sequence(actions), withKey: "moriMove")
+    }
+
+    private func checkPetalCollection(at platformID: String) {
+        guard let petal = petalNode,
+              !petal.isCollected,
+              platformID == petal.platformID else { return }
+
+        viewModel.collectPetal()
+        HapticManager.playSnapFeedback()
+        petal.collect { [weak self] in
+            self?.petalNode = nil
         }
+        exitNode?.unlockWithAnimation()
+        updateInstruction()
+    }
+
+    private func showPetalRequiredNotice() {
+        instructionLabel?.text = "Ambil kelopak bunga terlebih dahulu!"
+        let pulseRed = SKAction.sequence([
+            SKAction.run { [weak self] in
+                self?.instructionLabel?.fontColor = SKColor(red: 0.85, green: 0.35, blue: 0.30, alpha: 1.0)
+            },
+            SKAction.scale(to: 1.08, duration: 0.1),
+            SKAction.scale(to: 1.0, duration: 0.1),
+            SKAction.wait(forDuration: 1.2),
+            SKAction.run { [weak self] in
+                self?.instructionLabel?.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
+                self?.updateInstruction()
+            }
+        ])
+        instructionLabel?.removeAction(forKey: "noticePulse")
+        instructionLabel?.run(pulseRed, withKey: "noticePulse")
+    }
+
+    private func petalNode(at location: CGPoint) -> PetalNode? {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if let petal = node as? PetalNode {
+                return petal
+            }
+            touchedNode = node.parent
+        }
+
+        return nil
     }
 
     private func platformNode(at location: CGPoint) -> PlatformNode? {
@@ -471,8 +580,8 @@ final class GameScene: SKScene {
         platformNodes.values.contains { platform in
             let horizontalDistance = abs(mori.position.x - platform.position.x)
             let verticalDistance = abs(mori.position.y - (platform.position.y + 55))
-            return horizontalDistance <= platform.model.size.width / 2 + 18
-                && verticalDistance <= 12
+            return horizontalDistance <= platform.model.size.width / 2 + 22
+                && verticalDistance <= 14
         }
     }
 
@@ -491,10 +600,38 @@ final class GameScene: SKScene {
         }
     }
 
+    private func enterExit() {
+        guard let moriNode, !viewModel.hasReachedExit else { return }
+        viewModel.markExitReached()
+        print("Mori reached the exit")
+
+        if let exitNode {
+            let exitCenter = exitNode.convert(CGPoint.zero, to: self)
+            let moveToCenter = SKAction.move(to: exitCenter, duration: 0.18)
+            let shrink = SKAction.scale(to: 0.1, duration: 0.3)
+            let spin = SKAction.rotate(byAngle: .pi * 2, duration: 0.3)
+            let fade = SKAction.fadeOut(withDuration: 0.3)
+            let group = SKAction.group([shrink, spin, fade])
+            let enterAnim = SKAction.sequence([moveToCenter, group])
+            HapticManager.playSnapFeedback()
+            moriNode.run(enterAnim) { [weak self] in
+                guard let self else { return }
+                self.appFlow.completeLevel(self.viewModel.currentLevel.id)
+            }
+        } else {
+            appFlow.completeLevel(viewModel.currentLevel.id)
+        }
+    }
+
     private func moveMori(to platformID: String, completesLevel: Bool) {
+        guard let moriNode, moriNode.action(forKey: "moriMove") == nil else { return }
+
+        if completesLevel && viewModel.moriPlatformID == platformID {
+            enterExit()
+            return
+        }
+
         guard viewModel.canMoveMori(to: platformID),
-              let moriNode,
-              moriNode.action(forKey: "moriMove") == nil,
               let path = viewModel.connectionPath(from: viewModel.moriPlatformID, to: platformID) else {
             return
         }
@@ -505,28 +642,51 @@ final class GameScene: SKScene {
         for nextPlatformID in path.dropFirst() {
             guard let platform = platformNodes[nextPlatformID] else { return }
             let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            let start = previousPosition
+
+            let faceAction = SKAction.run { [weak moriNode] in
+                let dx = destination.x - start.x
+                if abs(dx) > 1 {
+                    moriNode?.playWalk(facingRight: dx > 0)
+                } else {
+                    moriNode?.playWalk()
+                }
+            }
+            movementActions.append(faceAction)
             movementActions.append(movementAction(from: previousPosition, to: destination))
+
+            let stepArrival = SKAction.run { [weak self] in
+                self?.viewModel.moveMori(to: nextPlatformID)
+                self?.checkPetalCollection(at: nextPlatformID)
+            }
+            movementActions.append(stepArrival)
             previousPosition = destination
         }
 
         if completesLevel, let exitNode {
             let exitDestination = exitNode.convert(CGPoint.zero, to: self)
+            let start = previousPosition
+            let faceAction = SKAction.run { [weak moriNode] in
+                let dx = exitDestination.x - start.x
+                if abs(dx) > 1 {
+                    moriNode?.playWalk(facingRight: dx > 0)
+                } else {
+                    moriNode?.playWalk()
+                }
+            }
+            movementActions.append(faceAction)
             movementActions.append(movementAction(from: previousPosition, to: exitDestination))
+            movementActions.append(SKAction.run { [weak self] in
+                self?.enterExit()
+            })
+        } else {
+            movementActions.append(SKAction.run { [weak self, weak moriNode] in
+                moriNode?.playIdle()
+                self?.updateInstruction()
+            })
         }
 
         guard !movementActions.isEmpty else { return }
-
-        movementActions.append(SKAction.run { [weak self] in
-            self?.viewModel.moveMori(to: platformID)
-
-            if completesLevel {
-                self?.viewModel.markExitReached()
-                print("Mori reached the exit")
-                self?.appFlow.completeLevel(self?.viewModel.currentLevel.id ?? platformID)
-            } else {
-                self?.updateInstruction()
-            }
-        })
         moriNode.run(SKAction.sequence(movementActions), withKey: "moriMove")
     }
 
@@ -608,7 +768,20 @@ final class GameScene: SKScene {
 
     private func updateInstruction() {
         let level = viewModel.currentLevel
-        guard let draggablePlatform = level.platforms.first(where: { $0.isDraggable }) else { return }
+
+        if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
+            instructionLabel?.text = "Ambil kelopak bunga Forget-me-not"
+            return
+        }
+
+        if viewModel.hasPetalToCollect && viewModel.hasCollectedPetal {
+            instructionLabel?.text = "Tap black hole untuk keluar"
+            return
+        }
+
+        guard let draggablePlatform = level.platforms.first(where: { $0.isDraggable }) else {
+            return
+        }
 
         if !viewModel.isConnected {
             instructionLabel?.text = "Drag Platform B to connect the path"

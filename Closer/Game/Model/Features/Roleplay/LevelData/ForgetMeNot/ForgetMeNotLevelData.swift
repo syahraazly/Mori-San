@@ -37,7 +37,8 @@ enum ForgetMeNotLevelData {
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
         exitPlatformID: "platformC",
         platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55))
+        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48))
     )
 
     static let level1_2 = GameLevel(
@@ -85,7 +86,8 @@ enum ForgetMeNotLevelData {
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
         exitPlatformID: "platformD",
         platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55))
+        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
     )
 
     static let level1_3 = GameLevel(
@@ -118,7 +120,7 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.33),
-                sidePosition: CGPoint(x: 0.75, y: 0.60)
+                sidePosition: CGPoint(x: 0.62, y: 0.15)
             ),
             PlatformModel(
                 id: "platformBridge",
@@ -142,7 +144,8 @@ enum ForgetMeNotLevelData {
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
         exitPlatformID: "platformD",
         platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55))
+        exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
     )
 
     static let level1_4 = GameLevel(
@@ -199,7 +202,8 @@ enum ForgetMeNotLevelData {
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
         exitPlatformID: "platformE",
         platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55))
+        exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
     )
 
     static let level1_5 = GameLevel(
@@ -265,7 +269,8 @@ enum ForgetMeNotLevelData {
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
         exitPlatformID: "platformExit",
         platformHeightRatio: 0.35,
-        exitConfiguration: ExitConfiguration(platformID: "platformExit", offset: CGPoint(x: 0, y: 55))
+        exitConfiguration: ExitConfiguration(platformID: "platformExit", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
     )
 
     static let goal = FlowerGoal(
