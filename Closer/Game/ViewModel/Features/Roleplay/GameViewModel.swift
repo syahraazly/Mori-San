@@ -8,6 +8,7 @@ final class GameViewModel {
 
     private(set) var connections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
+    private(set) var hasCollectedPetal = false
     private(set) var moriPlatformID: String
     private(set) var perspectivePOV: PerspectivePOV = .front
 
@@ -18,6 +19,18 @@ final class GameViewModel {
 
     var isConnected: Bool {
         !connections.isEmpty
+    }
+
+    var hasPetalToCollect: Bool {
+        currentLevel.petalConfiguration != nil
+    }
+
+    var isExitUnlocked: Bool {
+        !hasPetalToCollect || hasCollectedPetal
+    }
+
+    func collectPetal() {
+        hasCollectedPetal = true
     }
 
     @discardableResult
@@ -129,6 +142,7 @@ final class GameViewModel {
         currentLevel = configuration
         connections = []
         hasReachedExit = false
+        hasCollectedPetal = false
         moriPlatformID = currentLevel.player.startingPlatformID
         perspectivePOV = .front
     }

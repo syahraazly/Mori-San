@@ -28,6 +28,22 @@ struct ExitConfiguration {
     let offset: CGPoint
 }
 
+struct PetalConfiguration {
+    let platformID: String
+    let offset: CGPoint
+    let assetName: String?
+
+    init(
+        platformID: String,
+        offset: CGPoint = CGPoint(x: 0, y: 48),
+        assetName: String? = nil
+    ) {
+        self.platformID = platformID
+        self.offset = offset
+        self.assetName = assetName
+    }
+}
+
 struct PortalDestination {
     let platformID: String
     let offset: CGPoint
@@ -76,6 +92,7 @@ struct GameLevel {
     let snapRules: [SnapRule]
     let initialConnections: [ConnectionModel]
     let exitConfiguration: ExitConfiguration?
+    let petalConfiguration: PetalConfiguration?
     let portals: [PortalConfiguration]
     let backgroundAssetName: String?
     let movementMode: MoriMovementMode
@@ -92,6 +109,7 @@ struct GameLevel {
         snapRules: [SnapRule] = [],
         initialConnections: [ConnectionModel] = [],
         exitConfiguration: ExitConfiguration? = nil,
+        petalConfiguration: PetalConfiguration? = nil,
         portals: [PortalConfiguration] = [],
         backgroundAssetName: String? = nil,
         movementMode: MoriMovementMode = .pathfinding,
@@ -107,6 +125,7 @@ struct GameLevel {
         self.snapRules = snapRules
         self.initialConnections = initialConnections
         self.exitConfiguration = exitConfiguration
+        self.petalConfiguration = petalConfiguration
         self.portals = portals
         self.backgroundAssetName = backgroundAssetName
         self.movementMode = movementMode

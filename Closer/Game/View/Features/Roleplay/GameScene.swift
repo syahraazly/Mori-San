@@ -10,6 +10,9 @@ final class GameScene: SKScene {
     private var didDragPlatform = false
     private var moriNode: PlayerNode?
     private var portalNodes: [String: ExitNode] = [:]
+    private var petalNode: PetalNode?
+    private var chapterProgressLabel: SKLabelNode?
+    private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
@@ -70,6 +73,7 @@ final class GameScene: SKScene {
         let goalDetailView = GoalDetailView(
             sceneSize: size,
             goal: goal,
+            progress: appFlow.progress,
             isPlayable: { [weak self] levelID in
                 self?.appFlow.isLevelUnlocked(levelID) ?? false
             }
@@ -109,9 +113,14 @@ final class GameScene: SKScene {
         portalNodes.removeAll()
         draggedPlatform = nil
         moriNode = nil
+        petalNode = nil
+        chapterProgressLabel = nil
+        chapterProgressGoal = nil
 
         let level = viewModel.currentLevel
         addBackground(for: level)
+        createLevelBackButton()
+        createChapterProgressHUD(for: level)
         for platform in level.platforms {
             let node = PlatformNode(model: platform)
             node.position = position(for: platform)
@@ -123,6 +132,18 @@ final class GameScene: SKScene {
 
         if level.usesPerspective, level.usesProximityConnections {
             updatePerspectiveConnections()
+        }
+
+        if let petal = level.petalConfiguration,
+           let platform = platformNodes[petal.platformID] {
+            let node = PetalNode(
+                platformID: petal.platformID,
+                assetName: petal.assetName ?? petalAssetName(for: level)
+            )
+            node.position = petal.offset
+            node.zPosition = 10
+            platform.addChild(node)
+            petalNode = node
         }
 
         guard let startPlatform = level.platforms.first(where: { $0.id == level.player.startingPlatformID }) else { return }
@@ -177,6 +198,11 @@ final class GameScene: SKScene {
         var touchedNode: SKNode? = atPoint(location)
 
         while let node = touchedNode {
+            if node.name == "back-to-map" {
+                appFlow.openMap()
+                return
+            }
+
             if let name = node.name, name.hasPrefix("level-") {
                 let levelID = String(name.dropFirst("level-".count))
                 appFlow.startLevel(levelID)
@@ -192,6 +218,11 @@ final class GameScene: SKScene {
         }
 
         let touchLocation = touch.location(in: self)
+
+        if isLevelBackButton(at: touchLocation) {
+            returnToLevelChapter()
+            return
+        }
 
         if let portal = portalConfiguration(at: touchLocation) {
             enter(portal: portal)
@@ -539,6 +570,7 @@ final class GameScene: SKScene {
         moriNode.playWalkAnimation()
         moriNode.run(SKAction.sequence(actions)) { [weak self] in
             self?.viewModel.moveMori(to: platformID)
+            self?.checkPetalCollection(at: platformID)
             self?.moriNode?.playIdleAnimation()
         }
     }
@@ -582,6 +614,76 @@ final class GameScene: SKScene {
         return nil
     }
 
+    private func createLevelBackButton() {
+        let button = SKShapeNode(rectOf: CGSize(width: 118, height: 42), cornerRadius: 14)
+        button.name = "back-to-chapter"
+        button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.92)
+        button.strokeColor = .white.withAlphaComponent(0.35)
+        button.lineWidth = 2
+        button.position = CGPoint(x: 74, y: size.height - 42)
+        button.zPosition = 100
+        addChild(button)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "‹ Chapter"
+        label.fontSize = 16
+        label.verticalAlignmentMode = .center
+        label.fontColor = .white
+        button.addChild(label)
+    }
+
+    private func createChapterProgressHUD(for level: LevelConfiguration) {
+        guard let goalID = LevelCatalog.goalID(for: level.id),
+              let goal = FlowerGoalData.goal(for: goalID) else {
+            return
+        }
+
+        let hud = SKShapeNode(rectOf: CGSize(width: 108, height: 42), cornerRadius: 14)
+        hud.fillColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 0.82)
+        hud.strokeColor = .white.withAlphaComponent(0.35)
+        hud.lineWidth = 2
+        hud.position = CGPoint(x: size.width - 64, y: size.height - 42)
+        hud.zPosition = 100
+        addChild(hud)
+
+        let petal = SKSpriteNode(imageNamed: goal.petalAssetName)
+        petal.size = CGSize(width: 28, height: 22)
+        petal.position = CGPoint(x: -30, y: 0)
+        hud.addChild(petal)
+
+        let count = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        count.text = "\(appFlow.progress.petalCount(for: goal))/\(goal.totalPetals)"
+        count.fontSize = 16
+        count.horizontalAlignmentMode = .left
+        count.verticalAlignmentMode = .center
+        count.fontColor = .white
+        count.position = CGPoint(x: -10, y: 0)
+        hud.addChild(count)
+        chapterProgressLabel = count
+        chapterProgressGoal = goal
+    }
+
+    private func isLevelBackButton(at location: CGPoint) -> Bool {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if node.name == "back-to-chapter" {
+                return true
+            }
+            touchedNode = node.parent
+        }
+
+        return false
+    }
+
+    private func returnToLevelChapter() {
+        if let goalID = LevelCatalog.goalID(for: viewModel.currentLevel.id) {
+            appFlow.openGoal(goalID)
+        } else {
+            appFlow.openMap()
+        }
+    }
+
     private func isMoriSupported(_ mori: PlayerNode) -> Bool {
         platformNodes.values.contains { platform in
             guard platform.model.isWalkable else { return false }
@@ -609,6 +711,10 @@ final class GameScene: SKScene {
     }
 
     private func enter(portal: PortalConfiguration) {
+        if case .completesLevel = portal.outcome,
+           !viewModel.isExitUnlocked {
+            return
+        }
         moveMori(to: portal.platformID, entering: portal)
     }
 
@@ -641,6 +747,7 @@ final class GameScene: SKScene {
         moriNode.playWalkAnimation()
         movementActions.append(SKAction.run { [weak self] in
             self?.viewModel.moveMori(to: platformID)
+            self?.checkPetalCollection(at: platformID)
 
             if let portal {
                 self?.handlePortalOutcome(portal)
@@ -673,6 +780,7 @@ final class GameScene: SKScene {
                 .fadeIn(withDuration: 0.12),
                 .run { [weak self] in
                     self?.viewModel.moveMori(to: destination.platformID)
+                    self?.checkPetalCollection(at: destination.platformID)
                     self?.moriNode?.playIdleAnimation()
                 }
             ])
@@ -689,6 +797,39 @@ final class GameScene: SKScene {
             },
             .move(to: destination, duration: duration)
         ])
+    }
+
+    private func checkPetalCollection(at platformID: String) {
+        guard let petalNode,
+              !petalNode.isCollected,
+              petalNode.platformID == platformID else {
+            return
+        }
+
+        viewModel.collectPetal()
+        appFlow.claimPetal(for: viewModel.currentLevel.id)
+        updateChapterProgressHUD()
+        HapticManager.playSnapFeedback()
+        petalNode.collect { [weak self] in
+            self?.petalNode = nil
+        }
+    }
+
+    private func petalAssetName(for level: LevelConfiguration) -> String {
+        guard let goalID = LevelCatalog.goalID(for: level.id),
+              let goal = FlowerGoalData.goal(for: goalID) else {
+            return "forget-me-not-petal"
+        }
+        return goal.petalAssetName
+    }
+
+    private func updateChapterProgressHUD() {
+        guard let chapterProgressLabel,
+              let chapterProgressGoal else {
+            return
+        }
+
+        chapterProgressLabel.text = "\(appFlow.progress.petalCount(for: chapterProgressGoal))/\(chapterProgressGoal.totalPetals)"
     }
 
     private func showLevelComplete() {

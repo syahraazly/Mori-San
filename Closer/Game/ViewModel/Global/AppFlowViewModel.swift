@@ -51,6 +51,10 @@ final class AppFlowViewModel: ObservableObject {
         }
     }
 
+    func claimPetal(for levelID: LevelID) {
+        progress.claimPetal(for: levelID)
+    }
+
     func isLevelUnlocked(_ levelID: LevelID) -> Bool {
         guard LevelCatalog.configuration(for: levelID) != nil else { return false }
 

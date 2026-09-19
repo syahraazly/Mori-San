@@ -14,7 +14,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.10, y: 0.70),
                 sidePosition: CGPoint(x: 0.10, y: 0.67),
-                assetName: "stone1x1"
+                assetName: "stone1x1",
+                shape: .single1x1
             ),
             PlatformModel(
                 id: "pathA",
@@ -24,7 +25,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.28, y: 0.70),
                 sidePosition: CGPoint(x: 0.28, y: 0.67),
-                assetName: "stone2x1"
+                assetName: "stone2x1",
+                shape: .horizontal1x2
             ),
             PlatformModel(
                 id: "junctionB",
@@ -34,7 +36,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.52, y: 0.70),
                 sidePosition: CGPoint(x: 0.52, y: 0.67),
-                assetName: "stone2x1"
+                assetName: "stone2x1",
+                shape: .horizontal1x2
             ),
             PlatformModel(
                 id: "reverseLStone",
@@ -47,7 +50,8 @@ enum BalineseFrangipaniLevelData {
                 assetName: "stone2x3",
                 visualSize: CGSize(width: 132, height: 96),
                 walkableSurfaceOffset: CGPoint(x: 0, y: -2),
-                blockedConnectionEdges: [.right]
+                blockedConnectionEdges: [.right],
+                shape: .reverseLShape
             ),
             PlatformModel(
                 id: "falsePortalPlatform",
@@ -57,7 +61,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.52, y: 0.50),
                 sidePosition: CGPoint(x: 0.76, y: 0.67),
-                assetName: "stone2x1"
+                assetName: "stone2x1",
+                shape: .horizontal1x2
             ),
             PlatformModel(
                 id: "junctionE",
@@ -67,7 +72,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.15, y: 0.18),
                 sidePosition: CGPoint(x: 0.15, y: 0.26),
-                assetName: "stone2x1"
+                assetName: "stone2x1",
+                shape: .horizontal1x2
             ),
             PlatformModel(
                 id: "lStone",
@@ -80,7 +86,8 @@ enum BalineseFrangipaniLevelData {
                 assetName: "stone3x2",
                 visualSize: CGSize(width: 132, height: 96),
                 walkableSurfaceOffset: CGPoint(x: 0, y: -2),
-                blockedConnectionEdges: [.right]
+                blockedConnectionEdges: [.right],
+                shape: .lShape
             ),
             PlatformModel(
                 id: "pathF",
@@ -90,7 +97,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.44, y: 0.18),
                 sidePosition: CGPoint(x: 0.44, y: 0.11),
-                assetName: "stone3x1"
+                assetName: "stone3x1",
+                shape: .horizontal1x3
             ),
             PlatformModel(
                 id: "pathG",
@@ -100,7 +108,8 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.74, y: 0.18),
                 sidePosition: CGPoint(x: 0.74, y: 0.11),
-                assetName: "stone2x1"
+                assetName: "stone2x1",
+                shape: .horizontal1x2
             ),
             PlatformModel(
                 id: "correctPortalPlatform",
@@ -110,13 +119,19 @@ enum BalineseFrangipaniLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.92, y: 0.18),
                 sidePosition: CGPoint(x: 0.92, y: 0.11),
-                assetName: "stone1x1"
+                assetName: "stone1x1",
+                shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "start"),
         exitPlatformID: "",
         platformHeightRatio: 0.35,
         initialConnections: [],
+        petalConfiguration: PetalConfiguration(
+            platformID: "pathG",
+            offset: CGPoint(x: 0, y: 48),
+            assetName: "kamboja-bali-petal"
+        ),
         portals: [
             PortalConfiguration(
                 id: "loopPortal",
