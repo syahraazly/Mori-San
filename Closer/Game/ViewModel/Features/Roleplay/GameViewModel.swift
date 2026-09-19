@@ -43,7 +43,16 @@ final class GameViewModel {
               platformID != moriPlatformID,
               isWalkable(platformID) else { return false }
 
-        return connectionPath(from: moriPlatformID, to: platformID) != nil
+        guard let path = connectionPath(from: moriPlatformID, to: platformID) else {
+            return false
+        }
+
+        switch currentLevel.movementMode {
+        case .pathfinding:
+            return true
+        case .adjacentOnly:
+            return path.count == 2
+        }
     }
 
     func areConnected(_ firstPlatformID: String, _ secondPlatformID: String) -> Bool {

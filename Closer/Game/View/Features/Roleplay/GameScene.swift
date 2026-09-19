@@ -119,9 +119,9 @@ final class GameScene: SKScene {
             platformNodes[platform.id] = node
         }
 
-        viewModel.setConnections(level.initialConnections)
+        viewModel.setConnections(allowedConnections(from: level.initialConnections))
 
-        if level.usesPerspective {
+        if level.usesPerspective, level.usesProximityConnections {
             updatePerspectiveConnections()
         }
 
@@ -129,9 +129,10 @@ final class GameScene: SKScene {
 
         let mori = PlayerNode(player: level.player)
         let startPosition = position(for: startPlatform)
-        mori.position = CGPoint(
-            x: startPosition.x + level.player.startingOffset.x,
-            y: startPosition.y + 55 + level.player.startingOffset.y
+        mori.position = moriStandingPosition(
+            for: startPlatform,
+            at: startPosition,
+            offset: level.player.startingOffset
         )
         addChild(mori)
         moriNode = mori
@@ -140,7 +141,7 @@ final class GameScene: SKScene {
             guard let portalPlatform = platformNodes[portal.platformID] else { continue }
 
             let portalNode = ExitNode(portalID: portal.id)
-            portalNode.position = portal.offset
+            portalNode.position = portalPosition(for: portal, on: portalPlatform)
             portalNode.zPosition = 10
             portalPlatform.addChild(portalNode)
             portalNodes[portal.id] = portalNode
@@ -357,6 +358,99 @@ final class GameScene: SKScene {
         )
     }
 
+    private func moriStandingPosition(
+        for platform: PlatformModel,
+        at position: CGPoint,
+        offset: CGPoint = .zero
+    ) -> CGPoint {
+        CGPoint(
+            x: position.x + platform.walkableSurfaceOffset.x + offset.x,
+            y: position.y + platform.walkableSurfaceOffset.y + 33 + offset.y
+        )
+    }
+
+    private func moriStandingPosition(
+        on platform: PlatformNode,
+        offset: CGPoint = .zero
+    ) -> CGPoint {
+        moriStandingPosition(for: platform.model, at: platform.position, offset: offset)
+    }
+
+    private func walkableSurfacePosition(for platform: PlatformModel, at position: CGPoint) -> CGPoint {
+        CGPoint(
+            x: position.x + platform.walkableSurfaceOffset.x,
+            y: position.y + platform.walkableSurfaceOffset.y
+        )
+    }
+
+    private func walkableSurfacePosition(on platform: PlatformNode) -> CGPoint {
+        walkableSurfacePosition(for: platform.model, at: platform.position)
+    }
+
+    private func portalPosition(for portal: PortalConfiguration, on platform: PlatformNode) -> CGPoint {
+        switch portal.anchor {
+        case .platformCenter:
+            return portal.offset
+        case .walkableSurface:
+            return CGPoint(
+                x: platform.model.walkableSurfaceOffset.x + portal.offset.x,
+                y: platform.model.walkableSurfaceOffset.y + portal.offset.y
+            )
+        }
+    }
+
+    private func allowedConnections(from candidates: [ConnectionModel]) -> [ConnectionModel] {
+        candidates.filter { connection in
+            guard let firstPlatform = viewModel.currentLevel.platforms.first(where: {
+                $0.id == connection.firstPlatformID
+            }),
+            let secondPlatform = viewModel.currentLevel.platforms.first(where: {
+                $0.id == connection.secondPlatformID
+            }) else {
+                return false
+            }
+
+            return connectionIsAllowed(
+                between: firstPlatform,
+                at: position(for: firstPlatform),
+                and: secondPlatform,
+                at: position(for: secondPlatform)
+            )
+        }
+    }
+
+    private func connectionIsAllowed(
+        between first: PlatformModel,
+        at firstPosition: CGPoint,
+        and second: PlatformModel,
+        at secondPosition: CGPoint
+    ) -> Bool {
+        guard first.isWalkable, second.isWalkable else { return false }
+
+        let firstEdge: PlatformEdge
+        let secondEdge: PlatformEdge
+        if walkableSurfacePosition(for: first, at: firstPosition).x
+            <= walkableSurfacePosition(for: second, at: secondPosition).x {
+            firstEdge = .right
+            secondEdge = .left
+        } else {
+            firstEdge = .left
+            secondEdge = .right
+        }
+
+        return !first.blockedConnectionEdges.contains(firstEdge)
+            && !second.blockedConnectionEdges.contains(secondEdge)
+    }
+
+    private func connectionIsAllowed(between first: PlatformNode, and second: PlatformNode) -> Bool {
+        connectionIsAllowed(
+            between: first.model,
+            at: first.position,
+            and: second.model,
+            at: second.position
+        )
+    }
+
     private func animatePerspectiveChange() {
         viewModel.togglePerspectivePOV()
         updatePerspectiveConnections()
@@ -372,7 +466,7 @@ final class GameScene: SKScene {
             )
 
             if viewModel.moriPlatformID == platform.id {
-                let moriDestination = CGPoint(x: destination.x, y: destination.y + 55)
+                let moriDestination = moriStandingPosition(for: platform, at: destination)
                 moriNode?.removeAction(forKey: "perspectiveMove")
                 moriNode?.run(
                     SKAction.move(to: moriDestination, duration: 0.35),
@@ -383,6 +477,8 @@ final class GameScene: SKScene {
     }
 
     private func updatePerspectiveConnections() {
+        guard viewModel.currentLevel.usesProximityConnections else { return }
+
         let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
         let maximumGap: CGFloat = 10
@@ -392,8 +488,14 @@ final class GameScene: SKScene {
             for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
                 let firstPlatform = platforms[firstIndex]
                 let secondPlatform = platforms[secondIndex]
-                let firstPosition = position(for: firstPlatform)
-                let secondPosition = position(for: secondPlatform)
+                let firstPosition = walkableSurfacePosition(
+                    for: firstPlatform,
+                    at: position(for: firstPlatform)
+                )
+                let secondPosition = walkableSurfacePosition(
+                    for: secondPlatform,
+                    at: position(for: secondPlatform)
+                )
                 let horizontalDistance = abs(firstPosition.x - secondPosition.x)
                 let combinedHalfWidths = (firstPlatform.size.width + secondPlatform.size.width) / 2
                 let edgeGap = horizontalDistance - combinedHalfWidths
@@ -410,19 +512,22 @@ final class GameScene: SKScene {
             }
         }
 
-        viewModel.setPerspectiveConnections(newConnections)
+        viewModel.setConnections(
+            allowedConnections(from: viewModel.currentLevel.initialConnections + newConnections)
+        )
     }
 
     private func moveMoriAcrossPerspectivePath(to platformID: String) {
         guard let moriNode,
               !moriNode.hasActions(),
+              viewModel.canMoveMori(to: platformID),
               let path = viewModel.connectionPath(from: viewModel.moriPlatformID, to: platformID) else {
             return
         }
 
         let actions = path.dropFirst().compactMap { nextPlatformID -> SKAction? in
             guard let platform = platformNodes[nextPlatformID] else { return nil }
-            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            let destination = moriStandingPosition(on: platform)
             return SKAction.move(to: destination, duration: 0.35)
         }
 
@@ -477,8 +582,9 @@ final class GameScene: SKScene {
     private func isMoriSupported(_ mori: PlayerNode) -> Bool {
         platformNodes.values.contains { platform in
             guard platform.model.isWalkable else { return false }
-            let horizontalDistance = abs(mori.position.x - platform.position.x)
-            let verticalDistance = abs(mori.position.y - (platform.position.y + 55))
+            let standingPosition = moriStandingPosition(on: platform)
+            let horizontalDistance = abs(mori.position.x - standingPosition.x)
+            let verticalDistance = abs(mori.position.y - standingPosition.y)
             return horizontalDistance <= platform.model.size.width / 2 + 18
                 && verticalDistance <= 12
         }
@@ -517,7 +623,7 @@ final class GameScene: SKScene {
 
         for nextPlatformID in path.dropFirst() {
             guard let platform = platformNodes[nextPlatformID] else { return }
-            let destination = CGPoint(x: platform.position.x, y: platform.position.y + 55)
+            let destination = moriStandingPosition(on: platform)
             movementActions.append(movementAction(from: previousPosition, to: destination))
             previousPosition = destination
         }
@@ -554,9 +660,9 @@ final class GameScene: SKScene {
             guard let destinationPlatform = platformNodes[destination.platformID],
                   let moriNode else { return }
 
-            let targetPosition = CGPoint(
-                x: destinationPlatform.position.x + destination.offset.x,
-                y: destinationPlatform.position.y + 55 + destination.offset.y
+            let targetPosition = moriStandingPosition(
+                on: destinationPlatform,
+                offset: destination.offset
             )
             let loop = SKAction.sequence([
                 .fadeOut(withDuration: 0.12),
@@ -596,7 +702,10 @@ final class GameScene: SKScene {
         guard let snapTarget = snapTarget(for: platformB) else { return false }
         let snappedPosition = CGPoint(x: snapTarget.position.x, y: platformB.position.y)
 
-        guard viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else { return false }
+        guard connectionIsAllowed(between: snapTarget.platform, and: platformB),
+              viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else {
+            return false
+        }
 
         let move = SKAction.move(to: snappedPosition, duration: GameConstants.Snap.animationDuration)
         let bounce = SKAction.sequence([

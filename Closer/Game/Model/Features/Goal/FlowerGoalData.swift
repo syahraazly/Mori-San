@@ -21,7 +21,7 @@ enum FlowerGoalData {
     static let balineseFrangipani = FlowerGoal(
         id: "balinese-frangipani",
         title: "BALINESE FRANGIPANI",
-        levelIDs: []
+        levelIDs: ["balinese-1"]
     )
 
     static let goals = [forgetMeNot, whiteLily, balineseFrangipani]

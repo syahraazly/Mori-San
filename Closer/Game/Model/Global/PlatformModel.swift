@@ -5,6 +5,11 @@ enum PlatformRole {
     case obstacle
 }
 
+enum PlatformEdge: Hashable {
+    case left
+    case right
+}
+
 struct PlatformModel {
     let id: String
     let horizontalPosition: CGFloat
@@ -15,6 +20,9 @@ struct PlatformModel {
     let sidePosition: CGPoint?
     let role: PlatformRole
     let assetName: String?
+    let visualSize: CGSize?
+    let walkableSurfaceOffset: CGPoint
+    let blockedConnectionEdges: Set<PlatformEdge>
 
     init(
         id: String,
@@ -25,7 +33,10 @@ struct PlatformModel {
         frontPosition: CGPoint? = nil,
         sidePosition: CGPoint? = nil,
         role: PlatformRole = .walkable,
-        assetName: String? = nil
+        assetName: String? = nil,
+        visualSize: CGSize? = nil,
+        walkableSurfaceOffset: CGPoint? = nil,
+        blockedConnectionEdges: Set<PlatformEdge> = []
     ) {
         self.id = id
         self.horizontalPosition = horizontalPosition
@@ -36,6 +47,10 @@ struct PlatformModel {
         self.sidePosition = sidePosition
         self.role = role
         self.assetName = assetName
+        self.visualSize = visualSize
+        self.walkableSurfaceOffset = walkableSurfaceOffset
+            ?? CGPoint(x: 0, y: size.height / 2)
+        self.blockedConnectionEdges = blockedConnectionEdges
     }
 
     var isWalkable: Bool {

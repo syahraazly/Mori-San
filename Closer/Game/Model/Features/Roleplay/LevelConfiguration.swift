@@ -12,6 +12,11 @@ enum LevelInteraction {
     case perspectiveCompact
 }
 
+enum MoriMovementMode {
+    case pathfinding
+    case adjacentOnly
+}
+
 struct SnapRule {
     let draggablePlatformID: String
     let targetPlatformIDs: [String]
@@ -33,11 +38,31 @@ enum PortalOutcome {
     case loops(to: PortalDestination)
 }
 
+enum PortalAnchor {
+    case platformCenter
+    case walkableSurface
+}
+
 struct PortalConfiguration {
     let id: String
     let platformID: String
     let offset: CGPoint
     let outcome: PortalOutcome
+    let anchor: PortalAnchor
+
+    init(
+        id: String,
+        platformID: String,
+        offset: CGPoint,
+        outcome: PortalOutcome,
+        anchor: PortalAnchor = .platformCenter
+    ) {
+        self.id = id
+        self.platformID = platformID
+        self.offset = offset
+        self.outcome = outcome
+        self.anchor = anchor
+    }
 }
 
 struct GameLevel {
@@ -53,6 +78,8 @@ struct GameLevel {
     let exitConfiguration: ExitConfiguration?
     let portals: [PortalConfiguration]
     let backgroundAssetName: String?
+    let movementMode: MoriMovementMode
+    let usesProximityConnections: Bool
 
     init(
         id: LevelID,
@@ -66,7 +93,9 @@ struct GameLevel {
         initialConnections: [ConnectionModel] = [],
         exitConfiguration: ExitConfiguration? = nil,
         portals: [PortalConfiguration] = [],
-        backgroundAssetName: String? = nil
+        backgroundAssetName: String? = nil,
+        movementMode: MoriMovementMode = .pathfinding,
+        usesProximityConnections: Bool = true
     ) {
         self.id = id
         self.category = category
@@ -80,6 +109,8 @@ struct GameLevel {
         self.exitConfiguration = exitConfiguration
         self.portals = portals
         self.backgroundAssetName = backgroundAssetName
+        self.movementMode = movementMode
+        self.usesProximityConnections = usesProximityConnections
     }
 
     var usesPerspective: Bool {

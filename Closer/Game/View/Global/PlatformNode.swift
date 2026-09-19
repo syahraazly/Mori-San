@@ -14,17 +14,32 @@ final class PlatformNode: SKShapeNode {
             transform: nil
         )
         name = model.id
-        fillColor = model.isWalkable
+        fillColor = model.assetName == nil && model.isWalkable
             ? (model.isDraggable
                 ? SKColor(red: 0.86, green: 0.50, blue: 0.39, alpha: 1.0)
                 : SKColor(red: 0.78, green: 0.39, blue: 0.31, alpha: 1.0))
             : .clear
-        strokeColor = .white.withAlphaComponent(0.35)
+        strokeColor = model.assetName == nil ? .white.withAlphaComponent(0.35) : .clear
         lineWidth = 2
 
         if let assetName = model.assetName {
-            let asset = SKSpriteNode(imageNamed: assetName)
-            asset.size = model.size
+            let texture = SKTexture(imageNamed: assetName)
+            let asset = SKSpriteNode(texture: texture)
+            let textureSize = texture.size()
+            let visualBounds = model.visualSize ?? model.size
+
+            if textureSize.width > 0, textureSize.height > 0 {
+                let scale = min(
+                    visualBounds.width / textureSize.width,
+                    visualBounds.height / textureSize.height
+                )
+                asset.size = CGSize(
+                    width: textureSize.width * scale,
+                    height: textureSize.height * scale
+                )
+            } else {
+                asset.size = visualBounds
+            }
             addChild(asset)
         }
     }

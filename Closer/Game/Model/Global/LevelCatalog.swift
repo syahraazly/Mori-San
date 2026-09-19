@@ -1,5 +1,7 @@
 enum LevelCatalog {
-    static let configurations = TutorialLevelData.levels + ForgetMeNotLevelData.levels
+    static let configurations = TutorialLevelData.levels
+        + ForgetMeNotLevelData.levels
+        + BalineseFrangipaniLevelData.levels
 
     static func configuration(for levelID: LevelID) -> LevelConfiguration? {
         configurations.first { $0.id == levelID }

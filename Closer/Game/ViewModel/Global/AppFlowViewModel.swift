@@ -76,12 +76,7 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func isChapterUnlocked(_ chapterID: GoalID) -> Bool {
-        guard let chapterIndex = FlowerGoalData.goals.firstIndex(where: { $0.id == chapterID }) else {
-            return false
-        }
-
-        guard chapterIndex > 0 else { return true }
-        return isGoalCompleted(FlowerGoalData.goals[chapterIndex - 1].id)
+        FlowerGoalData.goal(for: chapterID) != nil
     }
 
     func isChapterCompleted(_ chapterID: GoalID) -> Bool {
