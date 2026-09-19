@@ -319,7 +319,7 @@ enum WhiteLilyLevelData {
                 id: "platformE",
                 horizontalPosition: 0.50,
                 size: CGSize(width: 42, height: 44),
-                isDraggable: true,
+                isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.72),
                 sidePosition: CGPoint(x: 0.64, y: 0.64),
@@ -363,74 +363,68 @@ enum WhiteLilyLevelData {
                     size: CGSize(width: 44, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.13, y: 0.40),
-                    sidePosition: CGPoint(x: 0.13, y: 0.40),
+                    frontPosition: CGPoint(x: 0.13, y: 0.50),
+                    sidePosition: CGPoint(x: 0.13, y: 0.24),
                     shape: .single1x1
                 ),
-                // B: lShape draggable — drag left to bridge A→C
                 PlatformModel(
                     id: "platformB",
                     horizontalPosition: 0.52,
                     size: CGSize(width: 92, height: 44),
                     isDraggable: true,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.52, y: 0.34),
-                    sidePosition: CGPoint(x: 0.52, y: 0.72),
+                    frontPosition: CGPoint(x: 0.24, y: 0.34),
+                    sidePosition: CGPoint(x: 0.24, y: 0.64),
                     shape: .lShape
                 ),
-                // C: static horizontal1x2 — intermediate hub in front view
                 PlatformModel(
                     id: "platformC",
                     horizontalPosition: 0.50,
                     size: CGSize(width: 92, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.50, y: 0.40),
-                    sidePosition: CGPoint(x: 0.50, y: 0.72),
-                    shape: .horizontal1x2
+                    frontPosition: CGPoint(x: 0.64, y: 0.67),
+                    sidePosition: CGPoint(x: 0.35, y: 0.24),
+                    shape: .reverseLShape
                 ),
-                // D: reverseLShape draggable — drag left to bridge C→E
                 PlatformModel(
                     id: "platformD",
                     horizontalPosition: 0.80,
                     size: CGSize(width: 92, height: 44),
                     isDraggable: true,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.80, y: 0.34),
-                    sidePosition: CGPoint(x: 0.80, y: 0.72),
-                    shape: .reverseLShape
+                    frontPosition: CGPoint(x: 0.36, y: 0.50),
+                    sidePosition: CGPoint(x: 0.36, y: 0.52),
+                    shape: .horizontal1x3
                 ),
-                // E: static horizontal1x3 — holds petal, right side front view
                 PlatformModel(
                     id: "platformE",
                     horizontalPosition: 0.50,
                     size: CGSize(width: 92, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.87, y: 0.40),
-                    sidePosition: CGPoint(x: 0.36, y: 0.72),
-                    shape: .horizontal1x3
+                    frontPosition: CGPoint(x: 0.80, y: 0.44),
+                    sidePosition: CGPoint(x: 0.675, y: 0.24),
+                    shape: .lShape
                 ),
-                // F: static single1x1 — only meaningful in side view, bridges A→G
                 PlatformModel(
                     id: "platformF",
                     horizontalPosition: 0.50,
                     size: CGSize(width: 44, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.50, y: 0.20),
-                    sidePosition: CGPoint(x: 0.50, y: 0.40),
-                    shape: .single1x1
+                    frontPosition: CGPoint(x: 0.36, y: 0.67),
+                    sidePosition: CGPoint(x: 0.64, y: 0.64),
+                    shape: .horizontal1x2
                 ),
-                // G: exit platform (single1x1) — reachable only via side view
                 PlatformModel(
                     id: "platformG",
                     horizontalPosition: 0.87,
                     size: CGSize(width: 44, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.87, y: 0.20),
-                    sidePosition: CGPoint(x: 0.87, y: 0.40),
+                    frontPosition: CGPoint(x: 0.87, y: 0.73),
+                    sidePosition: CGPoint(x: 0.87, y: 0.64),
                     shape: .single1x1
                 )
             ],
@@ -442,7 +436,7 @@ enum WhiteLilyLevelData {
                 SnapRule(draggablePlatformID: "platformD", targetPlatformIDs: ["platformC", "platformE"], threshold: 50)
             ],
             exitConfiguration: ExitConfiguration(platformID: "platformG", offset: CGPoint(x: 0, y: 55)),
-            petalConfiguration: PetalConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55))
+            petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55))
         )
 
     static let goal = FlowerGoal(
