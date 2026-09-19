@@ -39,7 +39,9 @@ final class GameViewModel {
     }
 
     func canMoveMori(to platformID: String) -> Bool {
-        guard !hasReachedExit, platformID != moriPlatformID else { return false }
+        guard !hasReachedExit,
+              platformID != moriPlatformID,
+              isWalkable(platformID) else { return false }
 
         return connectionPath(from: moriPlatformID, to: platformID) != nil
     }
@@ -52,6 +54,8 @@ final class GameViewModel {
     }
 
     func connectionPath(from startPlatformID: String, to targetPlatformID: String) -> [String]? {
+        guard isWalkable(startPlatformID), isWalkable(targetPlatformID) else { return nil }
+
         var platformsToVisit = [startPlatformID]
         var visitedPlatformIDs: Set<String> = [startPlatformID]
         var previousPlatformID: [String: String] = [:]
@@ -81,7 +85,9 @@ final class GameViewModel {
                     neighbourID = nil
                 }
 
-                guard let neighbourID, !visitedPlatformIDs.contains(neighbourID) else { continue }
+                guard let neighbourID,
+                      isWalkable(neighbourID),
+                      !visitedPlatformIDs.contains(neighbourID) else { continue }
                 visitedPlatformIDs.insert(neighbourID)
                 previousPlatformID[neighbourID] = currentPlatformID
                 platformsToVisit.append(neighbourID)
@@ -92,14 +98,17 @@ final class GameViewModel {
     }
 
     func setConnections(_ newConnections: [ConnectionModel]) {
-        connections = newConnections
+        connections = newConnections.filter {
+            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
+        }
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
-        connections = currentLevel.initialConnections + newConnections
+        setConnections(currentLevel.initialConnections + newConnections)
     }
 
     func moveMori(to platformID: String) {
+        guard isWalkable(platformID) else { return }
         moriPlatformID = platformID
     }
 
@@ -121,6 +130,10 @@ final class GameViewModel {
 
     func togglePerspectivePOV() {
         perspectivePOV = perspectivePOV == .front ? .side : .front
+    }
+
+    private func isWalkable(_ platformID: String) -> Bool {
+        currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true
     }
 
 }

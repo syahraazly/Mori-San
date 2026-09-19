@@ -9,7 +9,7 @@ final class GameScene: SKScene {
     private var dragTouchOffsetX: CGFloat = 0
     private var didDragPlatform = false
     private var moriNode: PlayerNode?
-    private var exitNode: ExitNode?
+    private var portalNodes: [String: ExitNode] = [:]
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
@@ -89,11 +89,12 @@ final class GameScene: SKScene {
     private func renderLevel() {
         removeAllChildren()
         platformNodes.removeAll()
+        portalNodes.removeAll()
         draggedPlatform = nil
         moriNode = nil
-        exitNode = nil
 
         let level = viewModel.currentLevel
+        addBackground(for: level)
         for platform in level.platforms {
             let node = PlatformNode(model: platform)
             node.position = position(for: platform)
@@ -118,17 +119,15 @@ final class GameScene: SKScene {
         addChild(mori)
         moriNode = mori
 
-        let exitPlatformID = resolvedExitPlatformID(for: level)
-        guard level.interaction != .perspective,
-              let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) else {
-            return
-        }
+        for portal in level.portalConfigurations {
+            guard let portalPlatform = platformNodes[portal.platformID] else { continue }
 
-        let exit = ExitNode()
-        exit.position = level.exitConfiguration?.offset ?? CGPoint(x: 45, y: 55)
-        exit.zPosition = 10
-        platformNodes[exitPlatform.id]?.addChild(exit)
-        exitNode = exit
+            let portalNode = ExitNode(portalID: portal.id)
+            portalNode.position = portal.offset
+            portalNode.zPosition = 10
+            portalPlatform.addChild(portalNode)
+            portalNodes[portal.id] = portalNode
+        }
 
         if level.interaction == .compact {
             createInstructionLabel()
@@ -189,6 +188,11 @@ final class GameScene: SKScene {
 
         let touchLocation = touch.location(in: self)
 
+        if let portal = portalConfiguration(at: touchLocation) {
+            enter(portal: portal)
+            return
+        }
+
         if viewModel.currentLevel.interaction == .perspective {
             if let platform = platformNode(at: touchLocation) {
                 moveMoriAcrossPerspectivePath(to: platform.model.id)
@@ -196,7 +200,7 @@ final class GameScene: SKScene {
             }
 
             if platformNode(at: touchLocation) == nil,
-               exitNode(at: touchLocation) == nil,
+               portalConfiguration(at: touchLocation) == nil,
                playerNode(at: touchLocation) == nil {
                 perspectiveSwipeStart = touchLocation
             }
@@ -204,11 +208,6 @@ final class GameScene: SKScene {
         }
 
         if viewModel.currentLevel.interaction == .perspectiveCompact {
-            if exitNode(at: touchLocation) != nil {
-                moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
-                return
-            }
-
             if let platform = platformNode(at: touchLocation) {
                 if viewModel.canMoveMori(to: platform.model.id) {
                     moveMoriAcrossPerspectivePath(to: platform.model.id)
@@ -229,21 +228,19 @@ final class GameScene: SKScene {
             return
         }
 
-        if exitNode(at: touchLocation) != nil {
-            moveMori(to: resolvedExitPlatformID(for: viewModel.currentLevel), completesLevel: true)
-            return
-        }
-
         guard let platform = platformNode(at: touchLocation), platform.model.isDraggable else { return }
 
         if viewModel.canMoveMori(to: platform.model.id) {
-            moveMori(to: platform.model.id, completesLevel: false)
+            moveMori(to: platform.model.id)
             return
         }
 
         guard !viewModel.isConnected
                 || (platform.model.remainsDraggableWhenConnected
-                    && !viewModel.areConnected(platform.model.id, resolvedExitPlatformID(for: viewModel.currentLevel))) else {
+                    && !viewModel.areConnected(
+                        platform.model.id,
+                        viewModel.currentLevel.portalConfigurations.first?.platformID ?? ""
+                    )) else {
             return
         }
 
@@ -372,7 +369,7 @@ final class GameScene: SKScene {
     }
 
     private func updatePerspectiveConnections() {
-        let platforms = viewModel.currentLevel.platforms
+        let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
         let maximumGap: CGFloat = 10
         let maximumVerticalDifference: CGFloat = 2
@@ -417,8 +414,10 @@ final class GameScene: SKScene {
 
         guard !actions.isEmpty else { return }
 
+        moriNode.playWalkAnimation()
         moriNode.run(SKAction.sequence(actions)) { [weak self] in
             self?.viewModel.moveMori(to: platformID)
+            self?.moriNode?.playIdleAnimation()
         }
     }
 
@@ -435,12 +434,12 @@ final class GameScene: SKScene {
         return nil
     }
 
-    private func exitNode(at location: CGPoint) -> ExitNode? {
+    private func portalConfiguration(at location: CGPoint) -> PortalConfiguration? {
         var touchedNode: SKNode? = atPoint(location)
 
         while let node = touchedNode {
-            if let exit = node as? ExitNode {
-                return exit
+            if let portal = node as? ExitNode {
+                return viewModel.currentLevel.portalConfigurations.first { $0.id == portal.name }
             }
             touchedNode = node.parent
         }
@@ -461,12 +460,9 @@ final class GameScene: SKScene {
         return nil
     }
 
-    private func resolvedExitPlatformID(for level: LevelConfiguration) -> String {
-        level.exitConfiguration?.platformID ?? level.exitPlatformID
-    }
-
     private func isMoriSupported(_ mori: PlayerNode) -> Bool {
         platformNodes.values.contains { platform in
+            guard platform.model.isWalkable else { return false }
             let horizontalDistance = abs(mori.position.x - platform.position.x)
             let verticalDistance = abs(mori.position.y - (platform.position.y + 55))
             return horizontalDistance <= platform.model.size.width / 2 + 18
@@ -489,10 +485,15 @@ final class GameScene: SKScene {
         }
     }
 
-    private func moveMori(to platformID: String, completesLevel: Bool) {
-        guard viewModel.canMoveMori(to: platformID),
+    private func enter(portal: PortalConfiguration) {
+        moveMori(to: portal.platformID, entering: portal)
+    }
+
+    private func moveMori(to platformID: String, entering portal: PortalConfiguration? = nil) {
+        let isAlreadyOnPortalPlatform = portal != nil && viewModel.moriPlatformID == platformID
+        guard (isAlreadyOnPortalPlatform || viewModel.canMoveMori(to: platformID)),
               let moriNode,
-              moriNode.action(forKey: "moriMove") == nil,
+              !moriNode.hasActions(),
               let path = viewModel.connectionPath(from: viewModel.moriPlatformID, to: platformID) else {
             return
         }
@@ -507,25 +508,53 @@ final class GameScene: SKScene {
             previousPosition = destination
         }
 
-        if completesLevel, let exitNode {
-            let exitDestination = exitNode.convert(CGPoint.zero, to: self)
-            movementActions.append(movementAction(from: previousPosition, to: exitDestination))
+        if let portal, let portalNode = portalNodes[portal.id] {
+            let portalDestination = portalNode.convert(CGPoint.zero, to: self)
+            movementActions.append(movementAction(from: previousPosition, to: portalDestination))
         }
 
         guard !movementActions.isEmpty else { return }
 
+        moriNode.playWalkAnimation()
         movementActions.append(SKAction.run { [weak self] in
             self?.viewModel.moveMori(to: platformID)
 
-            if completesLevel {
-                self?.viewModel.markExitReached()
-                print("Mori reached the exit")
-                self?.appFlow.completeLevel(self?.viewModel.currentLevel.id ?? platformID)
+            if let portal {
+                self?.handlePortalOutcome(portal)
             } else {
                 self?.updateInstruction()
+                self?.moriNode?.playIdleAnimation()
             }
         })
         moriNode.run(SKAction.sequence(movementActions), withKey: "moriMove")
+    }
+
+    private func handlePortalOutcome(_ portal: PortalConfiguration) {
+        switch portal.outcome {
+        case .completesLevel:
+            viewModel.markExitReached()
+            print("Mori entered the correct portal")
+            appFlow.completeLevel(viewModel.currentLevel.id)
+
+        case .loops(let destination):
+            guard let destinationPlatform = platformNodes[destination.platformID],
+                  let moriNode else { return }
+
+            let targetPosition = CGPoint(
+                x: destinationPlatform.position.x + destination.offset.x,
+                y: destinationPlatform.position.y + 55 + destination.offset.y
+            )
+            let loop = SKAction.sequence([
+                .fadeOut(withDuration: 0.12),
+                .move(to: targetPosition, duration: 0),
+                .fadeIn(withDuration: 0.12),
+                .run { [weak self] in
+                    self?.viewModel.moveMori(to: destination.platformID)
+                    self?.moriNode?.playIdleAnimation()
+                }
+            ])
+            moriNode.run(loop, withKey: "portalLoop")
+        }
     }
 
     private func movementAction(from start: CGPoint, to destination: CGPoint) -> SKAction {
@@ -574,7 +603,7 @@ final class GameScene: SKScene {
         var constrainedX = proposedX
         let halfDraggableWidth = draggablePlatform.model.size.width / 2
 
-        for target in platformNodes.values where !target.model.isDraggable {
+        for target in platformNodes.values where !target.model.isDraggable && target.model.isWalkable {
             if previousX > target.position.x, proposedX < previousX {
                 let nearestRightPosition = target.position.x + target.model.size.width / 2 + halfDraggableWidth
                 if previousX >= nearestRightPosition, proposedX < nearestRightPosition {
@@ -610,11 +639,12 @@ final class GameScene: SKScene {
 
         if !viewModel.isConnected {
             instructionLabel?.text = "Drag Platform B to connect the path"
-        } else if resolvedExitPlatformID(for: level) == draggablePlatform.id {
+        } else if level.portalConfigurations.first?.platformID == draggablePlatform.id {
             instructionLabel?.text = "Tap the black hole"
         } else if viewModel.moriPlatformID == level.player.startingPlatformID {
             instructionLabel?.text = "Tap Platform B to move Mori"
-        } else if !viewModel.areConnected(draggablePlatform.id, resolvedExitPlatformID(for: level)) {
+        } else if let portalPlatformID = level.portalConfigurations.first?.platformID,
+                  !viewModel.areConnected(draggablePlatform.id, portalPlatformID) {
             instructionLabel?.text = "Drag Platform B to Platform C"
         } else {
             instructionLabel?.text = "Tap the black hole"
@@ -628,7 +658,7 @@ final class GameScene: SKScene {
         }
         let snapThreshold = snapRule?.threshold ?? GameConstants.Snap.threshold
 
-        for target in platformNodes.values where !target.model.isDraggable {
+        for target in platformNodes.values where !target.model.isDraggable && target.model.isWalkable {
             if let snapRule, !snapRule.targetPlatformIDs.contains(target.model.id) {
                 continue
             }
@@ -658,5 +688,15 @@ final class GameScene: SKScene {
 
         guard let nearestTarget else { return nil }
         return (nearestTarget.platform, nearestTarget.position)
+    }
+
+    private func addBackground(for level: LevelConfiguration) {
+        guard let backgroundAssetName = level.backgroundAssetName else { return }
+
+        let background = SKSpriteNode(imageNamed: backgroundAssetName)
+        background.size = size
+        background.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        background.zPosition = -20
+        addChild(background)
     }
 }

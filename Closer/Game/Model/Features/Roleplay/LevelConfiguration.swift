@@ -23,6 +23,23 @@ struct ExitConfiguration {
     let offset: CGPoint
 }
 
+struct PortalDestination {
+    let platformID: String
+    let offset: CGPoint
+}
+
+enum PortalOutcome {
+    case completesLevel
+    case loops(to: PortalDestination)
+}
+
+struct PortalConfiguration {
+    let id: String
+    let platformID: String
+    let offset: CGPoint
+    let outcome: PortalOutcome
+}
+
 struct GameLevel {
     let id: String
     let category: LevelCategory
@@ -34,6 +51,8 @@ struct GameLevel {
     let snapRules: [SnapRule]
     let initialConnections: [ConnectionModel]
     let exitConfiguration: ExitConfiguration?
+    let portals: [PortalConfiguration]
+    let backgroundAssetName: String?
 
     init(
         id: LevelID,
@@ -45,7 +64,9 @@ struct GameLevel {
         platformHeightRatio: CGFloat,
         snapRules: [SnapRule] = [],
         initialConnections: [ConnectionModel] = [],
-        exitConfiguration: ExitConfiguration? = nil
+        exitConfiguration: ExitConfiguration? = nil,
+        portals: [PortalConfiguration] = [],
+        backgroundAssetName: String? = nil
     ) {
         self.id = id
         self.category = category
@@ -57,6 +78,8 @@ struct GameLevel {
         self.snapRules = snapRules
         self.initialConnections = initialConnections
         self.exitConfiguration = exitConfiguration
+        self.portals = portals
+        self.backgroundAssetName = backgroundAssetName
     }
 
     var usesPerspective: Bool {
@@ -65,6 +88,27 @@ struct GameLevel {
 
     var allowsCompact: Bool {
         interaction == .compact || interaction == .perspectiveCompact
+    }
+
+    // Keeps the original single-exit levels working while new levels use portals.
+    var portalConfigurations: [PortalConfiguration] {
+        if !portals.isEmpty {
+            return portals
+        }
+
+        guard let exitConfiguration,
+              !exitPlatformID.isEmpty else {
+            return []
+        }
+
+        return [
+            PortalConfiguration(
+                id: "exit",
+                platformID: exitConfiguration.platformID,
+                offset: exitConfiguration.offset,
+                outcome: .completesLevel
+            )
+        ]
     }
 }
 

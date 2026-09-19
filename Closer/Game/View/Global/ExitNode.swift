@@ -1,9 +1,9 @@
 import SpriteKit
 
 final class ExitNode: SKShapeNode {
-    override init() {
+    init(portalID: String = "exit") {
         super.init()
-        name = "exit"
+        name = portalID
         path = CGPath(ellipseIn: CGRect(x: -32, y: -32, width: 64, height: 64), transform: nil)
         fillColor = .clear
         strokeColor = .clear
