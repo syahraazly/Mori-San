@@ -525,10 +525,13 @@ final class GameScene: SKScene {
             return
         }
 
+        var previousPosition = moriNode.position
         let actions = path.dropFirst().compactMap { nextPlatformID -> SKAction? in
             guard let platform = platformNodes[nextPlatformID] else { return nil }
             let destination = moriStandingPosition(on: platform)
-            return SKAction.move(to: destination, duration: 0.35)
+            let action = movementAction(for: moriNode, from: previousPosition, to: destination)
+            previousPosition = destination
+            return action
         }
 
         guard !actions.isEmpty else { return }
@@ -624,13 +627,13 @@ final class GameScene: SKScene {
         for nextPlatformID in path.dropFirst() {
             guard let platform = platformNodes[nextPlatformID] else { return }
             let destination = moriStandingPosition(on: platform)
-            movementActions.append(movementAction(from: previousPosition, to: destination))
+            movementActions.append(movementAction(for: moriNode, from: previousPosition, to: destination))
             previousPosition = destination
         }
 
         if let portal, let portalNode = portalNodes[portal.id] {
             let portalDestination = portalNode.convert(CGPoint.zero, to: self)
-            movementActions.append(movementAction(from: previousPosition, to: portalDestination))
+            movementActions.append(movementAction(for: moriNode, from: previousPosition, to: portalDestination))
         }
 
         guard !movementActions.isEmpty else { return }
@@ -677,10 +680,15 @@ final class GameScene: SKScene {
         }
     }
 
-    private func movementAction(from start: CGPoint, to destination: CGPoint) -> SKAction {
+    private func movementAction(for mori: PlayerNode, from start: CGPoint, to destination: CGPoint) -> SKAction {
         let distance = hypot(destination.x - start.x, destination.y - start.y)
         let duration = max(0.15, TimeInterval(distance / 220))
-        return SKAction.move(to: destination, duration: duration)
+        return .sequence([
+            .run { [weak mori] in
+                mori?.face(horizontalDirection: destination.x - start.x)
+            },
+            .move(to: destination, duration: duration)
+        ])
     }
 
     private func showLevelComplete() {

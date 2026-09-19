@@ -26,6 +26,11 @@ final class PlayerNode: SKShapeNode {
         playAnimation(named: "moriWalk", assetNames: ["mori-walk-1", "mori-walk-2"], frameDuration: 0.16)
     }
 
+    func face(horizontalDirection: CGFloat) {
+        guard abs(horizontalDirection) > 1 else { return }
+        sprite.xScale = horizontalDirection < 0 ? -1 : 1
+    }
+
     private func playAnimation(named key: String, assetNames: [String], frameDuration: TimeInterval) {
         sprite.removeAllActions()
         let textures = assetNames.map(SKTexture.init(imageNamed:))
