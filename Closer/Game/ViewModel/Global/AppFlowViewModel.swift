@@ -27,6 +27,11 @@ final class AppFlowViewModel: ObservableObject {
         screen = .goal(goalID)
     }
 
+    func openChapter(_ chapterID: GoalID) {
+        guard isChapterUnlocked(chapterID) else { return }
+        openGoal(chapterID)
+    }
+
     func startLevel(_ levelID: LevelID) {
         guard LevelCatalog.configuration(for: levelID) != nil else { return }
         pendingLevelID = nil
@@ -66,6 +71,20 @@ final class AppFlowViewModel: ObservableObject {
 
     func isGoalCompleted(_ goalID: GoalID) -> Bool {
         guard let goal = FlowerGoalData.goal(for: goalID) else { return false }
+        guard !goal.levelIDs.isEmpty else { return false }
         return goal.levelIDs.allSatisfy(isLevelCompleted)
+    }
+
+    func isChapterUnlocked(_ chapterID: GoalID) -> Bool {
+        guard let chapterIndex = FlowerGoalData.goals.firstIndex(where: { $0.id == chapterID }) else {
+            return false
+        }
+
+        guard chapterIndex > 0 else { return true }
+        return isGoalCompleted(FlowerGoalData.goals[chapterIndex - 1].id)
+    }
+
+    func isChapterCompleted(_ chapterID: GoalID) -> Bool {
+        isGoalCompleted(chapterID)
     }
 }
