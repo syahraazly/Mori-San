@@ -23,6 +23,16 @@ struct ExitConfiguration {
     let offset: CGPoint
 }
 
+struct PetalConfiguration {
+    let platformID: String
+    let offset: CGPoint
+
+    init(platformID: String, offset: CGPoint = CGPoint(x: 0, y: 48)) {
+        self.platformID = platformID
+        self.offset = offset
+    }
+}
+
 struct GameLevel {
     let id: String
     let category: LevelCategory
@@ -34,6 +44,7 @@ struct GameLevel {
     let snapRules: [SnapRule]
     let initialConnections: [ConnectionModel]
     let exitConfiguration: ExitConfiguration?
+    let petalConfiguration: PetalConfiguration?
 
     init(
         id: LevelID,
@@ -45,7 +56,8 @@ struct GameLevel {
         platformHeightRatio: CGFloat,
         snapRules: [SnapRule] = [],
         initialConnections: [ConnectionModel] = [],
-        exitConfiguration: ExitConfiguration? = nil
+        exitConfiguration: ExitConfiguration? = nil,
+        petalConfiguration: PetalConfiguration? = nil
     ) {
         self.id = id
         self.category = category
@@ -57,6 +69,7 @@ struct GameLevel {
         self.snapRules = snapRules
         self.initialConnections = initialConnections
         self.exitConfiguration = exitConfiguration
+        self.petalConfiguration = petalConfiguration
     }
 
     var usesPerspective: Bool {

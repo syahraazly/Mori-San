@@ -7,7 +7,10 @@ final class GameViewModel {
     private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
+    private var perspectiveConnections: [ConnectionModel] = []
+    private var snapConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
+    private(set) var hasCollectedPetal = false
     private(set) var moriPlatformID: String
     private(set) var perspectivePOV: PerspectivePOV = .front
 
@@ -20,22 +23,57 @@ final class GameViewModel {
         !connections.isEmpty
     }
 
+    var hasPetalToCollect: Bool {
+        currentLevel.petalConfiguration != nil
+    }
+
+    var isExitUnlocked: Bool {
+        !hasPetalToCollect || hasCollectedPetal
+    }
+
+    func collectPetal() {
+        hasCollectedPetal = true
+    }
+
     @discardableResult
     func connect(_ firstPlatformID: String, to secondPlatformID: String) -> Bool {
-        if connections.contains(where: {
+        snapConnections.removeAll {
             ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
                 || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
-        }) {
-            return false
         }
 
-        connections = [
+        snapConnections.append(
             ConnectionModel(
                 firstPlatformID: firstPlatformID,
                 secondPlatformID: secondPlatformID
             )
-        ]
+        )
+        rebuildConnections()
         return true
+    }
+
+    func disconnectSnap(for platformID: String? = nil) {
+        if let platformID {
+            snapConnections.removeAll {
+                $0.firstPlatformID == platformID || $0.secondPlatformID == platformID
+            }
+        } else {
+            snapConnections.removeAll()
+        }
+        rebuildConnections()
+    }
+
+    private func rebuildConnections() {
+        var allConnections = currentLevel.initialConnections + perspectiveConnections
+        for snap in snapConnections {
+            if !allConnections.contains(where: {
+                ($0.firstPlatformID == snap.firstPlatformID && $0.secondPlatformID == snap.secondPlatformID)
+                    || ($0.firstPlatformID == snap.secondPlatformID && $0.secondPlatformID == snap.firstPlatformID)
+            }) {
+                allConnections.append(snap)
+            }
+        }
+        connections = allConnections
     }
 
     func canMoveMori(to platformID: String) -> Bool {
@@ -92,11 +130,14 @@ final class GameViewModel {
     }
 
     func setConnections(_ newConnections: [ConnectionModel]) {
+        perspectiveConnections = []
+        snapConnections = []
         connections = newConnections
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
-        connections = currentLevel.initialConnections + newConnections
+        perspectiveConnections = newConnections
+        rebuildConnections()
     }
 
     func moveMori(to platformID: String) {
@@ -110,7 +151,10 @@ final class GameViewModel {
     func loadLevel(_ configuration: LevelConfiguration) {
         currentLevel = configuration
         connections = []
+        perspectiveConnections = []
+        snapConnections = []
         hasReachedExit = false
+        hasCollectedPetal = false
         moriPlatformID = currentLevel.player.startingPlatformID
         perspectivePOV = .front
     }
