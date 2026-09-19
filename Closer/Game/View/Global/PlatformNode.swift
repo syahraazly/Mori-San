@@ -125,7 +125,7 @@ final class PlatformNode: SKShapeNode {
         }
     }
 
-    func landingPosition(approachingFrom fromPosition: CGPoint) -> CGPoint {
+    func landingPosition(at position: CGPoint, approachingFrom fromPosition: CGPoint) -> CGPoint {
         let surfaces = playableSurfaces(at: position)
         guard !surfaces.isEmpty else {
             return CGPoint(x: position.x, y: position.y + 55)
@@ -134,11 +134,30 @@ final class PlatformNode: SKShapeNode {
             return surfaces[0].position
         }
 
-        let closest = surfaces.min { a, b in
+        let heightMatchingSurfaces = surfaces.filter { abs($0.position.y - fromPosition.y) <= 8 }
+        let candidateSurfaces = heightMatchingSurfaces.isEmpty ? surfaces : heightMatchingSurfaces
+
+        let closest = candidateSurfaces.min { a, b in
             hypot(a.position.x - fromPosition.x, a.position.y - fromPosition.y) <
             hypot(b.position.x - fromPosition.x, b.position.y - fromPosition.y)
         }
         return closest?.position ?? surfaces[0].position
+    }
+
+    func landingPosition(approachingFrom fromPosition: CGPoint) -> CGPoint {
+        landingPosition(at: position, approachingFrom: fromPosition)
+    }
+
+    /// Returns the playable surface whose landing position is closest to `touchPoint`.
+    /// Returns `nil` for single1x1 platforms (only one surface; use `landingPosition` instead).
+    /// Used to let Mori walk to a specific cell when the user taps inside a multi-cell platform.
+    func closestSurface(to touchPoint: CGPoint) -> PlayableSurface? {
+        guard model.shape != .single1x1 else { return nil }
+        let surfaces = playableSurfaces(at: position)
+        return surfaces.min { a, b in
+            hypot(a.position.x - touchPoint.x, a.position.y - touchPoint.y) <
+            hypot(b.position.x - touchPoint.x, b.position.y - touchPoint.y)
+        }
     }
 
     required init?(coder aDecoder: NSCoder) {
