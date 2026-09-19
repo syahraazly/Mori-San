@@ -13,7 +13,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.20, y: 0.33),
-                sidePosition: CGPoint(x: 0.25, y: 0.33)
+                sidePosition: CGPoint(x: 0.25, y: 0.33),
+                assetName: "stone2x1"
             ),
             PlatformModel(
                 id: "platformB",
@@ -22,7 +23,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.50, y: 0.52),
-                sidePosition: CGPoint(x: 0.50, y: 0.33)
+                sidePosition: CGPoint(x: 0.50, y: 0.33),
+                assetName: "stone2x1"
             ),
             PlatformModel(
                 id: "platformC",
@@ -31,7 +33,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.80, y: 0.33),
-                sidePosition: CGPoint(x: 0.75, y: 0.33)
+                sidePosition: CGPoint(x: 0.75, y: 0.33),
+                assetName: "stone2x1"
             ),
             PlatformModel(
                 id: "obstacleReverseL",
