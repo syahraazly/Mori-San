@@ -34,7 +34,7 @@ enum FlowerGoalData {
     static let balineseFrangipani = FlowerGoal(
         id: "balinese-frangipani",
         title: "CHAPTER 3",
-        levelIDs: ["balinese-1"],
+        levelIDs: ["balinese-1", "balinese-2", "balinese-3", "balinese-4", "balinese-5"],
         petalAssetName: "kamboja-bali-petal"
     )
 

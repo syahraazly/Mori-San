@@ -97,6 +97,7 @@ struct GameLevel {
     let backgroundAssetName: String?
     let movementMode: MoriMovementMode
     let usesProximityConnections: Bool
+    let proximityConnectionTolerance: CGFloat
 
     init(
         id: LevelID,
@@ -113,7 +114,8 @@ struct GameLevel {
         portals: [PortalConfiguration] = [],
         backgroundAssetName: String? = nil,
         movementMode: MoriMovementMode = .pathfinding,
-        usesProximityConnections: Bool = true
+        usesProximityConnections: Bool = true,
+        proximityConnectionTolerance: CGFloat = 10
     ) {
         self.id = id
         self.category = category
@@ -130,6 +132,7 @@ struct GameLevel {
         self.backgroundAssetName = backgroundAssetName
         self.movementMode = movementMode
         self.usesProximityConnections = usesProximityConnections
+        self.proximityConnectionTolerance = proximityConnectionTolerance
     }
 
     var usesPerspective: Bool {

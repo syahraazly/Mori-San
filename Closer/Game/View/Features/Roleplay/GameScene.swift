@@ -39,6 +39,7 @@ final class GameScene: SKScene {
         guard case .gameplay = appFlow.screen,
               !isRestartingLevel,
               let moriNode,
+              !moriNode.hasActions(),
               !isMoriSupported(moriNode) else {
             return
         }
@@ -512,7 +513,7 @@ final class GameScene: SKScene {
 
         let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
-        let maximumGap: CGFloat = 10
+        let maximumGap = viewModel.currentLevel.proximityConnectionTolerance
         let maximumVerticalDifference: CGFloat = 2
 
         for firstIndex in platforms.indices {
@@ -557,12 +558,20 @@ final class GameScene: SKScene {
         }
 
         var previousPosition = moriNode.position
-        let actions = path.dropFirst().compactMap { nextPlatformID -> SKAction? in
-            guard let platform = platformNodes[nextPlatformID] else { return nil }
+        var actions: [SKAction] = []
+        for nextPlatformID in path.dropFirst() {
+            guard let platform = platformNodes[nextPlatformID] else { continue }
             let destination = moriStandingPosition(on: platform)
             let action = movementAction(for: moriNode, from: previousPosition, to: destination)
             previousPosition = destination
-            return action
+            actions.append(action)
+
+            if viewModel.currentLevel.movementMode == .pathfinding {
+                actions.append(.run { [weak self] in
+                    self?.viewModel.moveMori(to: nextPlatformID)
+                    self?.checkPetalCollection(at: nextPlatformID)
+                })
+            }
         }
 
         guard !actions.isEmpty else { return }
@@ -711,10 +720,6 @@ final class GameScene: SKScene {
     }
 
     private func enter(portal: PortalConfiguration) {
-        if case .completesLevel = portal.outcome,
-           !viewModel.isExitUnlocked {
-            return
-        }
         moveMori(to: portal.platformID, entering: portal)
     }
 
@@ -734,6 +739,10 @@ final class GameScene: SKScene {
             guard let platform = platformNodes[nextPlatformID] else { return }
             let destination = moriStandingPosition(on: platform)
             movementActions.append(movementAction(for: moriNode, from: previousPosition, to: destination))
+            movementActions.append(.run { [weak self] in
+                self?.viewModel.moveMori(to: nextPlatformID)
+                self?.checkPetalCollection(at: nextPlatformID)
+            })
             previousPosition = destination
         }
 
@@ -746,9 +755,6 @@ final class GameScene: SKScene {
 
         moriNode.playWalkAnimation()
         movementActions.append(SKAction.run { [weak self] in
-            self?.viewModel.moveMori(to: platformID)
-            self?.checkPetalCollection(at: platformID)
-
             if let portal {
                 self?.handlePortalOutcome(portal)
             } else {
@@ -762,6 +768,10 @@ final class GameScene: SKScene {
     private func handlePortalOutcome(_ portal: PortalConfiguration) {
         switch portal.outcome {
         case .completesLevel:
+            guard viewModel.isExitUnlocked else {
+                moriNode?.playIdleAnimation()
+                return
+            }
             viewModel.markExitReached()
             print("Mori entered the correct portal")
             appFlow.completeLevel(viewModel.currentLevel.id)

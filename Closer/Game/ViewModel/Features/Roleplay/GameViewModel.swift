@@ -7,6 +7,10 @@ final class GameViewModel {
     private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
+    // Perspective/proximity links are recalculated as the world changes POV.
+    // A movable platform keeps its latest snap link until it moves to another target.
+    private var generatedConnections: [ConnectionModel] = []
+    private var snappedConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
     private(set) var hasCollectedPetal = false
     private(set) var moriPlatformID: String
@@ -42,12 +46,19 @@ final class GameViewModel {
             return false
         }
 
-        connections = [
+        // `secondPlatformID` is the platform being snapped by GameScene.
+        // Replacing only its older snap link preserves Moving Bridge behavior
+        // while allowing other compacted platforms to stay connected.
+        snappedConnections.removeAll {
+            $0.firstPlatformID == secondPlatformID || $0.secondPlatformID == secondPlatformID
+        }
+        snappedConnections.append(
             ConnectionModel(
                 firstPlatformID: firstPlatformID,
                 secondPlatformID: secondPlatformID
             )
-        ]
+        )
+        rebuildConnections()
         return true
     }
 
@@ -120,9 +131,8 @@ final class GameViewModel {
     }
 
     func setConnections(_ newConnections: [ConnectionModel]) {
-        connections = newConnections.filter {
-            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
-        }
+        generatedConnections = newConnections
+        rebuildConnections()
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
@@ -141,6 +151,8 @@ final class GameViewModel {
     func loadLevel(_ configuration: LevelConfiguration) {
         currentLevel = configuration
         connections = []
+        generatedConnections = []
+        snappedConnections = []
         hasReachedExit = false
         hasCollectedPetal = false
         moriPlatformID = currentLevel.player.startingPlatformID
@@ -157,6 +169,26 @@ final class GameViewModel {
 
     private func isWalkable(_ platformID: String) -> Bool {
         currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true
+    }
+
+    private func rebuildConnections() {
+        var resolvedConnections: [ConnectionModel] = []
+
+        for connection in generatedConnections + snappedConnections
+        where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
+            let alreadyIncluded = resolvedConnections.contains {
+                ($0.firstPlatformID == connection.firstPlatformID
+                    && $0.secondPlatformID == connection.secondPlatformID)
+                    || ($0.firstPlatformID == connection.secondPlatformID
+                        && $0.secondPlatformID == connection.firstPlatformID)
+            }
+
+            if !alreadyIncluded {
+                resolvedConnections.append(connection)
+            }
+        }
+
+        connections = resolvedConnections
     }
 
 }
