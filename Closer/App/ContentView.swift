@@ -10,19 +10,8 @@ struct ContentView: View {
                 OnboardingScreen(appFlow: appFlow)
             case .storyline:
                 StorylineScreen(appFlow: appFlow)
-            case .map, .goal, .gameplay, .levelTransition:
+            case .map, .goal, .gameplay, .levelTransition, .flowerReveal, .congratulations:
                 SpriteKitGameView(appFlow: appFlow)
-            case .congratulations(let goalID):
-                VStack {
-                    Text("Congratulations! Goal: \(goalID)")
-                    Button("Kembali ke Map") {
-                        appFlow.openMap()
-                    }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                }
             }
         }
         .animation(.easeInOut(duration: 0.35), value: appFlow.screen)

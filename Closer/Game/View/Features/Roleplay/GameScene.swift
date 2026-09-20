@@ -66,6 +66,8 @@ final class GameScene: SKScene {
             renderGoal(goalID)
         case .levelTransition:
             renderChapterTransition()
+        case .flowerReveal(let goalID):
+            renderFlowerReveal(goalID)
         case .congratulations(let goalID):
             renderCongratulations(goalID)
         case .gameplay(let levelID):
@@ -97,7 +99,18 @@ final class GameScene: SKScene {
 
     private func renderCongratulations(_ goalID: GoalID) {
         removeAllChildren()
-        addChild(CongratulationsView(sceneSize: size, goalID: goalID))
+        addChild(
+            CongratulationsView(
+                sceneSize: size,
+                goalID: goalID,
+                nextGoalID: appFlow.nextChapterGoalID(after: goalID)
+            )
+        )
+    }
+
+    private func renderFlowerReveal(_ goalID: GoalID) {
+        removeAllChildren()
+        addChild(FlowerRevealView(sceneSize: size, goalID: goalID))
     }
 
     private func renderMap() {
@@ -207,9 +220,10 @@ final class GameScene: SKScene {
                 appFlow.startLevel(pendingLevelID)
             }
             renderCurrentScreen()
-        case .congratulations:
-            appFlow.openMap()
-            renderCurrentScreen()
+        case .flowerReveal(let goalID):
+            handleFlowerRevealTouch(at: touch.location(in: self), goalID: goalID)
+        case .congratulations(let goalID):
+            handleCongratulationsTouch(at: touch.location(in: self), goalID: goalID)
         case .map:
             startMapLevel(at: touch.location(in: self))
         case .gameplay:
@@ -217,6 +231,46 @@ final class GameScene: SKScene {
         case .onboarding, .storyline:
             return
         }
+    }
+
+    private func handleFlowerRevealTouch(at location: CGPoint, goalID: GoalID) {
+        guard let revealView = childNode(withName: "flower-reveal-screen") as? FlowerRevealView else { return }
+        if revealView.isBloomed {
+            revealView.playBloomTapCelebration { [weak self] in
+                guard let self else { return }
+                self.appFlow.showCongratulations(for: goalID)
+                self.renderCurrentScreen()
+            }
+        } else {
+            revealView.fastForwardToBloomed()
+        }
+    }
+
+    private func handleCongratulationsTouch(at location: CGPoint, goalID: GoalID) {
+        if node(named: "restart-chapter", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.restartChapter(goalID)
+        } else if node(named: "next-chapter", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.startNextChapter(after: goalID)
+        } else if node(named: "return-to-map", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.openMap()
+        } else {
+            return
+        }
+        renderCurrentScreen()
+    }
+
+    private func node(named targetName: String, at location: CGPoint) -> SKNode? {
+        var touchedNode: SKNode? = atPoint(location)
+        while let node = touchedNode {
+            if node.name == targetName {
+                return node
+            }
+            touchedNode = node.parent
+        }
+        return nil
     }
 
     private func startSelectedLevel(at location: CGPoint) {

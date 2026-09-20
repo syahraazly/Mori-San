@@ -8,6 +8,7 @@ final class AppFlowViewModel: ObservableObject {
         case goal(GoalID)
         case gameplay(LevelID)
         case levelTransition(LevelID)
+        case flowerReveal(GoalID)
         case congratulations(GoalID)
     }
 
@@ -22,6 +23,7 @@ final class AppFlowViewModel: ObservableObject {
 
     func openMap() {
         activeGoalID = nil
+        pendingLevelID = nil
         screen = .map
     }
 
@@ -62,13 +64,43 @@ final class AppFlowViewModel: ObservableObject {
            let currentIndex = goal.levelIDs.firstIndex(where: { LevelCatalog.canonicalID(for: $0) == canonicalID }) {
             let nextIndex = currentIndex + 1
             if nextIndex < goal.levelIDs.count {
+                // Continue to next stage within the chapter
                 startLevel(goal.levelIDs[nextIndex])
             } else {
-                screen = .congratulations(goal.id)
+                // All stages in chapter are complete! Show interactive flower bloom sequence
+                screen = .flowerReveal(goal.id)
             }
         } else {
             openMap()
         }
+    }
+
+    func showCongratulations(for goalID: GoalID) {
+        screen = .congratulations(goalID)
+    }
+
+    func nextChapterGoalID(after currentGoalID: GoalID) -> GoalID? {
+        guard let goal = FlowerGoalData.goal(for: currentGoalID),
+              let currentIndex = FlowerGoalData.goals.firstIndex(where: { $0.id == goal.id }) else {
+            return nil
+        }
+        let nextIndex = currentIndex + 1
+        if nextIndex < FlowerGoalData.goals.count {
+            return FlowerGoalData.goals[nextIndex].id
+        }
+        return nil
+    }
+
+    func startNextChapter(after currentGoalID: GoalID) {
+        if let nextID = nextChapterGoalID(after: currentGoalID) {
+            startChapter(nextID)
+        } else {
+            openMap()
+        }
+    }
+
+    func restartChapter(_ goalID: GoalID) {
+        startChapter(goalID)
     }
 
     func isLevelUnlocked(_ levelID: LevelID) -> Bool {
