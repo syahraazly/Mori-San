@@ -225,6 +225,11 @@ final class GameScene: SKScene {
             return
         }
 
+        if let petal = tappablePetal(at: touchLocation) {
+            moveMoriToPetal(petal)
+            return
+        }
+
         if let portal = portalConfiguration(at: touchLocation) {
             enter(portal: portal)
             return
@@ -251,7 +256,8 @@ final class GameScene: SKScene {
                     return
                 }
 
-                if platform.model.isDraggable {
+                if platform.model.isDraggable,
+                   canDragConnectedPlatform(platform) {
                     draggedPlatform = platform
                     dragTouchOffsetX = touchLocation.x - platform.position.x
                     didDragPlatform = false
@@ -310,6 +316,7 @@ final class GameScene: SKScene {
         let horizontalChange = constrainedX - platform.position.x
 
         if abs(horizontalChange) > 1 {
+            viewModel.disconnectSnappedConnections(for: platform.model.id)
             didDragPlatform = true
         }
 
@@ -597,6 +604,94 @@ final class GameScene: SKScene {
         return nil
     }
 
+    private func tappablePetal(at location: CGPoint) -> PetalNode? {
+        // `atPoint` returns only the top-most node. When Mori overlaps the
+        // petal, that is Mori instead of the petal sprite. Inspect every node
+        // under the touch so the petal remains tappable in that situation.
+        for hitNode in nodes(at: location) {
+            var node: SKNode? = hitNode
+            while let currentNode = node {
+                if let petal = currentNode as? PetalNode,
+                   petal === petalNode,
+                   !petal.isCollected {
+                    return petal
+                }
+                node = currentNode.parent
+            }
+        }
+
+        return nil
+    }
+
+    private func moveMoriToPetal(_ petal: PetalNode) {
+        guard let moriNode else {
+            return
+        }
+        guard !moriNode.hasActions() else {
+            return
+        }
+        guard let targetPlatform = platformNodes[petal.platformID] else {
+            return
+        }
+        guard let path = viewModel.connectionPath(
+            from: viewModel.moriPlatformID,
+            to: petal.platformID
+        ) else {
+            return
+        }
+        guard viewModel.moriPlatformID == petal.platformID
+                || viewModel.canMoveMori(to: petal.platformID) else {
+            return
+        }
+
+        var previousPosition = moriNode.position
+        var actions: [SKAction] = []
+
+        for nextPlatformID in path.dropFirst() {
+            guard let platform = platformNodes[nextPlatformID] else { return }
+            let destination = moriStandingPosition(on: platform)
+            actions.append(movementAction(for: moriNode, from: previousPosition, to: destination))
+            actions.append(.run { [weak self] in
+                self?.viewModel.moveMori(to: nextPlatformID)
+            })
+            previousPosition = destination
+        }
+
+        // A petal is a visual child of its platform. Mori approaches its X position
+        // while staying on the platform's configured walkable surface.
+        let petalPosition = petal.convert(CGPoint.zero, to: self)
+        let petalDestination = CGPoint(
+            x: petalPosition.x,
+            y: moriStandingPosition(on: targetPlatform).y
+        )
+        if hypot(previousPosition.x - petalDestination.x,
+                 previousPosition.y - petalDestination.y) > 1 {
+            actions.append(movementAction(for: moriNode, from: previousPosition, to: petalDestination))
+        }
+
+        guard !actions.isEmpty else {
+            checkPetalCollection(at: petal.platformID)
+            moriNode.playIdleAnimation()
+            return
+        }
+
+        moriNode.playWalkAnimation()
+        actions.append(.run { [weak self] in
+            self?.viewModel.moveMori(to: petal.platformID)
+            self?.checkPetalCollection(at: petal.platformID)
+            self?.moriNode?.playIdleAnimation()
+        })
+        moriNode.run(.sequence(actions), withKey: "moriMove")
+    }
+
+    private func canDragConnectedPlatform(_ platform: PlatformNode) -> Bool {
+        let platformHasConnection = viewModel.connections.contains {
+            $0.firstPlatformID == platform.model.id || $0.secondPlatformID == platform.model.id
+        }
+
+        return !platformHasConnection || viewModel.moriPlatformID == platform.model.id
+    }
+
     private func portalConfiguration(at location: CGPoint) -> PortalConfiguration? {
         var touchedNode: SKNode? = atPoint(location)
 
@@ -861,17 +956,30 @@ final class GameScene: SKScene {
         guard let snapTarget = snapTarget(for: platformB) else { return false }
         let snappedPosition = CGPoint(x: snapTarget.position.x, y: platformB.position.y)
 
-        guard connectionIsAllowed(between: snapTarget.platform, and: platformB),
+        // Validate and register the graph link at the exact position that will
+        // be rendered after the snap, not at the bridge's pre-snap position.
+        guard connectionIsAllowed(
+            between: snapTarget.platform.model,
+            at: snapTarget.platform.position,
+            and: platformB.model,
+            at: snappedPosition
+        ),
               viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else {
             return false
         }
 
-        let move = SKAction.move(to: snappedPosition, duration: GameConstants.Snap.animationDuration)
+        let snapDeltaX = snappedPosition.x - platformB.position.x
         let bounce = SKAction.sequence([
             SKAction.scale(to: 1.04, duration: 0.06),
             SKAction.scale(to: 1.0, duration: 0.06)
         ])
-        platformB.run(.group([move, bounce]))
+        platformB.position = snappedPosition
+        platformB.run(bounce)
+
+        if viewModel.moriPlatformID == platformB.model.id {
+            moriNode?.position.x += snapDeltaX
+        }
+
         HapticManager.playSnapFeedback()
         updateInstruction()
         return true

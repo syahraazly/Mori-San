@@ -39,13 +39,6 @@ final class GameViewModel {
 
     @discardableResult
     func connect(_ firstPlatformID: String, to secondPlatformID: String) -> Bool {
-        if connections.contains(where: {
-            ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
-                || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
-        }) {
-            return false
-        }
-
         // `secondPlatformID` is the platform being snapped by GameScene.
         // Replacing only its older snap link preserves Moving Bridge behavior
         // while allowing other compacted platforms to stay connected.
@@ -60,6 +53,13 @@ final class GameViewModel {
         )
         rebuildConnections()
         return true
+    }
+
+    func disconnectSnappedConnections(for platformID: String) {
+        snappedConnections.removeAll {
+            $0.firstPlatformID == platformID || $0.secondPlatformID == platformID
+        }
+        rebuildConnections()
     }
 
     func canMoveMori(to platformID: String) -> Bool {
