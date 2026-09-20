@@ -13,6 +13,7 @@ final class GameScene: SKScene {
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
+    private var mapView: MapView?
 
     init(size: CGSize, appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
@@ -83,7 +84,23 @@ final class GameScene: SKScene {
 
     private func renderMap() {
         removeAllChildren()
-        addChild(MapView(sceneSize: size))
+        let mapViewModel = MapViewModel(
+            isChapterUnlocked: { [weak self] chapterID in
+                self?.appFlow.isChapterUnlocked(chapterID) ?? false
+            },
+            isChapterCompleted: { [weak self] chapterID in
+                self?.appFlow.isChapterCompleted(chapterID) ?? false
+            }
+        )
+        let map = MapView(
+            sceneSize: size,
+            viewModel: mapViewModel,
+            onSelectChapter: { [weak self] chapterID in
+                self?.appFlow.openChapter(chapterID)
+            }
+        )
+        addChild(map)
+        mapView = map
     }
 
     private func renderLevel() {
@@ -148,7 +165,7 @@ final class GameScene: SKScene {
             }
             renderCurrentScreen()
         case .map:
-            startMapLevel(at: touch.location(in: self))
+            mapView?.handleTouchBegan(at: touch.location(in: self))
         case .gameplay:
             handleGameplayTouch(touch)
         case .onboarding, .storyline:
@@ -162,19 +179,6 @@ final class GameScene: SKScene {
         while let node = touchedNode {
             if let name = node.name, name.hasPrefix("level-") {
                 let levelID = String(name.dropFirst("level-".count))
-                appFlow.startLevel(levelID)
-                return
-            }
-            touchedNode = node.parent
-        }
-    }
-
-    private func startMapLevel(at location: CGPoint) {
-        var touchedNode: SKNode? = atPoint(location)
-
-        while let node = touchedNode {
-            if let name = node.name, name.hasPrefix("start-level-") {
-                let levelID = String(name.dropFirst("start-level-".count))
                 appFlow.startLevel(levelID)
                 return
             }
@@ -253,6 +257,11 @@ final class GameScene: SKScene {
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if case .map = appFlow.screen, let touch = touches.first {
+            mapView?.handleTouchMoved(to: touch.location(in: self))
+            return
+        }
+
         guard case .gameplay = appFlow.screen else { return }
         guard viewModel.currentLevel.allowsCompact else { return }
         guard let touch = touches.first, let platform = draggedPlatform else { return }
@@ -282,6 +291,11 @@ final class GameScene: SKScene {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if case .map = appFlow.screen, let touch = touches.first {
+            mapView?.handleTouchEnded(at: touch.location(in: self))
+            return
+        }
+
         guard case .gameplay = appFlow.screen else { return }
 
         if viewModel.currentLevel.usesPerspective {
