@@ -53,7 +53,7 @@ enum BalineseFrangipaniLevelData {
                 anchor: .walkableSurface
             )
         ],
-        backgroundAssetName: "background-chapter-1",
+        backgroundAssetName: "background-chapter-3",
         movementMode: .adjacentOnly,
         usesProximityConnections: true
     )
@@ -78,7 +78,7 @@ enum BalineseFrangipaniLevelData {
         portals: [
             PortalConfiguration(id: "correctPortal", platformID: "portalStone", offset: CGPoint(x: 0, y: 30), outcome: .completesLevel, anchor: .walkableSurface)
         ],
-        backgroundAssetName: "background-chapter-1",
+        backgroundAssetName: "background-chapter-3",
         movementMode: .adjacentOnly,
         usesProximityConnections: true
     )
@@ -105,7 +105,7 @@ enum BalineseFrangipaniLevelData {
             PortalConfiguration(id: "falsePortal", platformID: "falsePortalStone", offset: CGPoint(x: 0, y: 30), outcome: .loops(to: PortalDestination(platformID: "pathA", offset: .zero)), anchor: .walkableSurface),
             PortalConfiguration(id: "correctPortal", platformID: "correctPortalStone", offset: CGPoint(x: 0, y: 30), outcome: .completesLevel, anchor: .walkableSurface)
         ],
-        backgroundAssetName: "background-chapter-1",
+        backgroundAssetName: "background-chapter-3",
         movementMode: .adjacentOnly,
         usesProximityConnections: true
     )
@@ -132,7 +132,7 @@ enum BalineseFrangipaniLevelData {
         portals: [
             PortalConfiguration(id: "correctPortal", platformID: "portalStone", offset: CGPoint(x: 0, y: 30), outcome: .completesLevel, anchor: .walkableSurface)
         ],
-        backgroundAssetName: "background-chapter-1",
+        backgroundAssetName: "background-chapter-3",
         movementMode: .adjacentOnly,
         usesProximityConnections: true
     )
@@ -185,7 +185,7 @@ enum BalineseFrangipaniLevelData {
         portals: [
             PortalConfiguration(id: "correctPortal", platformID: "correctPortalStone", offset: CGPoint(x: 0, y: 30), outcome: .completesLevel, anchor: .walkableSurface)
         ],
-        backgroundAssetName: "background-chapter-1",
+        backgroundAssetName: "background-chapter-3",
         movementMode: .adjacentOnly,
         usesProximityConnections: true,
         lightRevealConfiguration: LightRevealConfiguration(

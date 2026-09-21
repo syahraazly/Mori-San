@@ -8,22 +8,30 @@ final class AppFlowViewModel: ObservableObject {
         case goal(GoalID)
         case gameplay(LevelID)
         case levelTransition(LevelID)
+        case flowerReveal(GoalID)
+        case congratulations(GoalID)
     }
 
     @Published private(set) var screen: Screen = .onboarding
     @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
+    private(set) var activeGoalID: GoalID?
 
     func openStoryline() {
         screen = .storyline
     }
 
+    // MARK: - Chapter Navigation
+
     func openMap() {
+        activeGoalID = nil
+        pendingLevelID = nil
         screen = .map
     }
 
     func openGoal(_ goalID: GoalID) {
         guard FlowerGoalData.goal(for: goalID) != nil else { return }
+        activeGoalID = goalID
         screen = .goal(goalID)
     }
 
@@ -33,18 +41,36 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func startLevel(_ levelID: LevelID) {
-        guard LevelCatalog.configuration(for: levelID) != nil else { return }
+        let canonicalID = LevelCatalog.canonicalID(for: levelID)
+        guard LevelCatalog.configuration(for: canonicalID) != nil else { return }
+        if activeGoalID == nil {
+            activeGoalID = LevelCatalog.goalID(for: canonicalID)
+        }
         pendingLevelID = nil
-        screen = .gameplay(levelID)
+        screen = .gameplay(canonicalID)
     }
 
-    func completeLevel(_ levelID: LevelID) {
-        progress.completeLevel(levelID)
+    // MARK: - Level Completion Transition
 
-        if let nextTutorialLevelID = LevelCatalog.nextTutorialLevel(after: levelID) {
+    func completeLevel(_ levelID: LevelID) {
+        let canonicalID = LevelCatalog.canonicalID(for: levelID)
+        progress.completeLevel(canonicalID)
+
+        if let nextTutorialLevelID = LevelCatalog.nextTutorialLevel(after: canonicalID) {
             pendingLevelID = nextTutorialLevelID
             screen = .levelTransition(nextTutorialLevelID)
-        } else if let goalID = LevelCatalog.goalID(for: levelID) {
+            return
+        }
+
+        let goalID = activeGoalID ?? LevelCatalog.goalID(for: canonicalID)
+        if let goalID,
+           let goal = FlowerGoalData.goal(for: goalID),
+           let currentIndex = goal.levelIDs.firstIndex(where: {
+               LevelCatalog.canonicalID(for: $0) == canonicalID
+           }),
+           currentIndex == goal.levelIDs.index(before: goal.levelIDs.endIndex) {
+            screen = .flowerReveal(goalID)
+        } else if let goalID {
             openGoal(goalID)
         } else {
             openMap()
@@ -55,12 +81,42 @@ final class AppFlowViewModel: ObservableObject {
         progress.claimPetal(for: levelID)
     }
 
-    func isLevelUnlocked(_ levelID: LevelID) -> Bool {
-        guard LevelCatalog.configuration(for: levelID) != nil else { return false }
+    // MARK: - Chapter Completion / Flower Reveal
 
-        guard let goalID = LevelCatalog.goalID(for: levelID),
+    func showCongratulations(for goalID: GoalID) {
+        screen = .congratulations(goalID)
+    }
+
+    func nextChapterGoalID(after goalID: GoalID) -> GoalID? {
+        guard let index = FlowerGoalData.goals.firstIndex(where: { $0.id == goalID }) else {
+            return nil
+        }
+        let nextIndex = FlowerGoalData.goals.index(after: index)
+        guard nextIndex < FlowerGoalData.goals.endIndex else { return nil }
+        return FlowerGoalData.goals[nextIndex].id
+    }
+
+    func startNextChapter(after goalID: GoalID) {
+        guard let nextGoalID = nextChapterGoalID(after: goalID) else {
+            openMap()
+            return
+        }
+        openGoal(nextGoalID)
+    }
+
+    func restartChapter(_ goalID: GoalID) {
+        openGoal(goalID)
+    }
+
+    func isLevelUnlocked(_ levelID: LevelID) -> Bool {
+        let canonicalID = LevelCatalog.canonicalID(for: levelID)
+        guard LevelCatalog.configuration(for: canonicalID) != nil else { return false }
+
+        guard let goalID = LevelCatalog.goalID(for: canonicalID),
               let goal = FlowerGoalData.goal(for: goalID),
-              let levelIndex = goal.levelIDs.firstIndex(of: levelID) else {
+              let levelIndex = goal.levelIDs.firstIndex(where: {
+                  LevelCatalog.canonicalID(for: $0) == canonicalID
+              }) else {
             return true
         }
 
@@ -70,7 +126,7 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func isLevelCompleted(_ levelID: LevelID) -> Bool {
-        progress.isLevelCompleted(levelID)
+        progress.isLevelCompleted(LevelCatalog.canonicalID(for: levelID))
     }
 
     func isGoalCompleted(_ goalID: GoalID) -> Bool {

@@ -13,6 +13,8 @@ final class GameScene: SKScene {
     private var portalNodes: [String: ExitNode] = [:]
     private var exitNode: ExitNode?
     private var petalNode: PetalNode?
+    private var chapterProgressHUD: SKShapeNode?
+    private var levelBackButton: SKShapeNode?
     private var chapterProgressLabel: SKLabelNode?
     private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
@@ -43,6 +45,12 @@ final class GameScene: SKScene {
 
     override func didMove(to view: SKView) {
         renderCurrentScreen()
+        layoutGameplayHUD()
+    }
+
+    override func didChangeSize(_ oldSize: CGSize) {
+        super.didChangeSize(oldSize)
+        layoutGameplayHUD()
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -72,10 +80,14 @@ final class GameScene: SKScene {
             removeAllChildren()
         case .map:
             renderMap()
-        case .goal(let goalID):
-            renderGoal(goalID)
+        case .goal:
+            removeAllChildren()
         case .levelTransition:
             renderChapterTransition()
+        case .flowerReveal(let goalID):
+            renderFlowerReveal(goalID)
+        case .congratulations(let goalID):
+            renderCongratulations(goalID)
         case .gameplay(let levelID):
             guard let configuration = LevelCatalog.configuration(for: levelID) else { return }
             viewModel.loadLevel(configuration)
@@ -101,6 +113,30 @@ final class GameScene: SKScene {
     private func renderChapterTransition() {
         removeAllChildren()
         addChild(ChapterTransitionView(sceneSize: size))
+    }
+
+    private func renderFlowerReveal(_ goalID: GoalID) {
+        removeAllChildren()
+        guard let completionView = ChapterCompletionView(
+            sceneSize: size,
+            goalID: goalID,
+            isFinalChapter: appFlow.nextChapterGoalID(after: goalID) == nil
+        ) else {
+            appFlow.openMap()
+            return
+        }
+        addChild(completionView)
+    }
+
+    private func renderCongratulations(_ goalID: GoalID) {
+        removeAllChildren()
+        addChild(
+            CongratulationsView(
+                sceneSize: size,
+                goalID: goalID,
+                nextGoalID: appFlow.nextChapterGoalID(after: goalID)
+            )
+        )
     }
 
     private func renderMap() {
@@ -132,6 +168,8 @@ final class GameScene: SKScene {
         moriNode = nil
         exitNode = nil
         petalNode = nil
+        chapterProgressHUD = nil
+        levelBackButton = nil
         chapterProgressLabel = nil
         chapterProgressGoal = nil
         moriCurrentSurfacePosition = nil
@@ -220,12 +258,16 @@ final class GameScene: SKScene {
 
         switch appFlow.screen {
         case .goal:
-            startSelectedLevel(at: touch.location(in: self))
+            return
         case .levelTransition:
             if let pendingLevelID = appFlow.pendingLevelID {
                 appFlow.startLevel(pendingLevelID)
             }
             renderCurrentScreen()
+        case .flowerReveal:
+            handleFlowerRevealTouch(at: touch.location(in: self))
+        case .congratulations(let goalID):
+            handleCongratulationsTouch(at: touch.location(in: self), goalID: goalID)
         case .map:
             mapView?.handleTouchBegan(at: touch.location(in: self))
         case .gameplay:
@@ -233,6 +275,44 @@ final class GameScene: SKScene {
         case .onboarding, .storyline:
             return
         }
+    }
+
+    private func handleFlowerRevealTouch(at location: CGPoint) {
+        guard let completionView = childNode(withName: "chapter-completion-screen") as? ChapterCompletionView,
+              completionView.handleTap(at: location) else {
+            return
+        }
+
+        HapticManager.playSnapFeedback()
+        appFlow.openMap()
+        renderCurrentScreen()
+    }
+
+    private func handleCongratulationsTouch(at location: CGPoint, goalID: GoalID) {
+        if node(named: "restart-chapter", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.restartChapter(goalID)
+        } else if node(named: "next-chapter", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.startNextChapter(after: goalID)
+        } else if node(named: "return-to-map", at: location) != nil {
+            HapticManager.playSnapFeedback()
+            appFlow.openMap()
+        } else {
+            return
+        }
+        renderCurrentScreen()
+    }
+
+    private func node(named targetName: String, at location: CGPoint) -> SKNode? {
+        var touchedNode: SKNode? = atPoint(location)
+        while let node = touchedNode {
+            if node.name == targetName {
+                return node
+            }
+            touchedNode = node.parent
+        }
+        return nil
     }
 
     private func startSelectedLevel(at location: CGPoint) {
@@ -672,6 +752,8 @@ final class GameScene: SKScene {
     }
 
     private let connectionTolerance: CGFloat = 4
+    private let surfaceContactOverlapTolerance: CGFloat = 3
+    private let collisionContactEpsilon: CGFloat = 0.5
 
     private func allowedConnections(
         from candidates: [ConnectionModel],
@@ -732,9 +814,11 @@ final class GameScene: SKScene {
                     gap = firstSurface.cellRect.minX - secondSurface.cellRect.maxX
                 }
 
-                // A tiny overlap is tolerated for SpriteKit rounding only. A visible
-                // gap is never navigable, and intersecting solid cells are rejected.
-                guard gap >= -1, gap <= connectionTolerance else { continue }
+                // Authored platform edges may overlap by a few points at contact.
+                // Positive gaps remain governed by connectionTolerance, so this
+                // never turns a visibly separated route into a walkable one.
+                guard gap >= -surfaceContactOverlapTolerance,
+                      gap <= connectionTolerance else { continue }
 
                 if bestPair == nil || abs(gap) < abs(bestPair!.gap) {
                     bestPair = (firstSurface, secondSurface, gap)
@@ -1016,24 +1100,6 @@ final class GameScene: SKScene {
         updateInstruction()
     }
 
-    private func showPetalRequiredNotice() {
-        instructionLabel?.text = "Ambil kelopak bunga terlebih dahulu!"
-        let pulseRed = SKAction.sequence([
-            SKAction.run { [weak self] in
-                self?.instructionLabel?.fontColor = SKColor(red: 0.85, green: 0.35, blue: 0.30, alpha: 1.0)
-            },
-            SKAction.scale(to: 1.08, duration: 0.1),
-            SKAction.scale(to: 1.0, duration: 0.1),
-            SKAction.wait(forDuration: 1.2),
-            SKAction.run { [weak self] in
-                self?.instructionLabel?.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
-                self?.updateInstruction()
-            }
-        ])
-        instructionLabel?.removeAction(forKey: "noticePulse")
-        instructionLabel?.run(pulseRed, withKey: "noticePulse")
-    }
-
     private func petalAssetName(for level: LevelConfiguration) -> String {
         guard let goalID = LevelCatalog.goalID(for: level.id),
               let goal = FlowerGoalData.goal(for: goalID) else {
@@ -1061,9 +1127,12 @@ final class GameScene: SKScene {
         hud.fillColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 0.82)
         hud.strokeColor = .white.withAlphaComponent(0.35)
         hud.lineWidth = 2
-        hud.position = CGPoint(x: size.width - 64, y: size.height - 42)
+        hud.position = gameplayHUDPosition(
+            horizontal: size.width - (view?.safeAreaInsets.right ?? 0) - 64
+        )
         hud.zPosition = 100
         addChild(hud)
+        chapterProgressHUD = hud
 
         let petal = SKSpriteNode(imageNamed: goal.petalAssetName)
         petal.size = CGSize(width: 28, height: 22)
@@ -1088,9 +1157,12 @@ final class GameScene: SKScene {
         button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.92)
         button.strokeColor = .white.withAlphaComponent(0.35)
         button.lineWidth = 2
-        button.position = CGPoint(x: 74, y: size.height - 42)
+        button.position = gameplayHUDPosition(
+            horizontal: (view?.safeAreaInsets.left ?? 0) + 74
+        )
         button.zPosition = 100
         addChild(button)
+        levelBackButton = button
 
         let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
         label.text = "‹ Chapter"
@@ -1098,6 +1170,24 @@ final class GameScene: SKScene {
         label.verticalAlignmentMode = .center
         label.fontColor = .white
         button.addChild(label)
+    }
+
+    private func gameplayHUDPosition(horizontal: CGFloat) -> CGPoint {
+        CGPoint(
+            x: horizontal,
+            y: size.height - (view?.safeAreaInsets.top ?? 0) - 42
+        )
+    }
+
+    private func layoutGameplayHUD() {
+        guard case .gameplay = appFlow.screen else { return }
+
+        levelBackButton?.position = gameplayHUDPosition(
+            horizontal: (view?.safeAreaInsets.left ?? 0) + 74
+        )
+        chapterProgressHUD?.position = gameplayHUDPosition(
+            horizontal: size.width - (view?.safeAreaInsets.right ?? 0) - 64
+        )
     }
 
     private func isLevelBackButton(at location: CGPoint) -> Bool {
@@ -1133,7 +1223,6 @@ final class GameScene: SKScene {
         if case .completesLevel = portal.outcome,
            !viewModel.isExitUnlocked {
             exitNode?.playShake()
-            showPetalRequiredNotice()
             return false
         }
 
@@ -1567,30 +1656,28 @@ final class GameScene: SKScene {
         proposedX: CGFloat,
         previousX: CGFloat
     ) -> CGFloat {
-        // All shapes, including 1x1 stones, use their occupied solid cells.
         let y = draggablePlatform.position.y
-        let proposedPosition = CGPoint(x: proposedX, y: y)
+        let sweptX = sweptCollisionConstrainedX(
+            for: draggablePlatform,
+            proposedX: proposedX,
+            previousX: previousX
+        )
+        let proposedPosition = CGPoint(x: sweptX, y: y)
 
-        // Fast path: proposed position is already valid.
         if isPlacementValid(for: draggablePlatform, at: proposedPosition) {
-            return proposedX
+            return sweptX
         }
 
-        // If previousX itself is invalid (fast drag left us in an overlap),
-        // recover to the nearest valid position on the safe side first.
-        let safeX = nearestValidX(for: draggablePlatform, startX: previousX, directionX: proposedX)
+        let safeX = nearestValidX(for: draggablePlatform, startX: previousX, directionX: sweptX)
 
-        // If even the recovered position equals proposedX direction we cannot move further.
         guard isPlacementValid(for: draggablePlatform, at: CGPoint(x: safeX, y: y)) else {
             return safeX
         }
 
-        // Binary search between safeX and proposedX for the furthest valid position.
-        let movingRight = proposedX > safeX
+        let movingRight = sweptX > safeX
         var lo = safeX
-        var hi = proposedX
+        var hi = sweptX
 
-        // Run up to 16 iterations — precision ≈ |hi-lo| / 2^16 ≈ 0.002 pt at 100 pt range.
         for _ in 0..<16 {
             let mid = (lo + hi) / 2
             if isPlacementValid(for: draggablePlatform, at: CGPoint(x: mid, y: y)) {
@@ -1601,6 +1688,48 @@ final class GameScene: SKScene {
         }
 
         return movingRight ? lo : hi
+    }
+
+    private func sweptCollisionConstrainedX(
+        for draggablePlatform: PlatformNode,
+        proposedX: CGFloat,
+        previousX: CGFloat
+    ) -> CGFloat {
+        let horizontalDelta = proposedX - previousX
+        guard horizontalDelta != 0 else { return proposedX }
+
+        let previousPosition = CGPoint(x: previousX, y: draggablePlatform.position.y)
+        let previousRects = draggablePlatform.occupiedCellRects(at: previousPosition)
+        let proposedRects = draggablePlatform.occupiedCellRects(
+            at: CGPoint(x: proposedX, y: draggablePlatform.position.y)
+        )
+        var resolvedX = proposedX
+
+        for target in platformNodes.values where target.model.id != draggablePlatform.model.id
+            && !target.model.isDraggable
+            && !target.isHidden {
+            for targetRect in target.occupiedCellRects(at: target.position) {
+                for (previousRect, proposedRect) in zip(previousRects, proposedRects) {
+                    let overlapsVertically = previousRect.maxY > targetRect.minY
+                        && previousRect.minY < targetRect.maxY
+                    guard overlapsVertically else { continue }
+
+                    if horizontalDelta > 0,
+                       previousRect.maxX <= targetRect.minX + collisionContactEpsilon,
+                       proposedRect.maxX > targetRect.minX - collisionContactEpsilon {
+                        let boundaryX = previousX + targetRect.minX - previousRect.maxX
+                        resolvedX = min(resolvedX, boundaryX)
+                    } else if horizontalDelta < 0,
+                              previousRect.minX >= targetRect.maxX - collisionContactEpsilon,
+                              proposedRect.minX < targetRect.maxX + collisionContactEpsilon {
+                        let boundaryX = previousX + targetRect.maxX - previousRect.minX
+                        resolvedX = max(resolvedX, boundaryX)
+                    }
+                }
+            }
+        }
+
+        return resolvedX
     }
 
     private func createInstructionLabel() {
@@ -1618,7 +1747,7 @@ final class GameScene: SKScene {
         let level = viewModel.currentLevel
 
         if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
-            instructionLabel?.text = "Ambil kelopak bunga Forget-me-not"
+            instructionLabel?.text = nil
             return
         }
 
