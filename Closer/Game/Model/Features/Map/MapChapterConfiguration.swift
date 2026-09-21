@@ -22,15 +22,15 @@ enum MapChapterData {
             order: 1,
             progressionTitle: "Scars to your beautiful",
             clue: "Small blue petals,\nin places you've been,\nbut not forgotten.",
-            flowerAssetName: "forgetmenotFlower",
-            flowerDisplayName: "Forget Me Not"
+            flowerAssetName: "forget-me-not-flower",
+            flowerDisplayName: "Forget-Me-Not"
         ),
         MapChapterConfiguration(
             id: "white-lily",
             order: 2,
             progressionTitle: "Everything I wanted",
             clue: "Pure light\nthat blooms anew,\neven in silence.",
-            flowerAssetName: "lilyputihFlower",
+            flowerAssetName: "white-lily-flower",
             flowerDisplayName: "White Lily"
         ),
         MapChapterConfiguration(
@@ -38,7 +38,7 @@ enum MapChapterData {
             order: 3,
             progressionTitle: "From Dusk till Dawn",
             clue: "Warm petals\nthat carry memories\nacross time.",
-            flowerAssetName: "kambojabaliFlower",
+            flowerAssetName: "kamboja-bali-flower",
             flowerDisplayName: "Balinese Frangipani"
         )
     ]

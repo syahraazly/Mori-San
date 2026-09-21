@@ -109,7 +109,15 @@ final class GameScene: SKScene {
 
     private func renderFlowerReveal(_ goalID: GoalID) {
         removeAllChildren()
-        addChild(FlowerRevealView(sceneSize: size, goalID: goalID))
+        guard let completionView = ChapterCompletionView(
+            sceneSize: size,
+            goalID: goalID,
+            isFinalChapter: appFlow.nextChapterGoalID(after: goalID) == nil
+        ) else {
+            appFlow.openMap()
+            return
+        }
+        addChild(completionView)
     }
 
     private func renderCongratulations(_ goalID: GoalID) {
@@ -246,8 +254,8 @@ final class GameScene: SKScene {
                 appFlow.startLevel(pendingLevelID)
             }
             renderCurrentScreen()
-        case .flowerReveal(let goalID):
-            handleFlowerRevealTouch(goalID: goalID)
+        case .flowerReveal:
+            handleFlowerRevealTouch(at: touch.location(in: self))
         case .congratulations(let goalID):
             handleCongratulationsTouch(at: touch.location(in: self), goalID: goalID)
         case .map:
@@ -259,20 +267,15 @@ final class GameScene: SKScene {
         }
     }
 
-    private func handleFlowerRevealTouch(goalID: GoalID) {
-        guard let revealView = childNode(withName: "flower-reveal-screen") as? FlowerRevealView else {
+    private func handleFlowerRevealTouch(at location: CGPoint) {
+        guard let completionView = childNode(withName: "chapter-completion-screen") as? ChapterCompletionView,
+              completionView.handleTap(at: location) else {
             return
         }
 
-        if revealView.isBloomed {
-            revealView.playBloomTapCelebration { [weak self] in
-                guard let self else { return }
-                self.appFlow.showCongratulations(for: goalID)
-                self.renderCurrentScreen()
-            }
-        } else {
-            revealView.fastForwardToBloomed()
-        }
+        HapticManager.playSnapFeedback()
+        appFlow.openMap()
+        renderCurrentScreen()
     }
 
     private func handleCongratulationsTouch(at location: CGPoint, goalID: GoalID) {

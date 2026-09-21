@@ -32,7 +32,7 @@ struct FlowerCelebrationInfo {
                 moriLearnedQuote: "Mori learned that standing tall does not mean never trembling. Grace is found in moving forward anyway.",
                 playAgainSubtitle: "Play Chapter II again"
             )
-        case "chapter-3":
+        case "chapter-3", "balinese-frangipani":
             return FlowerCelebrationInfo(
                 goalID: "chapter-3",
                 flowerName: "Kamboja Bali",

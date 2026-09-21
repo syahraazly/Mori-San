@@ -40,14 +40,14 @@ enum FlowerGoalData {
 
     static let kambojaBali = KambojaBaliLevelData.goal
 
-    static let goals = [forgetMeNot, whiteLily, balineseFrangipani, kambojaBali]
+    static let goals = [forgetMeNot, whiteLily, balineseFrangipani]
 
     static func goal(for goalID: GoalID) -> FlowerGoal? {
         goals.first {
             $0.id == goalID
             || ($0.id == "chapter-1" && (goalID == "forget-me-not" || goalID == "1"))
             || ($0.id == "chapter-2" && (goalID == "white-lily" || goalID == "2"))
-            || ($0.id == "chapter-3" && (goalID == "kamboja-bali" || goalID == "3"))
+            || ($0.id == "balinese-frangipani" && (goalID == "chapter-3" || goalID == "kamboja-bali" || goalID == "3"))
         }
     }
 }
