@@ -183,8 +183,18 @@ final class GameViewModel {
         rebuildConnections()
     }
 
+    func setBaseConnections(_ newConnections: [ConnectionModel]) {
+        baseConnections = newConnections
+        rebuildConnections()
+    }
+
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
         perspectiveConnections = newConnections
+        rebuildConnections()
+    }
+
+    func setLightConnections(_ newConnections: [ConnectionModel]) {
+        lightConnections = isLightRevealed ? newConnections : []
         rebuildConnections()
     }
 
