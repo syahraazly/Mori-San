@@ -5,9 +5,9 @@ final class PetalNode: SKNode {
     private let sprite: SKSpriteNode
     private(set) var isCollected = false
 
-    init(platformID: String) {
+    init(platformID: String, assetName: String) {
         self.platformID = platformID
-        let texture = SKTexture(imageNamed: "forget-me-not-petal")
+        let texture = SKTexture(imageNamed: assetName)
         self.sprite = SKSpriteNode(texture: texture, size: CGSize(width: 44, height: 32))
         super.init()
 

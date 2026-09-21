@@ -9,8 +9,11 @@ final class GameScene: SKScene {
     private var dragTouchOffsetX: CGFloat = 0
     private var didDragPlatform = false
     private var moriNode: PlayerNode?
+    private var portalNodes: [String: ExitNode] = [:]
     private var exitNode: ExitNode?
     private var petalNode: PetalNode?
+    private var chapterProgressLabel: SKLabelNode?
+    private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
@@ -22,11 +25,14 @@ final class GameScene: SKScene {
     private var pendingDragOffsetX: CGFloat = 0
     private var touchBeganLocation: CGPoint = .zero
     private let dragCommitThreshold: CGFloat = 8
+    private var mapView: MapView?
 
     init(size: CGSize, appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
         viewModel = GameViewModel(initialLevel: TutorialLevelData.closerLevel)
         super.init(size: size)
+        scaleMode = .resizeFill
+        backgroundColor = SKColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1.0)
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -34,11 +40,11 @@ final class GameScene: SKScene {
     }
 
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(red: 0.95, green: 0.90, blue: 0.82, alpha: 1.0)
         renderCurrentScreen()
     }
 
     override func update(_ currentTime: TimeInterval) {
+        super.update(currentTime)
         renderCurrentScreen()
 
         guard case .gameplay = appFlow.screen,
@@ -46,18 +52,20 @@ final class GameScene: SKScene {
               let moriNode,
               moriNode.action(forKey: "moriMove") == nil,
               moriNode.action(forKey: "perspectiveMove") == nil,
+              moriNode.action(forKey: "portalLoop") == nil,
               !isMoriSupported(moriNode) else {
             return
         }
 
-        handleFall()
+        handleMoriFall()
     }
 
-    private func renderCurrentScreen() {
-        guard renderedScreen != appFlow.screen else { return }
-        renderedScreen = appFlow.screen
+    func renderCurrentScreen() {
+        let screen = appFlow.screen
+        guard renderedScreen != screen else { return }
+        renderedScreen = screen
 
-        switch appFlow.screen {
+        switch screen {
         case .onboarding, .storyline:
             removeAllChildren()
         case .map:
@@ -66,8 +74,6 @@ final class GameScene: SKScene {
             renderGoal(goalID)
         case .levelTransition:
             renderChapterTransition()
-        case .congratulations(let goalID):
-            renderCongratulations(goalID)
         case .gameplay(let levelID):
             guard let configuration = LevelCatalog.configuration(for: levelID) else { return }
             viewModel.loadLevel(configuration)
@@ -95,25 +101,46 @@ final class GameScene: SKScene {
         addChild(ChapterTransitionView(sceneSize: size))
     }
 
-    private func renderCongratulations(_ goalID: GoalID) {
-        removeAllChildren()
-        addChild(CongratulationsView(sceneSize: size, goalID: goalID))
-    }
-
     private func renderMap() {
         removeAllChildren()
-        addChild(MapView(sceneSize: size))
+        let mapViewModel = MapViewModel(
+            isChapterUnlocked: { [weak self] chapterID in
+                self?.appFlow.isChapterUnlocked(chapterID) ?? false
+            },
+            isChapterCompleted: { [weak self] chapterID in
+                self?.appFlow.isChapterCompleted(chapterID) ?? false
+            }
+        )
+        let map = MapView(
+            sceneSize: size,
+            viewModel: mapViewModel,
+            onSelectChapter: { [weak self] chapterID in
+                self?.appFlow.openChapter(chapterID)
+            }
+        )
+        addChild(map)
+        mapView = map
     }
 
     private func renderLevel() {
         removeAllChildren()
         platformNodes.removeAll()
+        portalNodes.removeAll()
         draggedPlatform = nil
         moriNode = nil
         exitNode = nil
         petalNode = nil
+        chapterProgressLabel = nil
+        chapterProgressGoal = nil
         moriCurrentSurfacePosition = nil
+        pendingDragPlatform = nil
+        didDragPlatform = false
+
         let level = viewModel.currentLevel
+        addBackground(for: level)
+        createLevelBackButton()
+        createChapterProgressHUD(for: level)
+
         for platform in level.platforms {
             let node = PlatformNode(model: platform)
             node.position = position(for: platform)
@@ -121,18 +148,23 @@ final class GameScene: SKScene {
             platformNodes[platform.id] = node
         }
 
-        viewModel.setConnections(level.initialConnections)
+        configureLightReveal(for: level)
+
+        viewModel.setConnections(allowedConnections(from: level.initialConnections))
 
         if level.usesPerspective {
             updatePerspectiveConnections()
         }
 
-        // Add Petal if level defines one
-        if let petalConfig = level.petalConfiguration {
-            let petal = PetalNode(platformID: petalConfig.platformID)
+        if let petalConfig = level.petalConfiguration,
+           let platform = platformNodes[petalConfig.platformID] {
+            let petal = PetalNode(
+                platformID: petalConfig.platformID,
+                assetName: petalConfig.assetName ?? petalAssetName(for: level)
+            )
             petal.position = petalConfig.offset
             petal.zPosition = 10
-            platformNodes[petalConfig.platformID]?.addChild(petal)
+            platform.addChild(petal)
             petalNode = petal
         }
 
@@ -145,55 +177,39 @@ final class GameScene: SKScene {
             x: initialLanding.x + level.player.startingOffset.x,
             y: initialLanding.y + level.player.startingOffset.y
         )
+        mori.zPosition = 10
         addChild(mori)
         moriNode = mori
 
         let exitPlatformID = resolvedExitPlatformID(for: level)
-        if level.interaction != .perspective,
-           let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) {
+        if !level.portalConfigurations.isEmpty {
+            for portal in level.portalConfigurations {
+                guard let portalPlatformNode = platformNodes[portal.platformID] else { continue }
+                let portalNode = ExitNode(portalID: portal.id)
+                portalNode.position = portalPosition(for: portal, on: portalPlatformNode)
+                portalNode.zPosition = 8
+                if case .completesLevel = portal.outcome {
+                    portalNode.setLocked(viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal)
+                    exitNode = portalNode
+                }
+                portalPlatformNode.addChild(portalNode)
+                portalNodes[portal.id] = portalNode
+            }
+        } else if level.interaction != .perspective,
+                  let exitPlatform = level.platforms.first(where: { $0.id == exitPlatformID }) {
             let exit = ExitNode()
             exit.position = level.exitConfiguration?.offset ?? CGPoint(x: 45, y: 55)
             exit.zPosition = 10
             exit.setLocked(viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal)
             platformNodes[exitPlatform.id]?.addChild(exit)
             exitNode = exit
+            portalNodes["exit"] = exit
         }
 
         createInstructionLabel()
         updateInstruction()
-        renderChapterProgressHUD()
 
         checkPetalCollection(at: level.player.startingPlatformID)
-    }
-
-    private func renderChapterProgressHUD() {
-        let levelID = viewModel.currentLevel.id
-        guard let goalID = appFlow.activeGoalID ?? LevelCatalog.goalID(for: levelID),
-              let goal = FlowerGoalData.goal(for: goalID),
-              let currentLevelIndex = goal.levelIDs.firstIndex(where: { LevelCatalog.canonicalID(for: $0) == LevelCatalog.canonicalID(for: levelID) }) else {
-            return
-        }
-
-        let hudContainer = SKNode()
-        hudContainer.name = "chapterProgressHUD"
-        hudContainer.position = CGPoint(x: 24, y: size.height - 40)
-        hudContainer.zPosition = 100
-
-        let icon = SKSpriteNode(imageNamed: goal.petalAssetName)
-        icon.size = CGSize(width: 28, height: 20)
-        icon.position = CGPoint(x: 14, y: 0)
-        hudContainer.addChild(icon)
-
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        label.text = "\(currentLevelIndex + 1)/\(goal.levelIDs.count)"
-        label.fontSize = 16
-        label.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
-        label.horizontalAlignmentMode = .left
-        label.verticalAlignmentMode = .center
-        label.position = CGPoint(x: 34, y: 0)
-        hudContainer.addChild(label)
-
-        addChild(hudContainer)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -207,11 +223,8 @@ final class GameScene: SKScene {
                 appFlow.startLevel(pendingLevelID)
             }
             renderCurrentScreen()
-        case .congratulations:
-            appFlow.openMap()
-            renderCurrentScreen()
         case .map:
-            startMapLevel(at: touch.location(in: self))
+            mapView?.handleTouchBegan(at: touch.location(in: self))
         case .gameplay:
             handleGameplayTouch(touch)
         case .onboarding, .storyline:
@@ -223,27 +236,20 @@ final class GameScene: SKScene {
         var touchedNode: SKNode? = atPoint(location)
 
         while let node = touchedNode {
-            if let name = node.name, name.hasPrefix("level-") {
-                let levelID = String(name.dropFirst("level-".count))
-                guard appFlow.isLevelUnlocked(levelID) else { return }
-                appFlow.startLevel(levelID)
+            if node.name == "back-to-map" {
+                appFlow.openMap()
                 return
             }
-            touchedNode = node.parent
-        }
-    }
 
-    private func startMapLevel(at location: CGPoint) {
-        var touchedNode: SKNode? = atPoint(location)
-
-        while let node = touchedNode {
             if let name = node.name {
-                if name.hasPrefix("start-chapter-") {
-                    let chapterID = String(name.dropFirst("start-chapter-".count))
-                    appFlow.startChapter(chapterID)
+                if name.hasPrefix("level-") {
+                    let levelID = String(name.dropFirst("level-".count))
+                    guard appFlow.isLevelUnlocked(levelID) else { return }
+                    appFlow.startLevel(levelID)
                     return
                 } else if name.hasPrefix("start-level-") {
                     let levelID = String(name.dropFirst("start-level-".count))
+                    guard appFlow.isLevelUnlocked(levelID) else { return }
                     appFlow.startLevel(levelID)
                     return
                 }
@@ -258,26 +264,20 @@ final class GameScene: SKScene {
         }
 
         let touchLocation = touch.location(in: self)
-        let exitPlatformID = resolvedExitPlatformID(for: viewModel.currentLevel)
 
-        // Exit touched
-        if exitNode(at: touchLocation) != nil {
-            if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
-                exitNode?.playShake()
-                showPetalRequiredNotice()
-                return
-            }
-
-            if viewModel.moriPlatformID == exitPlatformID {
-                enterExit()
-                return
-            }
-
-            if viewModel.canMoveMori(to: exitPlatformID) {
-                moveMori(to: exitPlatformID, completesLevel: true)
-            }
+        if isLevelBackButton(at: touchLocation) {
+            returnToLevelChapter()
             return
         }
+
+        if let platform = platformNode(at: touchLocation),
+           platform.model.id == viewModel.moriPlatformID,
+           activateLightRevealIfNeeded(on: platform.model.id) {
+            return
+        }
+
+        let exitPlatformID = resolvedExitPlatformID(for: viewModel.currentLevel)
+        let touchedPortal = portalConfiguration(at: touchLocation)
 
         // Petal touched
         if let touchedPetal = petalNode(at: touchLocation) {
@@ -299,6 +299,7 @@ final class GameScene: SKScene {
 
             if platformNode(at: touchLocation) == nil,
                exitNode(at: touchLocation) == nil,
+               touchedPortal == nil,
                petalNode(at: touchLocation) == nil,
                playerNode(at: touchLocation) == nil {
                 perspectiveSwipeStart = touchLocation
@@ -306,16 +307,35 @@ final class GameScene: SKScene {
             return
         }
 
-        if viewModel.currentLevel.interaction == .perspective {
+        if viewModel.currentLevel.interaction == .perspectiveCompact {
             if let platform = platformNode(at: touchLocation) {
-                moveMoriAcrossPerspectivePath(to: platform.model.id)
-                return
+                if platform.model.id == viewModel.moriPlatformID {
+                    if platform.model.isDraggable {
+                        pendingDragPlatform = platform
+                        pendingDragOffsetX = touchLocation.x - platform.position.x
+                        touchBeganLocation = touchLocation
+                        didDragPlatform = false
+                    } else if let targetSurface = platform.closestSurface(to: touchLocation) {
+                        walkMoriWithinPlatform(to: targetSurface.position)
+                    }
+                    return
+                }
+
+                if viewModel.canMoveMori(to: platform.model.id) {
+                    moveMoriAcrossPerspectivePath(to: platform.model.id)
+                    return
+                }
+
+                if platform.model.isDraggable {
+                    pendingDragPlatform = platform
+                    pendingDragOffsetX = touchLocation.x - platform.position.x
+                    touchBeganLocation = touchLocation
+                    didDragPlatform = false
+                    return
+                }
             }
 
-            if platformNode(at: touchLocation) == nil,
-               exitNode(at: touchLocation) == nil,
-               petalNode(at: touchLocation) == nil,
-               playerNode(at: touchLocation) == nil {
+            if playerNode(at: touchLocation) == nil {
                 perspectiveSwipeStart = touchLocation
             }
             return
@@ -355,6 +375,12 @@ final class GameScene: SKScene {
 
         // 3. Mori is on a different platform, and this platform is draggable
         if platform.model.isDraggable {
+            guard !viewModel.isConnected
+                    || (platform.model.remainsDraggableWhenConnected
+                        && !viewModel.areConnected(platform.model.id, exitPlatformID)) else {
+                return
+            }
+
             pendingDragPlatform = platform
             pendingDragOffsetX = touchLocation.x - platform.position.x
             touchBeganLocation = touchLocation
@@ -364,6 +390,11 @@ final class GameScene: SKScene {
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if case .map = appFlow.screen, let touch = touches.first {
+            mapView?.handleTouchMoved(to: touch.location(in: self))
+            return
+        }
+
         guard case .gameplay = appFlow.screen else { return }
         guard viewModel.currentLevel.allowsCompact else { return }
         guard let touch = touches.first else { return }
@@ -397,6 +428,7 @@ final class GameScene: SKScene {
         let horizontalChange = constrainedX - platform.position.x
 
         if abs(horizontalChange) > 1 {
+            viewModel.disconnectSnappedConnections(for: platform.model.id)
             didDragPlatform = true
             viewModel.disconnectSnap(for: platform.model.id)
             if viewModel.currentLevel.usesPerspective {
@@ -412,6 +444,11 @@ final class GameScene: SKScene {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if case .map = appFlow.screen, let touch = touches.first {
+            mapView?.handleTouchEnded(at: touch.location(in: self))
+            return
+        }
+
         guard case .gameplay = appFlow.screen else { return }
 
         defer {
@@ -422,7 +459,6 @@ final class GameScene: SKScene {
             if viewModel.currentLevel.interaction == .perspectiveCompact, didDragPlatform {
                 if !attemptSnapIfNeeded() {
                     viewModel.disconnectSnap(for: draggedPlatform?.model.id)
-                    // Recalculate koneksi berdasarkan posisi aktual setelah drag selesai
                     updatePerspectiveConnectionsUsingActualPositions()
                 }
                 draggedPlatform = nil
@@ -480,33 +516,30 @@ final class GameScene: SKScene {
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard case .gameplay = appFlow.screen else { return }
         if didDragPlatform {
-            viewModel.disconnectSnap(for: draggedPlatform?.model.id)
-            if viewModel.currentLevel.usesPerspective {
-                updatePerspectiveConnectionsUsingActualPositions()
+            if !attemptSnapIfNeeded() {
+                viewModel.disconnectSnap(for: draggedPlatform?.model.id)
             }
         }
-        perspectiveSwipeStart = nil
         draggedPlatform = nil
         pendingDragPlatform = nil
         didDragPlatform = false
+        perspectiveSwipeStart = nil
     }
 
     private func position(for platform: PlatformModel) -> CGPoint {
         let level = viewModel.currentLevel
-
-        guard level.usesPerspective else {
-            return CGPoint(
-                x: size.width * platform.horizontalPosition,
-                y: size.height * level.platformHeightRatio
-            )
-        }
-
+        let positionOverride = viewModel.hasCollectedPetal
+            ? level.petalConfiguration?.perspectivePositionOverrides.first(where: {
+                $0.platformID == platform.id
+            })
+            : nil
         let normalizedPosition: CGPoint?
+
         switch viewModel.perspectivePOV {
         case .front:
-            normalizedPosition = platform.frontPosition
+            normalizedPosition = positionOverride?.frontPosition ?? platform.frontPosition
         case .side:
-            normalizedPosition = platform.sidePosition
+            normalizedPosition = positionOverride?.sidePosition ?? platform.sidePosition
         }
 
         guard let normalizedPosition else {
@@ -522,9 +555,132 @@ final class GameScene: SKScene {
         )
     }
 
+    private func configureLightReveal(for level: LevelConfiguration) {
+        guard let lightReveal = level.lightRevealConfiguration else { return }
+
+        for platformID in lightReveal.hiddenPlatformIDs {
+            platformNodes[platformID]?.isHidden = !viewModel.isLightRevealed
+        }
+
+        guard let lampPlatform = platformNodes[lightReveal.lampPlatformID] else { return }
+        let indicator = SKShapeNode(circleOfRadius: 8)
+        indicator.name = "lamp-indicator"
+        indicator.fillColor = SKColor(red: 1.0, green: 0.80, blue: 0.30, alpha: 1.0)
+        indicator.strokeColor = SKColor.white.withAlphaComponent(0.7)
+        indicator.lineWidth = 1.5
+        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 12)
+        indicator.zPosition = 12
+        lampPlatform.addChild(indicator)
+
+        if !viewModel.isLightRevealed {
+            indicator.run(
+                SKAction.repeatForever(
+                    SKAction.sequence([
+                        .fadeAlpha(to: 0.45, duration: 0.65),
+                        .fadeAlpha(to: 1.0, duration: 0.65)
+                    ])
+                ),
+                withKey: "lampPulse"
+            )
+        }
+    }
+
+    @discardableResult
+    private func activateLightRevealIfNeeded(on platformID: String) -> Bool {
+        guard let lightReveal = viewModel.currentLevel.lightRevealConfiguration,
+              lightReveal.lampPlatformID == platformID,
+              viewModel.revealLightRoute() else {
+            return false
+        }
+
+        for (index, hiddenPlatformID) in lightReveal.hiddenPlatformIDs.enumerated() {
+            guard let platform = platformNodes[hiddenPlatformID] else { continue }
+            platform.isHidden = false
+            platform.alpha = 0
+            platform.run(
+                SKAction.sequence([
+                    .wait(forDuration: 0.16 * Double(index)),
+                    .fadeIn(withDuration: 0.22)
+                ]),
+                withKey: "lightReveal"
+            )
+        }
+
+        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") {
+            lamp.removeAction(forKey: "lampPulse")
+            lamp.run(SKAction.scale(to: 1.45, duration: 0.16))
+        }
+
+        HapticManager.playSnapFeedback()
+        updateInstruction()
+        return true
+    }
+
+    private func portalPosition(for portal: PortalConfiguration, on platform: PlatformNode) -> CGPoint {
+        switch portal.anchor {
+        case .platformCenter:
+            return portal.offset
+        case .walkableSurface:
+            return CGPoint(
+                x: platform.model.walkableSurfaceOffset.x + portal.offset.x,
+                y: platform.model.walkableSurfaceOffset.y + portal.offset.y
+            )
+        }
+    }
+
+    private func allowedConnections(from candidates: [ConnectionModel]) -> [ConnectionModel] {
+        candidates.filter { connection in
+            guard let firstPlatform = viewModel.currentLevel.platforms.first(where: {
+                $0.id == connection.firstPlatformID
+            }),
+            let secondPlatform = viewModel.currentLevel.platforms.first(where: {
+                $0.id == connection.secondPlatformID
+            }) else {
+                return false
+            }
+
+            return connectionIsAllowed(
+                between: firstPlatform,
+                at: position(for: firstPlatform),
+                and: secondPlatform,
+                at: position(for: secondPlatform)
+            )
+        }
+    }
+
+    private func connectionIsAllowed(
+        between first: PlatformModel,
+        at firstPosition: CGPoint,
+        and second: PlatformModel,
+        at secondPosition: CGPoint
+    ) -> Bool {
+        guard first.isWalkable, second.isWalkable else { return false }
+
+        let firstEdge: PlatformEdge
+        let secondEdge: PlatformEdge
+        if firstPosition.x <= secondPosition.x {
+            firstEdge = .right
+            secondEdge = .left
+        } else {
+            firstEdge = .left
+            secondEdge = .right
+        }
+
+        return !first.blockedConnectionEdges.contains(firstEdge)
+            && !second.blockedConnectionEdges.contains(secondEdge)
+    }
+
+    private func connectionIsAllowed(between first: PlatformNode, and second: PlatformNode) -> Bool {
+        connectionIsAllowed(
+            between: first.model,
+            at: first.position,
+            and: second.model,
+            at: second.position
+        )
+    }
+
     private func animatePerspectiveChange() {
         viewModel.togglePerspectivePOV()
-
         updatePerspectiveConnections()
 
         for platform in viewModel.currentLevel.platforms {
@@ -557,7 +713,7 @@ final class GameScene: SKScene {
     }
 
     private func updatePerspectiveConnections() {
-        let platforms = viewModel.currentLevel.platforms
+        let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
         let maximumGap: CGFloat = 25
         let maximumVerticalDifference: CGFloat = 8
@@ -594,7 +750,8 @@ final class GameScene: SKScene {
                 }
 
                 if let pair = matchingPair, abs(edgeGap) <= maximumGap {
-                    if !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: true) {
+                    if connectionIsAllowed(between: firstPlatform, at: firstPosition, and: secondPlatform, at: secondPosition)
+                        && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: true) {
                         newConnections.append(
                             ConnectionModel(
                                 firstPlatformID: firstPlatform.id,
@@ -613,7 +770,7 @@ final class GameScene: SKScene {
     /// (bukan posisi layout frontPosition/sidePosition). Dipanggil setelah snap/drag
     /// agar koneksi benar-benar mencerminkan posisi fisik balok di layar.
     private func updatePerspectiveConnectionsUsingActualPositions() {
-        let platforms = viewModel.currentLevel.platforms
+        let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
         let maximumGap: CGFloat = 25
         let maximumVerticalDifference: CGFloat = 8
@@ -651,7 +808,8 @@ final class GameScene: SKScene {
                 }
 
                 if let pair = matchingPair, abs(edgeGap) <= maximumGap {
-                    if !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: false) {
+                    if connectionIsAllowed(between: firstNode, and: secondNode)
+                        && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: false) {
                         newConnections.append(
                             ConnectionModel(
                                 firstPlatformID: firstPlatform.id,
@@ -741,21 +899,28 @@ final class GameScene: SKScene {
         guard !actions.isEmpty else { return }
 
         actions.append(SKAction.run { [weak self, weak moriNode] in
-            moriNode?.playIdle()
-            self?.updateInstruction()
+            guard let self else { return }
+            if !self.activatePortalIfNeeded(on: platformID) {
+                moriNode?.playIdle()
+                self.updateInstruction()
+            }
         })
 
         moriNode.run(SKAction.sequence(actions), withKey: "moriMove")
     }
 
     private func checkPetalCollection(at platformID: String) {
-        guard let petal = petalNode,
-              !petal.isCollected,
-              platformID == petal.platformID else { return }
+        guard let petalNode,
+              !petalNode.isCollected,
+              petalNode.platformID == platformID else {
+            return
+        }
 
         viewModel.collectPetal()
+        appFlow.claimPetal(for: viewModel.currentLevel.id)
+        updateChapterProgressHUD()
         HapticManager.playSnapFeedback()
-        petal.collect { [weak self] in
+        petalNode.collect { [weak self] in
             self?.petalNode = nil
         }
         exitNode?.unlockWithAnimation()
@@ -778,6 +943,123 @@ final class GameScene: SKScene {
         ])
         instructionLabel?.removeAction(forKey: "noticePulse")
         instructionLabel?.run(pulseRed, withKey: "noticePulse")
+    }
+
+    private func petalAssetName(for level: LevelConfiguration) -> String {
+        guard let goalID = LevelCatalog.goalID(for: level.id),
+              let goal = FlowerGoalData.goal(for: goalID) else {
+            return "forget-me-not-petal"
+        }
+        return goal.petalAssetName
+    }
+
+    private func updateChapterProgressHUD() {
+        guard let chapterProgressLabel,
+              let chapterProgressGoal else {
+            return
+        }
+
+        chapterProgressLabel.text = "\(appFlow.progress.petalCount(for: chapterProgressGoal))/\(chapterProgressGoal.totalPetals)"
+    }
+
+    private func createChapterProgressHUD(for level: LevelConfiguration) {
+        guard let goalID = LevelCatalog.goalID(for: level.id),
+              let goal = FlowerGoalData.goal(for: goalID) else {
+            return
+        }
+
+        let hud = SKShapeNode(rectOf: CGSize(width: 108, height: 42), cornerRadius: 14)
+        hud.fillColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 0.82)
+        hud.strokeColor = .white.withAlphaComponent(0.35)
+        hud.lineWidth = 2
+        hud.position = CGPoint(x: size.width - 64, y: size.height - 42)
+        hud.zPosition = 100
+        addChild(hud)
+
+        let petal = SKSpriteNode(imageNamed: goal.petalAssetName)
+        petal.size = CGSize(width: 28, height: 22)
+        petal.position = CGPoint(x: -30, y: 0)
+        hud.addChild(petal)
+
+        let count = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        count.text = "\(appFlow.progress.petalCount(for: goal))/\(goal.totalPetals)"
+        count.fontSize = 16
+        count.horizontalAlignmentMode = .left
+        count.verticalAlignmentMode = .center
+        count.fontColor = .white
+        count.position = CGPoint(x: -10, y: 0)
+        hud.addChild(count)
+        chapterProgressLabel = count
+        chapterProgressGoal = goal
+    }
+
+    private func createLevelBackButton() {
+        let button = SKShapeNode(rectOf: CGSize(width: 118, height: 42), cornerRadius: 14)
+        button.name = "back-to-chapter"
+        button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.92)
+        button.strokeColor = .white.withAlphaComponent(0.35)
+        button.lineWidth = 2
+        button.position = CGPoint(x: 74, y: size.height - 42)
+        button.zPosition = 100
+        addChild(button)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "‹ Chapter"
+        label.fontSize = 16
+        label.verticalAlignmentMode = .center
+        label.fontColor = .white
+        button.addChild(label)
+    }
+
+    private func isLevelBackButton(at location: CGPoint) -> Bool {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if node.name == "back-to-chapter" {
+                return true
+            }
+            touchedNode = node.parent
+        }
+
+        return false
+    }
+
+    private func returnToLevelChapter() {
+        if let goalID = LevelCatalog.goalID(for: viewModel.currentLevel.id) {
+            appFlow.openGoal(goalID)
+        } else {
+            appFlow.openMap()
+        }
+    }
+
+    @discardableResult
+    private func activatePortalIfNeeded(on platformID: String) -> Bool {
+        guard !viewModel.hasReachedExit,
+              let portal = viewModel.currentLevel.portalConfigurations.first(where: {
+                  $0.platformID == platformID
+              }) else {
+            return false
+        }
+
+        if case .completesLevel = portal.outcome,
+           !viewModel.isExitUnlocked {
+            exitNode?.playShake()
+            showPetalRequiredNotice()
+            return false
+        }
+
+        handlePortalOutcome(portal)
+        return true
+    }
+
+    private func addBackground(for level: LevelConfiguration) {
+        guard let backgroundAssetName = level.backgroundAssetName else { return }
+
+        let background = SKSpriteNode(imageNamed: backgroundAssetName)
+        background.size = size
+        background.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        background.zPosition = -20
+        addChild(background)
     }
 
     private func petalNode(at location: CGPoint) -> PetalNode? {
@@ -819,6 +1101,19 @@ final class GameScene: SKScene {
         return nil
     }
 
+    private func portalConfiguration(at location: CGPoint) -> PortalConfiguration? {
+        var touchedNode: SKNode? = atPoint(location)
+
+        while let node = touchedNode {
+            if let portal = node as? ExitNode {
+                return viewModel.currentLevel.portalConfigurations.first { $0.id == portal.name }
+            }
+            touchedNode = node.parent
+        }
+
+        return nil
+    }
+
     private func playerNode(at location: CGPoint) -> PlayerNode? {
         var touchedNode: SKNode? = atPoint(location)
 
@@ -833,11 +1128,20 @@ final class GameScene: SKScene {
     }
 
     private func resolvedExitPlatformID(for level: LevelConfiguration) -> String {
-        level.exitConfiguration?.platformID ?? level.exitPlatformID
+        if let exitID = level.exitConfiguration?.platformID {
+            return exitID
+        }
+        for portal in level.portalConfigurations {
+            if case .completesLevel = portal.outcome {
+                return portal.platformID
+            }
+        }
+        return level.exitPlatformID
     }
 
     private func isMoriSupported(_ mori: PlayerNode) -> Bool {
         platformNodes.values.contains { platform in
+            guard platform.model.isWalkable else { return false }
             let surfaces = platform.playableSurfaces(at: platform.position)
             return surfaces.contains { surface in
                 let horizontalDistance = abs(mori.position.x - surface.position.x)
@@ -851,7 +1155,7 @@ final class GameScene: SKScene {
         }
     }
 
-    private func handleFall() {
+    private func handleMoriFall() {
         guard let moriNode else { return }
         isRestartingLevel = true
         print("Mori fell. Restarting level.")
@@ -866,13 +1170,49 @@ final class GameScene: SKScene {
         }
     }
 
-    private func enterExit() {
+    private func handlePortalOutcome(_ portal: PortalConfiguration) {
+        switch portal.outcome {
+        case .completesLevel:
+            enterExit(portal: portal)
+
+        case .loops(let destination):
+            guard let destinationPlatform = platformNodes[destination.platformID],
+                  let moriNode else { return }
+
+            let targetLanding = destinationPlatform.landingPosition(approachingFrom: destinationPlatform.position)
+            let targetPosition = CGPoint(
+                x: targetLanding.x + destination.offset.x,
+                y: targetLanding.y + destination.offset.y
+            )
+            let loop = SKAction.sequence([
+                .fadeOut(withDuration: 0.12),
+                .move(to: targetPosition, duration: 0),
+                .fadeIn(withDuration: 0.12),
+                .run { [weak self] in
+                    self?.moriCurrentSurfacePosition = nil
+                    self?.viewModel.moveMori(to: destination.platformID)
+                    self?.checkPetalCollection(at: destination.platformID)
+                    self?.moriNode?.playIdle()
+                }
+            ])
+            moriNode.run(loop, withKey: "portalLoop")
+        }
+    }
+
+    private func enterExit(portal: PortalConfiguration? = nil) {
         guard let moriNode, !viewModel.hasReachedExit else { return }
+
+        if let portal, case .loops = portal.outcome {
+            handlePortalOutcome(portal)
+            return
+        }
+
         viewModel.markExitReached()
         print("Mori reached the exit")
 
-        if let exitNode {
-            let exitCenter = exitNode.convert(CGPoint.zero, to: self)
+        let targetExitNode = (portal != nil ? portalNodes[portal!.id] : nil) ?? exitNode
+        if let targetExitNode {
+            let exitCenter = targetExitNode.convert(CGPoint.zero, to: self)
             let moveToCenter = SKAction.move(to: exitCenter, duration: 0.18)
             let shrink = SKAction.scale(to: 0.1, duration: 0.3)
             let spin = SKAction.rotate(byAngle: .pi * 2, duration: 0.3)
@@ -889,11 +1229,11 @@ final class GameScene: SKScene {
         }
     }
 
-    private func moveMori(to platformID: String, completesLevel: Bool) {
+    private func moveMori(to platformID: String, completesLevel: Bool, portal: PortalConfiguration? = nil) {
         guard let moriNode, moriNode.action(forKey: "moriMove") == nil else { return }
 
         if completesLevel && viewModel.moriPlatformID == platformID {
-            enterExit()
+            enterExit(portal: portal)
             return
         }
 
@@ -930,26 +1270,36 @@ final class GameScene: SKScene {
             previousPosition = destination
         }
 
-        if completesLevel, let exitNode {
-            let exitDestination = exitNode.convert(CGPoint.zero, to: self)
-            let start = previousPosition
-            let faceAction = SKAction.run { [weak moriNode] in
-                let dx = exitDestination.x - start.x
-                if abs(dx) > 1 {
-                    moriNode?.playWalk(facingRight: dx > 0)
-                } else {
-                    moriNode?.playWalk()
+        if completesLevel {
+            let targetExitNode = (portal != nil ? portalNodes[portal!.id] : nil) ?? exitNode
+            if let targetExitNode {
+                let exitDestination = targetExitNode.convert(CGPoint.zero, to: self)
+                let start = previousPosition
+                let faceAction = SKAction.run { [weak moriNode] in
+                    let dx = exitDestination.x - start.x
+                    if abs(dx) > 1 {
+                        moriNode?.playWalk(facingRight: dx > 0)
+                    } else {
+                        moriNode?.playWalk()
+                    }
                 }
+                movementActions.append(faceAction)
+                movementActions.append(movementAction(from: previousPosition, to: exitDestination))
+                movementActions.append(SKAction.run { [weak self] in
+                    self?.enterExit(portal: portal)
+                })
+            } else {
+                movementActions.append(SKAction.run { [weak self] in
+                    self?.enterExit(portal: portal)
+                })
             }
-            movementActions.append(faceAction)
-            movementActions.append(movementAction(from: previousPosition, to: exitDestination))
-            movementActions.append(SKAction.run { [weak self] in
-                self?.enterExit()
-            })
         } else {
             movementActions.append(SKAction.run { [weak self, weak moriNode] in
-                moriNode?.playIdle()
-                self?.updateInstruction()
+                guard let self else { return }
+                if !self.activatePortalIfNeeded(on: platformID) {
+                    moriNode?.playIdle()
+                    self.updateInstruction()
+                }
             })
         }
 
@@ -1028,7 +1378,17 @@ final class GameScene: SKScene {
         guard let snapTarget = snapTarget(for: platformB) else { return false }
         let snappedPosition = CGPoint(x: snapTarget.position.x, y: platformB.position.y)
 
-        guard viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else { return false }
+        // Validate and register the graph link at the exact position that will
+        // be rendered after the snap, not at the bridge's pre-snap position.
+        guard connectionIsAllowed(
+            between: snapTarget.platform.model,
+            at: snapTarget.platform.position,
+            and: platformB.model,
+            at: snappedPosition
+        ),
+              viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else {
+            return false
+        }
 
         let snapDeltaX = snappedPosition.x - platformB.position.x
         let move = SKAction.move(to: snappedPosition, duration: GameConstants.Snap.animationDuration)
@@ -1037,8 +1397,6 @@ final class GameScene: SKScene {
             SKAction.scale(to: 1.0, duration: 0.06)
         ])
         platformB.run(.group([move, bounce])) { [weak self] in
-            // Gunakan posisi aktual (bukan layout) agar koneksi terbentuk
-            // berdasarkan posisi fisik balok setelah di-snap
             self?.updatePerspectiveConnectionsUsingActualPositions()
         }
         if viewModel.moriPlatformID == platformB.model.id {
@@ -1049,33 +1407,22 @@ final class GameScene: SKScene {
         return true
     }
 
-    private func isPlacementValid(for draggablePlatform: PlatformNode, at proposedPosition: CGPoint) -> Bool {
-        let proposedRects = draggablePlatform.occupiedCellRects(at: proposedPosition)
-
-        for rect in proposedRects {
-            if rect.minX < GameConstants.Layout.horizontalMargin || rect.maxX > size.width - GameConstants.Layout.horizontalMargin {
-                return false
-            }
-        }
-
-        for target in platformNodes.values where target.model.id != draggablePlatform.model.id && !target.model.isDraggable {
+    private func isPlacementValid(for draggablePlatform: PlatformNode, at position: CGPoint) -> Bool {
+        let draggableRects = draggablePlatform.occupiedCellRects(at: position)
+        for (id, target) in platformNodes where id != draggablePlatform.model.id {
             let targetRects = target.occupiedCellRects(at: target.position)
-            for pRect in proposedRects {
+            for dRect in draggableRects {
                 for tRect in targetRects {
-                    let intersection = pRect.intersection(tRect)
-                    if !intersection.isNull && intersection.width > 1 && intersection.height > 1 {
+                    let intersection = dRect.intersection(tRect)
+                    if !intersection.isNull, intersection.width > 1, intersection.height > 1 {
                         return false
                     }
                 }
             }
         }
-
         return true
     }
 
-    /// Returns the nearest X where `draggablePlatform` has a valid (non-overlapping) placement,
-    /// searching outward from `startX` toward `directionX`.
-    /// Used to recover when `previousX` itself is already in an invalid state after a fast drag.
     private func nearestValidX(
         for draggablePlatform: PlatformNode,
         startX: CGFloat,
@@ -1111,7 +1458,7 @@ final class GameScene: SKScene {
             var constrainedX = proposedX
             let halfDraggableWidth = draggablePlatform.model.effectiveWidth / 2
 
-            for target in platformNodes.values where !target.model.isDraggable {
+            for target in platformNodes.values where !target.model.isDraggable && target.model.isWalkable {
                 let halfTargetWidth = target.model.effectiveWidth / 2
                 let nearestRightPosition = target.position.x + halfTargetWidth + halfDraggableWidth
                 let nearestLeftPosition  = target.position.x - halfTargetWidth - halfDraggableWidth
@@ -1200,13 +1547,15 @@ final class GameScene: SKScene {
             return
         }
 
+        let exitPlatformID = resolvedExitPlatformID(for: level)
+
         if !viewModel.isConnected {
             instructionLabel?.text = "Drag Platform B to connect the path"
-        } else if resolvedExitPlatformID(for: level) == draggablePlatform.id {
+        } else if exitPlatformID == draggablePlatform.id {
             instructionLabel?.text = "Tap the black hole"
         } else if viewModel.moriPlatformID == level.player.startingPlatformID {
             instructionLabel?.text = "Tap Platform B to move Mori"
-        } else if !viewModel.areConnected(draggablePlatform.id, resolvedExitPlatformID(for: level)) {
+        } else if !viewModel.areConnected(draggablePlatform.id, exitPlatformID) {
             instructionLabel?.text = "Drag Platform B to Platform C"
         } else {
             instructionLabel?.text = "Tap the black hole"
@@ -1220,7 +1569,7 @@ final class GameScene: SKScene {
         }
         let snapThreshold = snapRule?.threshold ?? GameConstants.Snap.threshold
 
-        for target in platformNodes.values where !target.model.isDraggable {
+        for target in platformNodes.values where !target.model.isDraggable && target.model.isWalkable {
             if let snapRule, !snapRule.targetPlatformIDs.contains(target.model.id) {
                 continue
             }

@@ -52,8 +52,20 @@ final class PlayerNode: SKNode {
         spriteNode.xScale = right ? currentScale : -currentScale
     }
 
+    func face(horizontalDirection: CGFloat) {
+        guard abs(horizontalDirection) > 1 else { return }
+        setFacing(right: horizontalDirection > 0)
+    }
+
+    func playIdleAnimation() {
+        playIdle()
+    }
+
+    func playWalkAnimation() {
+        playWalk()
+    }
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
-

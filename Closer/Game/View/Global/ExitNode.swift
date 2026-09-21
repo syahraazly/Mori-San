@@ -6,13 +6,13 @@ final class ExitNode: SKShapeNode {
     private let lockIndicator: SKShapeNode
     private(set) var isOpen = true
 
-    override init() {
+    init(portalID: String = "exit") {
         outerRing = SKShapeNode(circleOfRadius: 26)
         blackHole = SKShapeNode(circleOfRadius: 19)
         lockIndicator = SKShapeNode(circleOfRadius: 5)
 
         super.init()
-        name = "exit"
+        name = portalID
         path = CGPath(ellipseIn: CGRect(x: -32, y: -32, width: 64, height: 64), transform: nil)
         fillColor = .clear
         strokeColor = .clear
@@ -74,4 +74,3 @@ final class ExitNode: SKShapeNode {
         fatalError("init(coder:) has not been implemented")
     }
 }
-

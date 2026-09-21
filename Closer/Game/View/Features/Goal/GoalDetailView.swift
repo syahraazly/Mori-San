@@ -29,6 +29,21 @@ final class GoalDetailView: SKNode {
         addChild(progressNode)
         self.progressLabel = progressNode
 
+        let backButton = SKShapeNode(rectOf: CGSize(width: 104, height: 42), cornerRadius: 14)
+        backButton.name = "back-to-map"
+        backButton.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 1.0)
+        backButton.strokeColor = .white.withAlphaComponent(0.35)
+        backButton.lineWidth = 2
+        backButton.position = CGPoint(x: 68, y: sceneSize.height - 42)
+        addChild(backButton)
+
+        let backLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        backLabel.text = "‹ Map"
+        backLabel.fontSize = 16
+        backLabel.verticalAlignmentMode = .center
+        backLabel.fontColor = .white
+        backButton.addChild(backLabel)
+
         addLevelCategory(
             levelIDs: goal.levelIDs,
             yPosition: sceneSize.height * 0.50,

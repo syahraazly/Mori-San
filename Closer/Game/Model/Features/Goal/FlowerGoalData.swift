@@ -31,9 +31,16 @@ enum FlowerGoalData {
 
     static let whiteLily = WhiteLilyLevelData.goal
 
+    static let balineseFrangipani = FlowerGoal(
+        id: "balinese-frangipani",
+        title: "CHAPTER 3",
+        levelIDs: ["balinese-1", "balinese-2", "balinese-3", "balinese-4", "balinese-5"],
+        petalAssetName: "kamboja-bali-petal"
+    )
+
     static let kambojaBali = KambojaBaliLevelData.goal
 
-    static let goals = [forgetMeNot, whiteLily, kambojaBali]
+    static let goals = [forgetMeNot, whiteLily, balineseFrangipani, kambojaBali]
 
     static func goal(for goalID: GoalID) -> FlowerGoal? {
         goals.first {
@@ -44,4 +51,3 @@ enum FlowerGoalData {
         }
     }
 }
-
