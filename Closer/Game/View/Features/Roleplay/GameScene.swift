@@ -148,6 +148,8 @@ final class GameScene: SKScene {
             platformNodes[platform.id] = node
         }
 
+        configureLightReveal(for: level)
+
         viewModel.setConnections(allowedConnections(from: level.initialConnections))
 
         if level.usesPerspective {
@@ -265,6 +267,12 @@ final class GameScene: SKScene {
 
         if isLevelBackButton(at: touchLocation) {
             returnToLevelChapter()
+            return
+        }
+
+        if let platform = platformNode(at: touchLocation),
+           platform.model.id == viewModel.moriPlatformID,
+           activateLightRevealIfNeeded(on: platform.model.id) {
             return
         }
 
@@ -520,13 +528,18 @@ final class GameScene: SKScene {
 
     private func position(for platform: PlatformModel) -> CGPoint {
         let level = viewModel.currentLevel
+        let positionOverride = viewModel.hasCollectedPetal
+            ? level.petalConfiguration?.perspectivePositionOverrides.first(where: {
+                $0.platformID == platform.id
+            })
+            : nil
         let normalizedPosition: CGPoint?
 
         switch viewModel.perspectivePOV {
         case .front:
-            normalizedPosition = platform.frontPosition
+            normalizedPosition = positionOverride?.frontPosition ?? platform.frontPosition
         case .side:
-            normalizedPosition = platform.sidePosition
+            normalizedPosition = positionOverride?.sidePosition ?? platform.sidePosition
         }
 
         guard let normalizedPosition else {
@@ -540,6 +553,67 @@ final class GameScene: SKScene {
             x: size.width * normalizedPosition.x,
             y: size.height * normalizedPosition.y
         )
+    }
+
+    private func configureLightReveal(for level: LevelConfiguration) {
+        guard let lightReveal = level.lightRevealConfiguration else { return }
+
+        for platformID in lightReveal.hiddenPlatformIDs {
+            platformNodes[platformID]?.isHidden = !viewModel.isLightRevealed
+        }
+
+        guard let lampPlatform = platformNodes[lightReveal.lampPlatformID] else { return }
+        let indicator = SKShapeNode(circleOfRadius: 8)
+        indicator.name = "lamp-indicator"
+        indicator.fillColor = SKColor(red: 1.0, green: 0.80, blue: 0.30, alpha: 1.0)
+        indicator.strokeColor = SKColor.white.withAlphaComponent(0.7)
+        indicator.lineWidth = 1.5
+        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 12)
+        indicator.zPosition = 12
+        lampPlatform.addChild(indicator)
+
+        if !viewModel.isLightRevealed {
+            indicator.run(
+                SKAction.repeatForever(
+                    SKAction.sequence([
+                        .fadeAlpha(to: 0.45, duration: 0.65),
+                        .fadeAlpha(to: 1.0, duration: 0.65)
+                    ])
+                ),
+                withKey: "lampPulse"
+            )
+        }
+    }
+
+    @discardableResult
+    private func activateLightRevealIfNeeded(on platformID: String) -> Bool {
+        guard let lightReveal = viewModel.currentLevel.lightRevealConfiguration,
+              lightReveal.lampPlatformID == platformID,
+              viewModel.revealLightRoute() else {
+            return false
+        }
+
+        for (index, hiddenPlatformID) in lightReveal.hiddenPlatformIDs.enumerated() {
+            guard let platform = platformNodes[hiddenPlatformID] else { continue }
+            platform.isHidden = false
+            platform.alpha = 0
+            platform.run(
+                SKAction.sequence([
+                    .wait(forDuration: 0.16 * Double(index)),
+                    .fadeIn(withDuration: 0.22)
+                ]),
+                withKey: "lightReveal"
+            )
+        }
+
+        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") {
+            lamp.removeAction(forKey: "lampPulse")
+            lamp.run(SKAction.scale(to: 1.45, duration: 0.16))
+        }
+
+        HapticManager.playSnapFeedback()
+        updateInstruction()
+        return true
     }
 
     private func portalPosition(for portal: PortalConfiguration, on platform: PlatformNode) -> CGPoint {

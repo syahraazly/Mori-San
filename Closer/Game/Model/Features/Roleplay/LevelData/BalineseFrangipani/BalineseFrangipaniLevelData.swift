@@ -137,32 +137,64 @@ enum BalineseFrangipaniLevelData {
         usesProximityConnections: true
     )
 
-    // Level 3.5: final compact/perspective mix, including a loop that returns Mori to the central junction.
+    // Level 3.5: the lamp reveals a route, then a petal-driven POV change opens the exit.
     static let levelFive = GameLevel(
         id: "balinese-5",
         category: .family,
-        interaction: .perspectiveCompact,
+        interaction: .perspective,
         platforms: [
-            stone(id: "start", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.10, y: 0.58), side: CGPoint(x: 0.10, y: 0.44)),
-            stone(id: "junction", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.28, y: 0.58), side: CGPoint(x: 0.28, y: 0.44)),
-            stone(id: "bridge", asset: "stone3x1", size: CGSize(width: 132, height: 44), shape: .horizontal1x3, front: CGPoint(x: 0.58, y: 0.70), side: CGPoint(x: 0.58, y: 0.44), draggable: true),
-            lStone(id: "upperDeadEnd", asset: "stone2x3", shape: .reverseLShape, front: CGPoint(x: 0.82, y: 0.7273), side: CGPoint(x: 0.82, y: 0.22), blockedEdges: [.right]),
-            stone(id: "falsePortalStone", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.58, y: 0.30), side: CGPoint(x: 0.58, y: 0.62)),
-            lStone(id: "lowerTurn", asset: "stone3x2", shape: .lShape, front: CGPoint(x: 0.30, y: 0.1427), side: CGPoint(x: 0.30, y: 0.1427), blockedEdges: [.right]),
-            stone(id: "correctPortalStone", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.76, y: 0.30), side: CGPoint(x: 0.76, y: 0.62))
+            stone(id: "start", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.10, y: 0.58), side: CGPoint(x: 0.10, y: 0.58)),
+            stone(id: "pathA", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.213, y: 0.58), side: CGPoint(x: 0.213, y: 0.58)),
+            stone(id: "lampStone", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.326, y: 0.58), side: CGPoint(x: 0.326, y: 0.58)),
+            stone(id: "hiddenB", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.439, y: 0.58), side: CGPoint(x: 0.439, y: 0.58)),
+            stone(id: "hiddenC", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.552, y: 0.58), side: CGPoint(x: 0.552, y: 0.58)),
+            stone(id: "pathD", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.70, y: 0.40), side: CGPoint(x: 0.665, y: 0.58)),
+            stone(id: "petalStone", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.813, y: 0.40), side: CGPoint(x: 0.778, y: 0.58)),
+            stone(id: "correctPortalStone", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.90, y: 0.40), side: CGPoint(x: 0.90, y: 0.38)),
+            PlatformModel(
+                id: "lightObstacle",
+                horizontalPosition: 0.62,
+                size: CGSize(width: 132, height: 96),
+                isDraggable: false,
+                remainsDraggableWhenConnected: false,
+                frontPosition: CGPoint(x: 0.62, y: 0.30),
+                sidePosition: CGPoint(x: 0.77, y: 0.30),
+                role: .obstacle,
+                assetName: "stone3x2",
+                visualSize: CGSize(width: 132, height: 96),
+                shape: .lShape
+            )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "start"),
         exitPlatformID: "",
         platformHeightRatio: 0.35,
-        snapRules: [SnapRule(draggablePlatformID: "bridge", targetPlatformIDs: ["upperDeadEnd", "correctPortalStone"], threshold: 42)],
-        petalConfiguration: PetalConfiguration(platformID: "bridge", assetName: "kamboja-bali-petal"),
+        initialConnections: [
+            ConnectionModel(firstPlatformID: "start", secondPlatformID: "pathA"),
+            ConnectionModel(firstPlatformID: "pathA", secondPlatformID: "lampStone")
+        ],
+        petalConfiguration: PetalConfiguration(
+            platformID: "petalStone",
+            assetName: "kamboja-bali-petal",
+            perspectivePositionOverrides: [
+                PerspectivePositionOverride(platformID: "hiddenB", frontPosition: CGPoint(x: 0.24, y: 0.30)),
+                PerspectivePositionOverride(platformID: "pathD", frontPosition: CGPoint(x: 0.665, y: 0.58)),
+                PerspectivePositionOverride(platformID: "petalStone", frontPosition: CGPoint(x: 0.778, y: 0.58)),
+                PerspectivePositionOverride(platformID: "correctPortalStone", frontPosition: CGPoint(x: 0.439, y: 0.58))
+            ]
+        ),
         portals: [
-            PortalConfiguration(id: "falsePortal", platformID: "falsePortalStone", offset: CGPoint(x: 0, y: 30), outcome: .loops(to: PortalDestination(platformID: "junction", offset: .zero)), anchor: .walkableSurface),
             PortalConfiguration(id: "correctPortal", platformID: "correctPortalStone", offset: CGPoint(x: 0, y: 30), outcome: .completesLevel, anchor: .walkableSurface)
         ],
         backgroundAssetName: "background-chapter-1",
-        movementMode: .pathfinding,
-        usesProximityConnections: true
+        movementMode: .adjacentOnly,
+        usesProximityConnections: true,
+        lightRevealConfiguration: LightRevealConfiguration(
+            lampPlatformID: "lampStone",
+            hiddenPlatformIDs: ["hiddenB", "hiddenC", "pathD", "petalStone", "correctPortalStone"],
+            activatedConnections: [
+                ConnectionModel(firstPlatformID: "lampStone", secondPlatformID: "hiddenB")
+            ]
+        )
     )
 
     static let levels = [levelOne, levelTwo, levelThree, levelFour, levelFive]

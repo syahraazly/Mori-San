@@ -10,8 +10,10 @@ final class GameViewModel {
     private var baseConnections: [ConnectionModel] = []
     private var perspectiveConnections: [ConnectionModel] = []
     private var snapConnections: [ConnectionModel] = []
+    private var lightConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
     private(set) var hasCollectedPetal = false
+    private(set) var isLightRevealed = false
     private(set) var moriPlatformID: String
     private(set) var perspectivePOV: PerspectivePOV = .front
 
@@ -34,6 +36,19 @@ final class GameViewModel {
 
     func collectPetal() {
         hasCollectedPetal = true
+    }
+
+    @discardableResult
+    func revealLightRoute() -> Bool {
+        guard let lightReveal = currentLevel.lightRevealConfiguration,
+              !isLightRevealed else {
+            return false
+        }
+
+        isLightRevealed = true
+        lightConnections = lightReveal.activatedConnections
+        rebuildConnections()
+        return true
     }
 
     @discardableResult
@@ -73,7 +88,7 @@ final class GameViewModel {
     private func rebuildConnections() {
         var resolvedConnections: [ConnectionModel] = []
 
-        for connection in baseConnections + perspectiveConnections + snapConnections
+        for connection in baseConnections + perspectiveConnections + snapConnections + lightConnections
         where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
             let alreadyIncluded = resolvedConnections.contains {
                 ($0.firstPlatformID == connection.firstPlatformID
@@ -162,6 +177,9 @@ final class GameViewModel {
         baseConnections = newConnections
         perspectiveConnections = []
         snapConnections = []
+        lightConnections = isLightRevealed
+            ? currentLevel.lightRevealConfiguration?.activatedConnections ?? []
+            : []
         rebuildConnections()
     }
 
@@ -185,8 +203,10 @@ final class GameViewModel {
         baseConnections = currentLevel.initialConnections
         perspectiveConnections = []
         snapConnections = []
+        lightConnections = []
         hasReachedExit = false
         hasCollectedPetal = false
+        isLightRevealed = false
         moriPlatformID = currentLevel.player.startingPlatformID
         perspectivePOV = .front
     }
@@ -200,7 +220,16 @@ final class GameViewModel {
     }
 
     private func isWalkable(_ platformID: String) -> Bool {
-        currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true
+        guard currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true else {
+            return false
+        }
+
+        guard let lightReveal = currentLevel.lightRevealConfiguration,
+              lightReveal.hiddenPlatformIDs.contains(platformID) else {
+            return true
+        }
+
+        return isLightRevealed
     }
 
 }
