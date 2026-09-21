@@ -10,7 +10,7 @@ struct ContentView: View {
                 OnboardingScreen(appFlow: appFlow)
             case .storyline:
                 StorylineScreen(appFlow: appFlow)
-            case .map, .goal, .gameplay, .levelTransition:
+            case .map, .goal, .gameplay, .levelTransition, .flowerReveal, .congratulations:
                 SpriteKitGameView(appFlow: appFlow)
             }
         }
