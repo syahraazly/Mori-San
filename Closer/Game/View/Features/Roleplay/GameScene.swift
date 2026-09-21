@@ -72,8 +72,8 @@ final class GameScene: SKScene {
             removeAllChildren()
         case .map:
             renderMap()
-        case .goal(let goalID):
-            renderGoal(goalID)
+        case .goal:
+            removeAllChildren()
         case .levelTransition:
             renderChapterTransition()
         case .flowerReveal(let goalID):
@@ -240,7 +240,7 @@ final class GameScene: SKScene {
 
         switch appFlow.screen {
         case .goal:
-            startSelectedLevel(at: touch.location(in: self))
+            return
         case .levelTransition:
             if let pendingLevelID = appFlow.pendingLevelID {
                 appFlow.startLevel(pendingLevelID)

@@ -1,6 +1,7 @@
 struct MapChapterConfiguration: Identifiable {
     let id: GoalID
     let order: Int
+    let progressionTitle: String
     let clue: String
 
     // Kept in data so the flower can be revealed without making chapter-specific views.
@@ -19,6 +20,7 @@ enum MapChapterData {
         MapChapterConfiguration(
             id: "forget-me-not",
             order: 1,
+            progressionTitle: "Scars to your beautiful",
             clue: "Small blue petals,\nin places you've been,\nbut not forgotten.",
             flowerAssetName: "forgetmenotFlower",
             flowerDisplayName: "Forget Me Not"
@@ -26,6 +28,7 @@ enum MapChapterData {
         MapChapterConfiguration(
             id: "white-lily",
             order: 2,
+            progressionTitle: "Everything I wanted",
             clue: "Pure light\nthat blooms anew,\neven in silence.",
             flowerAssetName: "lilyputihFlower",
             flowerDisplayName: "White Lily"
@@ -33,9 +36,17 @@ enum MapChapterData {
         MapChapterConfiguration(
             id: "balinese-frangipani",
             order: 3,
+            progressionTitle: "From Dusk till Dawn",
             clue: "Warm petals\nthat carry memories\nacross time.",
             flowerAssetName: "kambojabaliFlower",
             flowerDisplayName: "Balinese Frangipani"
         )
     ]
+
+    static func chapter(for goalID: GoalID) -> MapChapterConfiguration? {
+        guard let resolvedGoalID = FlowerGoalData.goal(for: goalID)?.id else { return nil }
+        return chapters.first {
+            FlowerGoalData.goal(for: $0.id)?.id == resolvedGoalID
+        }
+    }
 }

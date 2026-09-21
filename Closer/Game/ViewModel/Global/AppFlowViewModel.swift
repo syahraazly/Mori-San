@@ -21,6 +21,8 @@ final class AppFlowViewModel: ObservableObject {
         screen = .storyline
     }
 
+    // MARK: - Chapter Navigation
+
     func openMap() {
         activeGoalID = nil
         pendingLevelID = nil
@@ -47,6 +49,8 @@ final class AppFlowViewModel: ObservableObject {
         pendingLevelID = nil
         screen = .gameplay(canonicalID)
     }
+
+    // MARK: - Level Completion Transition
 
     func completeLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
@@ -76,6 +80,8 @@ final class AppFlowViewModel: ObservableObject {
     func claimPetal(for levelID: LevelID) {
         progress.claimPetal(for: levelID)
     }
+
+    // MARK: - Chapter Completion / Flower Reveal
 
     func showCongratulations(for goalID: GoalID) {
         screen = .congratulations(goalID)
