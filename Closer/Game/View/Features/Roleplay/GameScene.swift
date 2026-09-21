@@ -1076,24 +1076,6 @@ final class GameScene: SKScene {
         updateInstruction()
     }
 
-    private func showPetalRequiredNotice() {
-        instructionLabel?.text = "Ambil kelopak bunga terlebih dahulu!"
-        let pulseRed = SKAction.sequence([
-            SKAction.run { [weak self] in
-                self?.instructionLabel?.fontColor = SKColor(red: 0.85, green: 0.35, blue: 0.30, alpha: 1.0)
-            },
-            SKAction.scale(to: 1.08, duration: 0.1),
-            SKAction.scale(to: 1.0, duration: 0.1),
-            SKAction.wait(forDuration: 1.2),
-            SKAction.run { [weak self] in
-                self?.instructionLabel?.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
-                self?.updateInstruction()
-            }
-        ])
-        instructionLabel?.removeAction(forKey: "noticePulse")
-        instructionLabel?.run(pulseRed, withKey: "noticePulse")
-    }
-
     private func petalAssetName(for level: LevelConfiguration) -> String {
         guard let goalID = LevelCatalog.goalID(for: level.id),
               let goal = FlowerGoalData.goal(for: goalID) else {
@@ -1193,7 +1175,6 @@ final class GameScene: SKScene {
         if case .completesLevel = portal.outcome,
            !viewModel.isExitUnlocked {
             exitNode?.playShake()
-            showPetalRequiredNotice()
             return false
         }
 
@@ -1678,7 +1659,7 @@ final class GameScene: SKScene {
         let level = viewModel.currentLevel
 
         if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
-            instructionLabel?.text = "Ambil kelopak bunga Forget-me-not"
+            instructionLabel?.text = nil
             return
         }
 

@@ -38,7 +38,8 @@ enum ForgetMeNotLevelData {
         exitPlatformID: "platformC",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-1"
     )
 
     static let level1_2 = GameLevel(
@@ -87,7 +88,8 @@ enum ForgetMeNotLevelData {
         exitPlatformID: "platformD",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-1"
     )
 
     static let level1_3 = GameLevel(
@@ -145,7 +147,8 @@ enum ForgetMeNotLevelData {
         exitPlatformID: "platformD",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-1"
     )
 
     static let level1_4 = GameLevel(
@@ -203,7 +206,8 @@ enum ForgetMeNotLevelData {
         exitPlatformID: "platformE",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-1"
     )
 
     static let level1_5 = GameLevel(
@@ -270,7 +274,8 @@ enum ForgetMeNotLevelData {
         exitPlatformID: "platformExit",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformExit", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformTrap", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-1"
     )
 
     static let goal = FlowerGoal(

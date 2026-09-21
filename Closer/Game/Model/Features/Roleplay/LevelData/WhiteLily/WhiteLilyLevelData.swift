@@ -62,7 +62,8 @@ enum WhiteLilyLevelData {
         exitPlatformID: "platformE",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-2"
     )
 
     // Level 2.2: Introduction of 1x3 shape
@@ -126,7 +127,8 @@ enum WhiteLilyLevelData {
         exitPlatformID: "platformE",
         platformHeightRatio: 0.35,
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48))
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48)),
+        backgroundAssetName: "background-chapter-2"
     )
 
     // Level 2.3: Pengenalan L-shape
@@ -202,7 +204,8 @@ enum WhiteLilyLevelData {
             SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformC"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 40))
+        petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 40)),
+        backgroundAssetName: "background-chapter-2"
     )
 
     // Level 2.4: Pengenalan Reverse-L shape
@@ -262,7 +265,8 @@ enum WhiteLilyLevelData {
             SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformC"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 40))
+        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 0, y: 40)),
+        backgroundAssetName: "background-chapter-2"
     )
 
     // Level 2.5: Kombinasi 1x2 bridge + L-shape destination
@@ -343,7 +347,8 @@ enum WhiteLilyLevelData {
             SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformE"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55))
+        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55)),
+        backgroundAssetName: "background-chapter-2"
     )
 
     // Level 2.6: Reverse-L bridge + 1x3 destination
@@ -436,7 +441,8 @@ enum WhiteLilyLevelData {
                 SnapRule(draggablePlatformID: "platformD", targetPlatformIDs: ["platformC", "platformE"], threshold: 50)
             ],
             exitConfiguration: ExitConfiguration(platformID: "platformG", offset: CGPoint(x: 0, y: 55)),
-            petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55))
+            petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55)),
+            backgroundAssetName: "background-chapter-2"
         )
 
     static let goal = FlowerGoal(
