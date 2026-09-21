@@ -7,10 +7,8 @@ final class GameViewModel {
     private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
-    // Perspective/proximity links are recalculated as the world changes POV.
-    // A movable platform keeps its latest snap link until it moves to another target.
-    private var generatedConnections: [ConnectionModel] = []
-    private var snappedConnections: [ConnectionModel] = []
+    private var perspectiveConnections: [ConnectionModel] = []
+    private var snapConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
     private(set) var hasCollectedPetal = false
     private(set) var moriPlatformID: String
@@ -39,13 +37,12 @@ final class GameViewModel {
 
     @discardableResult
     func connect(_ firstPlatformID: String, to secondPlatformID: String) -> Bool {
-        // `secondPlatformID` is the platform being snapped by GameScene.
-        // Replacing only its older snap link preserves Moving Bridge behavior
-        // while allowing other compacted platforms to stay connected.
-        snappedConnections.removeAll {
-            $0.firstPlatformID == secondPlatformID || $0.secondPlatformID == secondPlatformID
+        snapConnections.removeAll {
+            ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
+                || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
         }
-        snappedConnections.append(
+
+        snapConnections.append(
             ConnectionModel(
                 firstPlatformID: firstPlatformID,
                 secondPlatformID: secondPlatformID
@@ -55,11 +52,30 @@ final class GameViewModel {
         return true
     }
 
-    func disconnectSnappedConnections(for platformID: String) {
-        snappedConnections.removeAll {
-            $0.firstPlatformID == platformID || $0.secondPlatformID == platformID
+    func disconnectSnap(for platformID: String? = nil) {
+        if let platformID {
+            snapConnections.removeAll {
+                $0.firstPlatformID == platformID || $0.secondPlatformID == platformID
+            }
+        } else {
+            snapConnections.removeAll()
         }
         rebuildConnections()
+    }
+
+    private func rebuildConnections() {
+        var allConnections = currentLevel.initialConnections + perspectiveConnections
+        for snap in snapConnections {
+            if !allConnections.contains(where: {
+                ($0.firstPlatformID == snap.firstPlatformID && $0.secondPlatformID == snap.secondPlatformID)
+                    || ($0.firstPlatformID == snap.secondPlatformID && $0.secondPlatformID == snap.firstPlatformID)
+            }) {
+                allConnections.append(snap)
+            }
+        }
+        connections = allConnections.filter {
+            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
+        }
     }
 
     func canMoveMori(to platformID: String) -> Bool {
@@ -131,12 +147,16 @@ final class GameViewModel {
     }
 
     func setConnections(_ newConnections: [ConnectionModel]) {
-        generatedConnections = newConnections
-        rebuildConnections()
+        perspectiveConnections = []
+        snapConnections = []
+        connections = newConnections.filter {
+            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
+        }
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
-        setConnections(currentLevel.initialConnections + newConnections)
+        perspectiveConnections = newConnections
+        rebuildConnections()
     }
 
     func moveMori(to platformID: String) {
@@ -151,8 +171,8 @@ final class GameViewModel {
     func loadLevel(_ configuration: LevelConfiguration) {
         currentLevel = configuration
         connections = []
-        generatedConnections = []
-        snappedConnections = []
+        perspectiveConnections = []
+        snapConnections = []
         hasReachedExit = false
         hasCollectedPetal = false
         moriPlatformID = currentLevel.player.startingPlatformID

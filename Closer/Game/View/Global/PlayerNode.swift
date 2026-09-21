@@ -1,39 +1,71 @@
 import SpriteKit
 
-final class PlayerNode: SKShapeNode {
-    private let sprite = SKSpriteNode(imageNamed: "mori-idle-1")
+final class PlayerNode: SKNode {
+    private let spriteNode: SKSpriteNode
+    private let idleAction: SKAction
+    private let walkAction: SKAction
+    private(set) var isFacingRight = true
 
     init(player: PlayerModel) {
+        let idleTextures = [
+            SKTexture(imageNamed: "mori-idle-1"),
+            SKTexture(imageNamed: "mori-idle-2")
+        ]
+        let walkTextures = [
+            SKTexture(imageNamed: "mori-walk-1"),
+            SKTexture(imageNamed: "mori-walk-2")
+        ]
+
+        let idleAnim = SKAction.animate(with: idleTextures, timePerFrame: 0.35)
+        idleAction = SKAction.repeatForever(idleAnim)
+
+        let walkAnim = SKAction.animate(with: walkTextures, timePerFrame: 0.18)
+        walkAction = SKAction.repeatForever(walkAnim)
+
+        spriteNode = SKSpriteNode(texture: idleTextures[0], size: CGSize(width: 52, height: 52))
+        // Mori asset feet are near the bottom of the frame; offset y: -6 rests feet on platform top
+        spriteNode.position = CGPoint(x: 0, y: -6)
+
         super.init()
         name = player.name.lowercased()
-        path = CGPath(ellipseIn: CGRect(x: -18, y: -18, width: 36, height: 36), transform: nil)
-        fillColor = .clear
-        strokeColor = .clear
-        sprite.size = CGSize(width: 48, height: 48)
-        addChild(sprite)
-        playIdleAnimation()
+
+        addChild(spriteNode)
+        playIdle()
     }
 
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func playIdle() {
+        spriteNode.removeAction(forKey: "moriAnim")
+        spriteNode.run(idleAction, withKey: "moriAnim")
     }
 
-    func playIdleAnimation() {
-        playAnimation(named: "moriIdle", assetNames: ["mori-idle-1", "mori-idle-2"], frameDuration: 0.45)
+    func playWalk(facingRight: Bool? = nil) {
+        if let facingRight {
+            setFacing(right: facingRight)
+        }
+        spriteNode.removeAction(forKey: "moriAnim")
+        spriteNode.run(walkAction, withKey: "moriAnim")
     }
 
-    func playWalkAnimation() {
-        playAnimation(named: "moriWalk", assetNames: ["mori-walk-1", "mori-walk-2"], frameDuration: 0.16)
+    func setFacing(right: Bool) {
+        isFacingRight = right
+        let currentScale = abs(spriteNode.xScale)
+        spriteNode.xScale = right ? currentScale : -currentScale
     }
 
     func face(horizontalDirection: CGFloat) {
         guard abs(horizontalDirection) > 1 else { return }
-        sprite.xScale = horizontalDirection < 0 ? -1 : 1
+        setFacing(right: horizontalDirection > 0)
     }
 
-    private func playAnimation(named key: String, assetNames: [String], frameDuration: TimeInterval) {
-        sprite.removeAllActions()
-        let textures = assetNames.map(SKTexture.init(imageNamed:))
-        sprite.run(.repeatForever(.animate(with: textures, timePerFrame: frameDuration)), withKey: key)
+    func playIdleAnimation() {
+        playIdle()
+    }
+
+    func playWalkAnimation() {
+        playWalk()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
