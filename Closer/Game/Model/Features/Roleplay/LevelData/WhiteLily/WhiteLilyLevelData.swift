@@ -319,7 +319,7 @@ enum WhiteLilyLevelData {
                 id: "platformE",
                 horizontalPosition: 0.50,
                 size: CGSize(width: 42, height: 44),
-                isDraggable: true,
+                isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.72),
                 sidePosition: CGPoint(x: 0.64, y: 0.64),
@@ -352,50 +352,92 @@ enum WhiteLilyLevelData {
     // C (1x3, eff=132) x=0.87: center=339.3, left=273.3
     // Puzzle: drag B kiri → snap A → hop A→B(petal) → drag B kanan → snap C → hop B→C(exit)
     static let level2_6 = GameLevel(
-        id: "2.6",
-        category: .family,
-        interaction: .perspectiveCompact,
-        platforms: [
-            PlatformModel(
-                id: "platformA",
-                horizontalPosition: 0.13,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.13, y: 0.40),
-                sidePosition: CGPoint(x: 0.13, y: 0.40),
-                shape: .single1x1
-            ),
-            PlatformModel(
-                id: "platformB",
-                horizontalPosition: 0.52,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: true,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.52, y: 0.40),
-                sidePosition: CGPoint(x: 0.52, y: 0.40),
-                shape: .reverseLShape
-            ),
-            PlatformModel(
-                id: "platformC",
-                horizontalPosition: 0.87,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.87, y: 0.40),
-                sidePosition: CGPoint(x: 0.87, y: 0.40),
-                shape: .horizontal1x3
-            )
-        ],
-        player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
-        exitPlatformID: "platformC",
-        platformHeightRatio: 0.40,
-        snapRules: [
-            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformC"], threshold: 50)
-        ],
-        exitConfiguration: ExitConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformB", offset: CGPoint(x: 20, y: 55))
-    )
+            id: "2.6",
+            category: .family,
+            interaction: .perspectiveCompact,
+            platforms: [
+                // A: starting platform (single1x1)
+                PlatformModel(
+                    id: "platformA",
+                    horizontalPosition: 0.13,
+                    size: CGSize(width: 44, height: 44),
+                    isDraggable: false,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.13, y: 0.50),
+                    sidePosition: CGPoint(x: 0.13, y: 0.24),
+                    shape: .single1x1
+                ),
+                PlatformModel(
+                    id: "platformB",
+                    horizontalPosition: 0.52,
+                    size: CGSize(width: 92, height: 44),
+                    isDraggable: true,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.24, y: 0.34),
+                    sidePosition: CGPoint(x: 0.24, y: 0.64),
+                    shape: .lShape
+                ),
+                PlatformModel(
+                    id: "platformC",
+                    horizontalPosition: 0.50,
+                    size: CGSize(width: 92, height: 44),
+                    isDraggable: false,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.64, y: 0.67),
+                    sidePosition: CGPoint(x: 0.35, y: 0.24),
+                    shape: .reverseLShape
+                ),
+                PlatformModel(
+                    id: "platformD",
+                    horizontalPosition: 0.80,
+                    size: CGSize(width: 92, height: 44),
+                    isDraggable: true,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.36, y: 0.50),
+                    sidePosition: CGPoint(x: 0.36, y: 0.52),
+                    shape: .horizontal1x3
+                ),
+                PlatformModel(
+                    id: "platformE",
+                    horizontalPosition: 0.50,
+                    size: CGSize(width: 92, height: 44),
+                    isDraggable: false,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.80, y: 0.44),
+                    sidePosition: CGPoint(x: 0.675, y: 0.24),
+                    shape: .lShape
+                ),
+                PlatformModel(
+                    id: "platformF",
+                    horizontalPosition: 0.50,
+                    size: CGSize(width: 44, height: 44),
+                    isDraggable: false,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.36, y: 0.67),
+                    sidePosition: CGPoint(x: 0.64, y: 0.64),
+                    shape: .horizontal1x2
+                ),
+                PlatformModel(
+                    id: "platformG",
+                    horizontalPosition: 0.87,
+                    size: CGSize(width: 44, height: 44),
+                    isDraggable: false,
+                    remainsDraggableWhenConnected: false,
+                    frontPosition: CGPoint(x: 0.87, y: 0.73),
+                    sidePosition: CGPoint(x: 0.87, y: 0.64),
+                    shape: .single1x1
+                )
+            ],
+            player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
+            exitPlatformID: "platformG",
+            platformHeightRatio: 0.40,
+            snapRules: [
+                SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformC"], threshold: 50),
+                SnapRule(draggablePlatformID: "platformD", targetPlatformIDs: ["platformC", "platformE"], threshold: 50)
+            ],
+            exitConfiguration: ExitConfiguration(platformID: "platformG", offset: CGPoint(x: 0, y: 55)),
+            petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55))
+        )
 
     static let goal = FlowerGoal(
         id: "chapter-2",
