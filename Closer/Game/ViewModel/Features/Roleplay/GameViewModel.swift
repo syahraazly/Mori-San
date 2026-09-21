@@ -191,4 +191,24 @@ final class GameViewModel {
         currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true
     }
 
+    private func rebuildConnections() {
+        var resolvedConnections: [ConnectionModel] = []
+
+        for connection in generatedConnections + snappedConnections
+        where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
+            let alreadyIncluded = resolvedConnections.contains {
+                ($0.firstPlatformID == connection.firstPlatformID
+                    && $0.secondPlatformID == connection.secondPlatformID)
+                    || ($0.firstPlatformID == connection.secondPlatformID
+                        && $0.secondPlatformID == connection.firstPlatformID)
+            }
+
+            if !alreadyIncluded {
+                resolvedConnections.append(connection)
+            }
+        }
+
+        connections = resolvedConnections
+    }
+
 }

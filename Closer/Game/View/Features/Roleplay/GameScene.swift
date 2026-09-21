@@ -449,6 +449,7 @@ final class GameScene: SKScene {
         let horizontalChange = constrainedX - platform.position.x
 
         if abs(horizontalChange) > 1 {
+            viewModel.disconnectSnappedConnections(for: platform.model.id)
             didDragPlatform = true
             viewModel.disconnectSnap(for: platform.model.id)
             if viewModel.currentLevel.usesPerspective {
@@ -1310,7 +1311,14 @@ final class GameScene: SKScene {
         guard let snapTarget = snapTarget(for: platformB) else { return false }
         let snappedPosition = CGPoint(x: snapTarget.position.x, y: platformB.position.y)
 
-        guard connectionIsAllowed(between: snapTarget.platform, and: platformB),
+        // Validate and register the graph link at the exact position that will
+        // be rendered after the snap, not at the bridge's pre-snap position.
+        guard connectionIsAllowed(
+            between: snapTarget.platform.model,
+            at: snapTarget.platform.position,
+            and: platformB.model,
+            at: snappedPosition
+        ),
               viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else {
             return false
         }
