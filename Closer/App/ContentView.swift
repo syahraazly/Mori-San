@@ -14,6 +14,7 @@ struct ContentView: View {
                 ChapterProgressionView(appFlow: appFlow, goalID: goalID)
             case .map, .gameplay, .levelTransition, .flowerReveal, .congratulations:
                 SpriteKitGameView(appFlow: appFlow)
+                    .ignoresSafeArea()
             }
         }
         .animation(.easeInOut(duration: 0.35), value: appFlow.screen)

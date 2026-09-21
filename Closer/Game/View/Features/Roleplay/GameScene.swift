@@ -13,6 +13,8 @@ final class GameScene: SKScene {
     private var portalNodes: [String: ExitNode] = [:]
     private var exitNode: ExitNode?
     private var petalNode: PetalNode?
+    private var chapterProgressHUD: SKShapeNode?
+    private var levelBackButton: SKShapeNode?
     private var chapterProgressLabel: SKLabelNode?
     private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
@@ -43,6 +45,12 @@ final class GameScene: SKScene {
 
     override func didMove(to view: SKView) {
         renderCurrentScreen()
+        layoutGameplayHUD()
+    }
+
+    override func didChangeSize(_ oldSize: CGSize) {
+        super.didChangeSize(oldSize)
+        layoutGameplayHUD()
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -160,6 +168,8 @@ final class GameScene: SKScene {
         moriNode = nil
         exitNode = nil
         petalNode = nil
+        chapterProgressHUD = nil
+        levelBackButton = nil
         chapterProgressLabel = nil
         chapterProgressGoal = nil
         moriCurrentSurfacePosition = nil
@@ -1110,9 +1120,12 @@ final class GameScene: SKScene {
         hud.fillColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 0.82)
         hud.strokeColor = .white.withAlphaComponent(0.35)
         hud.lineWidth = 2
-        hud.position = CGPoint(x: size.width - 64, y: size.height - 42)
+        hud.position = gameplayHUDPosition(
+            horizontal: size.width - (view?.safeAreaInsets.right ?? 0) - 64
+        )
         hud.zPosition = 100
         addChild(hud)
+        chapterProgressHUD = hud
 
         let petal = SKSpriteNode(imageNamed: goal.petalAssetName)
         petal.size = CGSize(width: 28, height: 22)
@@ -1137,9 +1150,12 @@ final class GameScene: SKScene {
         button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.92)
         button.strokeColor = .white.withAlphaComponent(0.35)
         button.lineWidth = 2
-        button.position = CGPoint(x: 74, y: size.height - 42)
+        button.position = gameplayHUDPosition(
+            horizontal: (view?.safeAreaInsets.left ?? 0) + 74
+        )
         button.zPosition = 100
         addChild(button)
+        levelBackButton = button
 
         let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
         label.text = "‹ Chapter"
@@ -1147,6 +1163,24 @@ final class GameScene: SKScene {
         label.verticalAlignmentMode = .center
         label.fontColor = .white
         button.addChild(label)
+    }
+
+    private func gameplayHUDPosition(horizontal: CGFloat) -> CGPoint {
+        CGPoint(
+            x: horizontal,
+            y: size.height - (view?.safeAreaInsets.top ?? 0) - 42
+        )
+    }
+
+    private func layoutGameplayHUD() {
+        guard case .gameplay = appFlow.screen else { return }
+
+        levelBackButton?.position = gameplayHUDPosition(
+            horizontal: (view?.safeAreaInsets.left ?? 0) + 74
+        )
+        chapterProgressHUD?.position = gameplayHUDPosition(
+            horizontal: size.width - (view?.safeAreaInsets.right ?? 0) - 64
+        )
     }
 
     private func isLevelBackButton(at location: CGPoint) -> Bool {
