@@ -427,16 +427,18 @@ final class GameScene: SKScene {
         )
         let horizontalChange = constrainedX - platform.position.x
 
+        platform.position.x = constrainedX
+
         if abs(horizontalChange) > 1 {
             viewModel.disconnectSnappedConnections(for: platform.model.id)
             didDragPlatform = true
             viewModel.disconnectSnap(for: platform.model.id)
             if viewModel.currentLevel.usesPerspective {
                 updatePerspectiveConnectionsUsingActualPositions()
+            } else {
+                refreshBaseConnectionsUsingActualPositions()
             }
         }
-
-        platform.position.x = constrainedX
 
         if viewModel.moriPlatformID == platform.model.id {
             moriNode?.position.x += horizontalChange
@@ -544,15 +546,24 @@ final class GameScene: SKScene {
 
         guard let normalizedPosition else {
             return CGPoint(
-                x: size.width * platform.horizontalPosition,
+                x: levelLayoutX(for: platform.horizontalPosition),
                 y: size.height * level.platformHeightRatio
             )
         }
 
         return CGPoint(
-            x: size.width * normalizedPosition.x,
+            x: levelLayoutX(for: normalizedPosition.x),
             y: size.height * normalizedPosition.y
         )
+    }
+
+    /// Level coordinates were authored for a 390 pt portrait iPhone canvas.
+    /// Keeping that fixed-size canvas centered prevents normalized positions
+    /// from stretching apart while stone sprites retain their fixed point size.
+    private func levelLayoutX(for normalizedX: CGFloat) -> CGFloat {
+        let layoutWidth = min(size.width, 390)
+        let horizontalInset = (size.width - layoutWidth) / 2
+        return horizontalInset + layoutWidth * normalizedX
     }
 
     private func configureLightReveal(for level: LevelConfiguration) {
@@ -611,6 +622,12 @@ final class GameScene: SKScene {
             lamp.run(SKAction.scale(to: 1.45, duration: 0.16))
         }
 
+        if viewModel.currentLevel.usesPerspective {
+            updatePerspectiveConnectionsUsingActualPositions()
+        } else {
+            refreshLightConnections(usingActualPositions: true)
+        }
+
         HapticManager.playSnapFeedback()
         updateInstruction()
         return true
@@ -628,37 +645,92 @@ final class GameScene: SKScene {
         }
     }
 
-    private func allowedConnections(from candidates: [ConnectionModel]) -> [ConnectionModel] {
+    private let connectionTolerance: CGFloat = 4
+
+    private func allowedConnections(
+        from candidates: [ConnectionModel],
+        usingActualPositions: Bool = false
+    ) -> [ConnectionModel] {
         candidates.filter { connection in
             guard let firstPlatform = viewModel.currentLevel.platforms.first(where: {
                 $0.id == connection.firstPlatformID
             }),
             let secondPlatform = viewModel.currentLevel.platforms.first(where: {
                 $0.id == connection.secondPlatformID
-            }) else {
+            }),
+            let firstNode = platformNodes[firstPlatform.id],
+            let secondNode = platformNodes[secondPlatform.id] else {
+                return false
+            }
+
+            let firstPosition = usingActualPositions ? firstNode.position : position(for: firstPlatform)
+            let secondPosition = usingActualPositions ? secondNode.position : position(for: secondPlatform)
+            guard let pair = connectedSurfacePair(
+                between: firstNode,
+                at: firstPosition,
+                and: secondNode,
+                at: secondPosition
+            ) else {
                 return false
             }
 
             return connectionIsAllowed(
                 between: firstPlatform,
-                at: position(for: firstPlatform),
+                surface: pair.s1,
                 and: secondPlatform,
-                at: position(for: secondPlatform)
+                surface: pair.s2
+            ) && !isHopPathBlocked(
+                from: pair.s1.position,
+                to: pair.s2.position,
+                usingLayoutPositions: !usingActualPositions
             )
         }
     }
 
+    private func connectedSurfacePair(
+        between firstNode: PlatformNode,
+        at firstPosition: CGPoint,
+        and secondNode: PlatformNode,
+        at secondPosition: CGPoint
+    ) -> (s1: PlatformNode.PlayableSurface, s2: PlatformNode.PlayableSurface)? {
+        var bestPair: (s1: PlatformNode.PlayableSurface, s2: PlatformNode.PlayableSurface, gap: CGFloat)?
+
+        for firstSurface in firstNode.playableSurfaces(at: firstPosition) {
+            for secondSurface in secondNode.playableSurfaces(at: secondPosition) {
+                guard abs(firstSurface.position.y - secondSurface.position.y) <= 8 else { continue }
+
+                let gap: CGFloat
+                if firstSurface.cellRect.midX <= secondSurface.cellRect.midX {
+                    gap = secondSurface.cellRect.minX - firstSurface.cellRect.maxX
+                } else {
+                    gap = firstSurface.cellRect.minX - secondSurface.cellRect.maxX
+                }
+
+                // A tiny overlap is tolerated for SpriteKit rounding only. A visible
+                // gap is never navigable, and intersecting solid cells are rejected.
+                guard gap >= -1, gap <= connectionTolerance else { continue }
+
+                if bestPair == nil || abs(gap) < abs(bestPair!.gap) {
+                    bestPair = (firstSurface, secondSurface, gap)
+                }
+            }
+        }
+
+        guard let bestPair else { return nil }
+        return (bestPair.s1, bestPair.s2)
+    }
+
     private func connectionIsAllowed(
         between first: PlatformModel,
-        at firstPosition: CGPoint,
+        surface firstSurface: PlatformNode.PlayableSurface,
         and second: PlatformModel,
-        at secondPosition: CGPoint
+        surface secondSurface: PlatformNode.PlayableSurface
     ) -> Bool {
         guard first.isWalkable, second.isWalkable else { return false }
 
         let firstEdge: PlatformEdge
         let secondEdge: PlatformEdge
-        if firstPosition.x <= secondPosition.x {
+        if firstSurface.position.x <= secondSurface.position.x {
             firstEdge = .right
             secondEdge = .left
         } else {
@@ -670,16 +742,40 @@ final class GameScene: SKScene {
             && !second.blockedConnectionEdges.contains(secondEdge)
     }
 
+    private func connectionIsAllowed(
+        between first: PlatformModel,
+        at firstPosition: CGPoint,
+        and second: PlatformModel,
+        at secondPosition: CGPoint
+    ) -> Bool {
+        guard first.isWalkable, second.isWalkable else { return false }
+
+        let firstEdge: PlatformEdge = firstPosition.x <= secondPosition.x ? .right : .left
+        let secondEdge: PlatformEdge = firstPosition.x <= secondPosition.x ? .left : .right
+        return !first.blockedConnectionEdges.contains(firstEdge)
+            && !second.blockedConnectionEdges.contains(secondEdge)
+    }
+
     private func connectionIsAllowed(between first: PlatformNode, and second: PlatformNode) -> Bool {
-        connectionIsAllowed(
-            between: first.model,
+        guard let pair = connectedSurfacePair(
+            between: first,
             at: first.position,
-            and: second.model,
+            and: second,
             at: second.position
+        ) else { return false }
+
+        return connectionIsAllowed(
+            between: first.model,
+            surface: pair.s1,
+            and: second.model,
+            surface: pair.s2
         )
     }
 
     private func animatePerspectiveChange() {
+        // A snap is only valid while the surfaces physically touch. The new
+        // POV may separate them, so rebuild from the destination geometry.
+        viewModel.disconnectSnap()
         viewModel.togglePerspectivePOV()
         updatePerspectiveConnections()
 
@@ -715,8 +811,9 @@ final class GameScene: SKScene {
     private func updatePerspectiveConnections() {
         let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
-        let maximumGap: CGFloat = 25
-        let maximumVerticalDifference: CGFloat = 8
+
+        viewModel.setBaseConnections(allowedConnections(from: viewModel.currentLevel.initialConnections))
+        refreshLightConnections()
 
         for firstIndex in platforms.indices {
             for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
@@ -724,41 +821,23 @@ final class GameScene: SKScene {
                 let secondPlatform = platforms[secondIndex]
                 let firstPosition = position(for: firstPlatform)
                 let secondPosition = position(for: secondPlatform)
-                let horizontalDistance = abs(firstPosition.x - secondPosition.x)
-                let combinedHalfWidths = (firstPlatform.effectiveWidth + secondPlatform.effectiveWidth) / 2
-                let edgeGap = horizontalDistance - combinedHalfWidths
-
                 guard let firstNode = platformNodes[firstPlatform.id],
-                      let secondNode = platformNodes[secondPlatform.id] else { continue }
+                      let secondNode = platformNodes[secondPlatform.id],
+                      let pair = connectedSurfacePair(
+                        between: firstNode,
+                        at: firstPosition,
+                        and: secondNode,
+                        at: secondPosition
+                      ) else { continue }
 
-                let firstSurfaces = firstNode.playableSurfaces(at: firstPosition)
-                let secondSurfaces = secondNode.playableSurfaces(at: secondPosition)
-
-                var matchingPair: (s1: PlatformNode.PlayableSurface, s2: PlatformNode.PlayableSurface)?
-                for s1 in firstSurfaces {
-                    for s2 in secondSurfaces {
-                        if abs(s1.position.y - s2.position.y) <= maximumVerticalDifference {
-                            if let current = matchingPair {
-                                if abs(s1.position.x - s2.position.x) < abs(current.s1.position.x - current.s2.position.x) {
-                                    matchingPair = (s1, s2)
-                                }
-                            } else {
-                                matchingPair = (s1, s2)
-                            }
-                        }
-                    }
-                }
-
-                if let pair = matchingPair, abs(edgeGap) <= maximumGap {
-                    if connectionIsAllowed(between: firstPlatform, at: firstPosition, and: secondPlatform, at: secondPosition)
-                        && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: true) {
-                        newConnections.append(
-                            ConnectionModel(
-                                firstPlatformID: firstPlatform.id,
-                                secondPlatformID: secondPlatform.id
-                            )
+                if connectionIsAllowed(between: firstPlatform, surface: pair.s1, and: secondPlatform, surface: pair.s2)
+                    && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: true) {
+                    newConnections.append(
+                        ConnectionModel(
+                            firstPlatformID: firstPlatform.id,
+                            secondPlatformID: secondPlatform.id
                         )
-                    }
+                    )
                 }
             }
         }
@@ -772,8 +851,9 @@ final class GameScene: SKScene {
     private func updatePerspectiveConnectionsUsingActualPositions() {
         let platforms = viewModel.currentLevel.platforms.filter(\.isWalkable)
         var newConnections: [ConnectionModel] = []
-        let maximumGap: CGFloat = 25
-        let maximumVerticalDifference: CGFloat = 8
+
+        refreshBaseConnectionsUsingActualPositions()
+        refreshLightConnections(usingActualPositions: true)
 
         for firstIndex in platforms.indices {
             for secondIndex in platforms.indices.dropFirst(firstIndex + 1) {
@@ -785,38 +865,21 @@ final class GameScene: SKScene {
                 let firstPosition = firstNode.position
                 let secondPosition = secondNode.position
 
-                let horizontalDistance = abs(firstPosition.x - secondPosition.x)
-                let combinedHalfWidths = (firstPlatform.effectiveWidth + secondPlatform.effectiveWidth) / 2
-                let edgeGap = horizontalDistance - combinedHalfWidths
+                guard let pair = connectedSurfacePair(
+                    between: firstNode,
+                    at: firstPosition,
+                    and: secondNode,
+                    at: secondPosition
+                ) else { continue }
 
-                let firstSurfaces = firstNode.playableSurfaces(at: firstPosition)
-                let secondSurfaces = secondNode.playableSurfaces(at: secondPosition)
-
-                var matchingPair: (s1: PlatformNode.PlayableSurface, s2: PlatformNode.PlayableSurface)?
-                for s1 in firstSurfaces {
-                    for s2 in secondSurfaces {
-                        if abs(s1.position.y - s2.position.y) <= maximumVerticalDifference {
-                            if let current = matchingPair {
-                                if abs(s1.position.x - s2.position.x) < abs(current.s1.position.x - current.s2.position.x) {
-                                    matchingPair = (s1, s2)
-                                }
-                            } else {
-                                matchingPair = (s1, s2)
-                            }
-                        }
-                    }
-                }
-
-                if let pair = matchingPair, abs(edgeGap) <= maximumGap {
-                    if connectionIsAllowed(between: firstNode, and: secondNode)
-                        && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: false) {
-                        newConnections.append(
-                            ConnectionModel(
-                                firstPlatformID: firstPlatform.id,
-                                secondPlatformID: secondPlatform.id
-                            )
+                if connectionIsAllowed(between: firstPlatform, surface: pair.s1, and: secondPlatform, surface: pair.s2)
+                    && !isHopPathBlocked(from: pair.s1.position, to: pair.s2.position, usingLayoutPositions: false) {
+                    newConnections.append(
+                        ConnectionModel(
+                            firstPlatformID: firstPlatform.id,
+                            secondPlatformID: secondPlatform.id
                         )
-                    }
+                    )
                 }
             }
         }
@@ -1378,15 +1441,14 @@ final class GameScene: SKScene {
         guard let snapTarget = snapTarget(for: platformB) else { return false }
         let snappedPosition = CGPoint(x: snapTarget.position.x, y: platformB.position.y)
 
-        // Validate and register the graph link at the exact position that will
-        // be rendered after the snap, not at the bridge's pre-snap position.
+        // Validate the exact rendered position before starting the snap.
         guard connectionIsAllowed(
             between: snapTarget.platform.model,
             at: snapTarget.platform.position,
             and: platformB.model,
             at: snappedPosition
         ),
-              viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id) else {
+              isPlacementValid(for: platformB, at: snappedPosition) else {
             return false
         }
 
@@ -1397,7 +1459,13 @@ final class GameScene: SKScene {
             SKAction.scale(to: 1.0, duration: 0.06)
         ])
         platformB.run(.group([move, bounce])) { [weak self] in
-            self?.updatePerspectiveConnectionsUsingActualPositions()
+            guard let self else { return }
+            _ = self.viewModel.connect(snapTarget.platform.model.id, to: platformB.model.id)
+            if self.viewModel.currentLevel.usesPerspective {
+                self.updatePerspectiveConnectionsUsingActualPositions()
+            } else {
+                self.refreshBaseConnectionsUsingActualPositions()
+            }
         }
         if viewModel.moriPlatformID == platformB.model.id {
             moriNode?.run(SKAction.moveBy(x: snapDeltaX, y: 0, duration: GameConstants.Snap.animationDuration))
@@ -1409,7 +1477,7 @@ final class GameScene: SKScene {
 
     private func isPlacementValid(for draggablePlatform: PlatformNode, at position: CGPoint) -> Bool {
         let draggableRects = draggablePlatform.occupiedCellRects(at: position)
-        for (id, target) in platformNodes where id != draggablePlatform.model.id {
+        for (id, target) in platformNodes where id != draggablePlatform.model.id && !target.isHidden {
             let targetRects = target.occupiedCellRects(at: target.position)
             for dRect in draggableRects {
                 for tRect in targetRects {
@@ -1421,6 +1489,25 @@ final class GameScene: SKScene {
             }
         }
         return true
+    }
+
+    private func refreshBaseConnectionsUsingActualPositions() {
+        viewModel.setBaseConnections(
+            allowedConnections(
+                from: viewModel.currentLevel.initialConnections,
+                usingActualPositions: true
+            )
+        )
+    }
+
+    private func refreshLightConnections(usingActualPositions: Bool = false) {
+        guard let lightReveal = viewModel.currentLevel.lightRevealConfiguration else { return }
+        viewModel.setLightConnections(
+            allowedConnections(
+                from: lightReveal.activatedConnections,
+                usingActualPositions: usingActualPositions
+            )
+        )
     }
 
     private func nearestValidX(
@@ -1454,36 +1541,7 @@ final class GameScene: SKScene {
         proposedX: CGFloat,
         previousX: CGFloat
     ) -> CGFloat {
-        if draggablePlatform.model.shape == .single1x1 {
-            var constrainedX = proposedX
-            let halfDraggableWidth = draggablePlatform.model.effectiveWidth / 2
-
-            for target in platformNodes.values where !target.model.isDraggable && target.model.isWalkable {
-                let halfTargetWidth = target.model.effectiveWidth / 2
-                let nearestRightPosition = target.position.x + halfTargetWidth + halfDraggableWidth
-                let nearestLeftPosition  = target.position.x - halfTargetWidth - halfDraggableWidth
-
-                // Draggable is (or was) to the right of target and moving left.
-                if proposedX < previousX {
-                    // Clamp so we never cross into the target from the right side.
-                    if proposedX < nearestRightPosition, previousX >= nearestRightPosition {
-                        constrainedX = max(constrainedX, nearestRightPosition)
-                    }
-                }
-
-                // Draggable is (or was) to the left of target and moving right.
-                if proposedX > previousX {
-                    // Clamp so we never cross into the target from the left side.
-                    if proposedX > nearestLeftPosition, previousX <= nearestLeftPosition {
-                        constrainedX = min(constrainedX, nearestLeftPosition)
-                    }
-                }
-            }
-
-            return constrainedX
-        }
-
-        // --- Multi-cell path (binary search) ---
+        // All shapes, including 1x1 stones, use their occupied solid cells.
         let y = draggablePlatform.position.y
         let proposedPosition = CGPoint(x: proposedX, y: y)
 
