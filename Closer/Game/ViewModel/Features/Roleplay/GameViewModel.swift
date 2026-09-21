@@ -242,4 +242,24 @@ final class GameViewModel {
         return isLightRevealed
     }
 
+//    private func rebuildConnections() {
+//        var resolvedConnections: [ConnectionModel] = []
+//
+//        for connection in perspectiveConnections + snapConnections
+//        where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
+//            let alreadyIncluded = resolvedConnections.contains {
+//                ($0.firstPlatformID == connection.firstPlatformID
+//                    && $0.secondPlatformID == connection.secondPlatformID)
+//                    || ($0.firstPlatformID == connection.secondPlatformID
+//                        && $0.secondPlatformID == connection.firstPlatformID)
+//            }
+//
+//            if !alreadyIncluded {
+//                resolvedConnections.append(connection)
+//            }
+//        }
+//
+//        connections = resolvedConnections
+//    }
+
 }

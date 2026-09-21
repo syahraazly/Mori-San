@@ -297,6 +297,13 @@ final class GameScene: SKScene {
 
         if viewModel.currentLevel.interaction == .perspective {
             if let platform = platformNode(at: touchLocation) {
+                // If Mori is already on this platform, walk to the tapped cell (e.g. corner of L-shape)
+                if platform.model.id == viewModel.moriPlatformID {
+                    if let targetSurface = platform.closestSurface(to: touchLocation) {
+                        walkMoriWithinPlatform(to: targetSurface.position)
+                    }
+                    return
+                }
                 moveMoriAcrossPerspectivePath(to: platform.model.id)
                 return
             }
@@ -434,7 +441,7 @@ final class GameScene: SKScene {
         platform.position.x = constrainedX
 
         if abs(horizontalChange) > 1 {
-            viewModel.disconnectSnappedConnections(for: platform.model.id)
+            viewModel.disconnectSnap(for: platform.model.id)
             didDragPlatform = true
             viewModel.disconnectSnap(for: platform.model.id)
             if viewModel.currentLevel.usesPerspective {
