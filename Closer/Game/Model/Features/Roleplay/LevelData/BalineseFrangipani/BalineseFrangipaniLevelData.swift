@@ -4,141 +4,44 @@ enum BalineseFrangipaniLevelData {
     static let levelOne = GameLevel(
         id: "balinese-1",
         category: .family,
-        interaction: .perspective,
+        interaction: .perspectiveCompact,
         platforms: [
+            stone(id: "start", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.12, y: 0.65), side: CGPoint(x: 0.12, y: 0.65)),
+            stone(id: "blueBridge", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.29, y: 0.65), side: CGPoint(x: 0.29, y: 0.65), draggable: true),
+            stone(id: "greenTarget", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.70, y: 0.65), side: CGPoint(x: 0.70, y: 0.65)),
+            stone(id: "returnPlatform", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.20, y: 0.18), side: CGPoint(x: 0.20, y: 0.18)),
+            stone(id: "petalStone", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.37, y: 0.18), side: CGPoint(x: 0.37, y: 0.18)),
+            stone(id: "correctPortalPlatform", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.54, y: 0.18), side: CGPoint(x: 0.54, y: 0.18)),
             PlatformModel(
-                id: "start",
-                horizontalPosition: 0.10,
-                size: CGSize(width: 44, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.10, y: 0.70),
-                sidePosition: CGPoint(x: 0.10, y: 0.67),
-                assetName: "stone1x1",
-                shape: .single1x1
-            ),
-            PlatformModel(
-                id: "pathA",
-                horizontalPosition: 0.24,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.28, y: 0.70),
-                sidePosition: CGPoint(x: 0.28, y: 0.67),
-                assetName: "stone2x1",
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "junctionB",
-                horizontalPosition: 0.45,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.52, y: 0.70),
-                sidePosition: CGPoint(x: 0.52, y: 0.67),
-                assetName: "stone2x1",
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "reverseLStone",
-                horizontalPosition: 0.83,
+                id: "lowerLObstacle",
+                horizontalPosition: 0.77,
                 size: CGSize(width: 132, height: 96),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.83, y: 0.7282),
-                sidePosition: CGPoint(x: 0.83, y: 0.45),
-                assetName: "stone2x3",
-                visualSize: CGSize(width: 132, height: 96),
-                walkableSurfaceOffset: CGPoint(x: 0, y: -2),
-                blockedConnectionEdges: [.right],
-                shape: .reverseLShape
-            ),
-            PlatformModel(
-                id: "falsePortalPlatform",
-                horizontalPosition: 0.50,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.52, y: 0.50),
-                sidePosition: CGPoint(x: 0.76, y: 0.67),
-                assetName: "stone2x1",
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "junctionE",
-                horizontalPosition: 0.15,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.15, y: 0.18),
-                sidePosition: CGPoint(x: 0.15, y: 0.26),
-                assetName: "stone2x1",
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "lStone",
-                horizontalPosition: 0.45,
-                size: CGSize(width: 132, height: 96),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.70, y: 0.48),
-                sidePosition: CGPoint(x: 0.45, y: 0.2882),
+                frontPosition: CGPoint(x: 0.77, y: 0.32),
+                sidePosition: CGPoint(x: 0.77, y: 0.32),
+                role: .obstacle,
                 assetName: "stone3x2",
                 visualSize: CGSize(width: 132, height: 96),
-                walkableSurfaceOffset: CGPoint(x: 0, y: -2),
-                blockedConnectionEdges: [.right],
                 shape: .lShape
-            ),
-            PlatformModel(
-                id: "pathF",
-                horizontalPosition: 0.44,
-                size: CGSize(width: 132, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.44, y: 0.18),
-                sidePosition: CGPoint(x: 0.44, y: 0.11),
-                assetName: "stone3x1",
-                shape: .horizontal1x3
-            ),
-            PlatformModel(
-                id: "pathG",
-                horizontalPosition: 0.74,
-                size: CGSize(width: 92, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.74, y: 0.18),
-                sidePosition: CGPoint(x: 0.74, y: 0.11),
-                assetName: "stone2x1",
-                shape: .horizontal1x2
-            ),
-            PlatformModel(
-                id: "correctPortalPlatform",
-                horizontalPosition: 0.92,
-                size: CGSize(width: 44, height: 44),
-                isDraggable: false,
-                remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.92, y: 0.18),
-                sidePosition: CGPoint(x: 0.92, y: 0.11),
-                assetName: "stone1x1",
-                shape: .single1x1
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "start"),
         exitPlatformID: "",
         platformHeightRatio: 0.35,
-        initialConnections: [],
+        snapRules: [SnapRule(draggablePlatformID: "blueBridge", targetPlatformIDs: ["greenTarget"], threshold: 42)],
         petalConfiguration: PetalConfiguration(
-            platformID: "pathG",
+            platformID: "petalStone",
             offset: CGPoint(x: 0, y: 48),
             assetName: "kamboja-bali-petal"
         ),
         portals: [
             PortalConfiguration(
                 id: "loopPortal",
-                platformID: "falsePortalPlatform",
+                platformID: "greenTarget",
                 offset: CGPoint(x: 0, y: 30),
                 outcome: .loops(
-                    to: PortalDestination(platformID: "junctionE", offset: .zero)
+                    to: PortalDestination(platformID: "returnPlatform", offset: .zero)
                 ),
                 anchor: .walkableSurface
             ),
@@ -151,9 +54,8 @@ enum BalineseFrangipaniLevelData {
             )
         ],
         backgroundAssetName: "background-chapter-1",
-        movementMode: .pathfinding,
-        usesProximityConnections: true,
-        proximityConnectionTolerance: 28
+        movementMode: .adjacentOnly,
+        usesProximityConnections: true
     )
 
     // Level 3.2: perspective reveals the route beyond the L-shaped dead end.
