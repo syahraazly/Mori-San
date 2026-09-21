@@ -1,6 +1,7 @@
 import SpriteKit
 
 final class GameScene: SKScene {
+    private let authoredGameplayWidth: CGFloat = 390
     private let appFlow: AppFlowViewModel
     private let viewModel: GameViewModel
     private var renderedScreen: AppFlowViewModel.Screen?
@@ -26,6 +27,7 @@ final class GameScene: SKScene {
     private var touchBeganLocation: CGPoint = .zero
     private let dragCommitThreshold: CGFloat = 8
     private var mapView: MapView?
+    private var gameplayWorldNode: SKNode?
 
     init(size: CGSize, appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
@@ -138,13 +140,14 @@ final class GameScene: SKScene {
 
         let level = viewModel.currentLevel
         addBackground(for: level)
+        createGameplayWorld()
         createLevelBackButton()
         createChapterProgressHUD(for: level)
 
         for platform in level.platforms {
             let node = PlatformNode(model: platform)
             node.position = position(for: platform)
-            addChild(node)
+            gameplayWorldNode?.addChild(node)
             platformNodes[platform.id] = node
         }
 
@@ -178,7 +181,7 @@ final class GameScene: SKScene {
             y: initialLanding.y + level.player.startingOffset.y
         )
         mori.zPosition = 10
-        addChild(mori)
+        gameplayWorldNode?.addChild(mori)
         moriNode = mori
 
         let exitPlatformID = resolvedExitPlatformID(for: level)
@@ -264,6 +267,7 @@ final class GameScene: SKScene {
         }
 
         let touchLocation = touch.location(in: self)
+        let worldTouchLocation = touch.location(in: gameplayWorldNode ?? self)
 
         if isLevelBackButton(at: touchLocation) {
             returnToLevelChapter()
@@ -312,10 +316,10 @@ final class GameScene: SKScene {
                 if platform.model.id == viewModel.moriPlatformID {
                     if platform.model.isDraggable {
                         pendingDragPlatform = platform
-                        pendingDragOffsetX = touchLocation.x - platform.position.x
-                        touchBeganLocation = touchLocation
+                        pendingDragOffsetX = worldTouchLocation.x - platform.position.x
+                        touchBeganLocation = worldTouchLocation
                         didDragPlatform = false
-                    } else if let targetSurface = platform.closestSurface(to: touchLocation) {
+                    } else if let targetSurface = platform.closestSurface(to: worldTouchLocation) {
                         walkMoriWithinPlatform(to: targetSurface.position)
                     }
                     return
@@ -328,8 +332,8 @@ final class GameScene: SKScene {
 
                 if platform.model.isDraggable {
                     pendingDragPlatform = platform
-                    pendingDragOffsetX = touchLocation.x - platform.position.x
-                    touchBeganLocation = touchLocation
+                    pendingDragOffsetX = worldTouchLocation.x - platform.position.x
+                    touchBeganLocation = worldTouchLocation
                     didDragPlatform = false
                     return
                 }
@@ -354,10 +358,10 @@ final class GameScene: SKScene {
         if platform.model.id == viewModel.moriPlatformID {
             if platform.model.isDraggable {
                 pendingDragPlatform = platform
-                pendingDragOffsetX = touchLocation.x - platform.position.x
-                touchBeganLocation = touchLocation
+                pendingDragOffsetX = worldTouchLocation.x - platform.position.x
+                touchBeganLocation = worldTouchLocation
                 didDragPlatform = false
-            } else if let targetSurface = platform.closestSurface(to: touchLocation) {
+            } else if let targetSurface = platform.closestSurface(to: worldTouchLocation) {
                 walkMoriWithinPlatform(to: targetSurface.position)
             }
             return
@@ -382,8 +386,8 @@ final class GameScene: SKScene {
             }
 
             pendingDragPlatform = platform
-            pendingDragOffsetX = touchLocation.x - platform.position.x
-            touchBeganLocation = touchLocation
+            pendingDragOffsetX = worldTouchLocation.x - platform.position.x
+            touchBeganLocation = worldTouchLocation
             didDragPlatform = false
             return
         }
@@ -399,7 +403,7 @@ final class GameScene: SKScene {
         guard viewModel.currentLevel.allowsCompact else { return }
         guard let touch = touches.first else { return }
 
-        let touchLocation = touch.location(in: self)
+        let touchLocation = touch.location(in: gameplayWorldNode ?? self)
 
         // Promote pending → active drag once finger crosses the commit threshold.
         if draggedPlatform == nil, let pending = pendingDragPlatform {
@@ -418,7 +422,7 @@ final class GameScene: SKScene {
         let newX = touchLocation.x - dragTouchOffsetX
         let halfPlatformWidth = platform.model.effectiveWidth / 2
         let minimumX = halfPlatformWidth + GameConstants.Layout.horizontalMargin
-        let maximumX = size.width - halfPlatformWidth - GameConstants.Layout.horizontalMargin
+        let maximumX = authoredGameplayWidth - halfPlatformWidth - GameConstants.Layout.horizontalMargin
         let screenBoundedX = min(max(newX, minimumX), maximumX)
         let constrainedX = constrainedPlatformX(
             for: platform,
@@ -547,23 +551,38 @@ final class GameScene: SKScene {
         guard let normalizedPosition else {
             return CGPoint(
                 x: levelLayoutX(for: platform.horizontalPosition),
-                y: size.height * level.platformHeightRatio
+                y: gameplayWorldHeight * level.platformHeightRatio
             )
         }
 
         return CGPoint(
             x: levelLayoutX(for: normalizedPosition.x),
-            y: size.height * normalizedPosition.y
+            y: gameplayWorldHeight * normalizedPosition.y
         )
     }
 
-    /// Level coordinates were authored for a 390 pt portrait iPhone canvas.
-    /// Keeping that fixed-size canvas centered prevents normalized positions
-    /// from stretching apart while stone sprites retain their fixed point size.
     private func levelLayoutX(for normalizedX: CGFloat) -> CGFloat {
-        let layoutWidth = min(size.width, 390)
-        let horizontalInset = (size.width - layoutWidth) / 2
-        return horizontalInset + layoutWidth * normalizedX
+        authoredGameplayWidth * normalizedX
+    }
+
+    private var gameplayWorldScale: CGFloat {
+        min(1, size.width / authoredGameplayWidth)
+    }
+
+    private var gameplayWorldHeight: CGFloat {
+        size.height / gameplayWorldScale
+    }
+
+    private func createGameplayWorld() {
+        let world = SKNode()
+        world.name = "gameplay-world"
+        world.position = CGPoint(
+            x: (size.width - authoredGameplayWidth * gameplayWorldScale) / 2,
+            y: 0
+        )
+        world.setScale(gameplayWorldScale)
+        addChild(world)
+        gameplayWorldNode = world
     }
 
     private func configureLightReveal(for level: LevelConfiguration) {
@@ -1275,7 +1294,7 @@ final class GameScene: SKScene {
 
         let targetExitNode = (portal != nil ? portalNodes[portal!.id] : nil) ?? exitNode
         if let targetExitNode {
-            let exitCenter = targetExitNode.convert(CGPoint.zero, to: self)
+            let exitCenter = targetExitNode.convert(CGPoint.zero, to: gameplayWorldNode ?? self)
             let moveToCenter = SKAction.move(to: exitCenter, duration: 0.18)
             let shrink = SKAction.scale(to: 0.1, duration: 0.3)
             let spin = SKAction.rotate(byAngle: .pi * 2, duration: 0.3)
@@ -1336,7 +1355,7 @@ final class GameScene: SKScene {
         if completesLevel {
             let targetExitNode = (portal != nil ? portalNodes[portal!.id] : nil) ?? exitNode
             if let targetExitNode {
-                let exitDestination = targetExitNode.convert(CGPoint.zero, to: self)
+                let exitDestination = targetExitNode.convert(CGPoint.zero, to: gameplayWorldNode ?? self)
                 let start = previousPosition
                 let faceAction = SKAction.run { [weak moriNode] in
                     let dx = exitDestination.x - start.x
@@ -1522,7 +1541,7 @@ final class GameScene: SKScene {
         }
         // Walk away from the obstacle in steps of 0.5 pt until we find clear air,
         // capped at the full width of the scene so we never loop forever.
-        let maxSearch: CGFloat = size.width
+        let maxSearch: CGFloat = authoredGameplayWidth
         let step: CGFloat = directionX >= startX ? -0.5 : 0.5
         var candidate = startX + step
         var traveled: CGFloat = 0
