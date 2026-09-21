@@ -115,7 +115,10 @@ final class PlatformNode: SKShapeNode {
             )
             return [
                 PlayableSurface(
-                    position: CGPoint(x: position.x, y: position.y + 55),
+                    position: CGPoint(
+                        x: position.x + model.walkableSurfaceOffset.x,
+                        y: position.y + model.walkableSurfaceOffset.y + 33
+                    ),
                     cellRect: rect
                 )
             ]
@@ -129,6 +132,16 @@ final class PlatformNode: SKShapeNode {
         for (index, cell) in cells.enumerated() {
             let col = cell.dx - minDx
             let cellRect = rects[index]
+
+            // An L's vertical wall is solid geometry, not a landing surface.
+            // Keep only exposed cells on its horizontal arm.
+            let hasCellAbove = cells.contains {
+                $0.dx == cell.dx && $0.dy > cell.dy
+            }
+            if hasCellAbove {
+                continue
+            }
+
             if let existing = topCellsByCol[col] {
                 if cellRect.maxY > existing.maxY {
                     topCellsByCol[col] = cellRect
@@ -142,7 +155,10 @@ final class PlatformNode: SKShapeNode {
         return sortedCols.compactMap { col in
             guard let cellRect = topCellsByCol[col] else { return nil }
             return PlayableSurface(
-                position: CGPoint(x: cellRect.midX, y: cellRect.maxY + 33),
+                position: CGPoint(
+                    x: cellRect.midX + model.walkableSurfaceOffset.x,
+                    y: cellRect.midY + model.walkableSurfaceOffset.y + 33
+                ),
                 cellRect: cellRect
             )
         }
