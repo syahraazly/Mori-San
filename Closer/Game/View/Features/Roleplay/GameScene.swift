@@ -271,35 +271,6 @@ final class GameScene: SKScene {
         let exitPlatformID = resolvedExitPlatformID(for: viewModel.currentLevel)
         let touchedPortal = portalConfiguration(at: touchLocation)
 
-        // Exit / Portal touched
-        if exitNode(at: touchLocation) != nil || touchedPortal != nil {
-            if let portal = touchedPortal, case .loops = portal.outcome {
-                if viewModel.moriPlatformID == portal.platformID {
-                    handlePortalOutcome(portal)
-                } else if viewModel.canMoveMori(to: portal.platformID) {
-                    moveMori(to: portal.platformID, completesLevel: false, portal: portal)
-                }
-                return
-            }
-
-            if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
-                exitNode?.playShake()
-                showPetalRequiredNotice()
-                return
-            }
-
-            let targetPlatformID = touchedPortal?.platformID ?? exitPlatformID
-            if viewModel.moriPlatformID == targetPlatformID {
-                enterExit(portal: touchedPortal)
-                return
-            }
-
-            if viewModel.canMoveMori(to: targetPlatformID) {
-                moveMori(to: targetPlatformID, completesLevel: true, portal: touchedPortal)
-            }
-            return
-        }
-
         // Petal touched
         if let touchedPetal = petalNode(at: touchLocation) {
             if viewModel.canMoveMori(to: touchedPetal.platformID) {
@@ -854,8 +825,11 @@ final class GameScene: SKScene {
         guard !actions.isEmpty else { return }
 
         actions.append(SKAction.run { [weak self, weak moriNode] in
-            moriNode?.playIdle()
-            self?.updateInstruction()
+            guard let self else { return }
+            if !self.activatePortalIfNeeded(on: platformID) {
+                moriNode?.playIdle()
+                self.updateInstruction()
+            }
         })
 
         moriNode.run(SKAction.sequence(actions), withKey: "moriMove")
@@ -982,6 +956,26 @@ final class GameScene: SKScene {
         } else {
             appFlow.openMap()
         }
+    }
+
+    @discardableResult
+    private func activatePortalIfNeeded(on platformID: String) -> Bool {
+        guard !viewModel.hasReachedExit,
+              let portal = viewModel.currentLevel.portalConfigurations.first(where: {
+                  $0.platformID == platformID
+              }) else {
+            return false
+        }
+
+        if case .completesLevel = portal.outcome,
+           !viewModel.isExitUnlocked {
+            exitNode?.playShake()
+            showPetalRequiredNotice()
+            return false
+        }
+
+        handlePortalOutcome(portal)
+        return true
     }
 
     private func addBackground(for level: LevelConfiguration) {
@@ -1227,11 +1221,10 @@ final class GameScene: SKScene {
             }
         } else {
             movementActions.append(SKAction.run { [weak self, weak moriNode] in
-                moriNode?.playIdle()
-                if let portal {
-                    self?.handlePortalOutcome(portal)
-                } else {
-                    self?.updateInstruction()
+                guard let self else { return }
+                if !self.activatePortalIfNeeded(on: platformID) {
+                    moriNode?.playIdle()
+                    self.updateInstruction()
                 }
             })
         }
