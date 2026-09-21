@@ -88,7 +88,7 @@
 				842BBBEF30584A0C00BE65FE /* Shared */,
 			);
 			name = "Mori-Chan";
-			productName = Closer;
+			productName = "Mori-Chan";
 			productReference = A10000000000000000000005 /* Mori-Chan.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -188,7 +188,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2QKLKP6CXJ;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Closer/Info.plist;
+				INFOPLIST_FILE = "Mori-Chan/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.gamejam.mori-chan";
@@ -206,7 +206,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2QKLKP6CXJ;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Closer/Info.plist;
+				INFOPLIST_FILE = "Mori-Chan/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.gamejam.mori-chan";
