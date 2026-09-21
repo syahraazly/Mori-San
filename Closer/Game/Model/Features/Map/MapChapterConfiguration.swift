@@ -7,6 +7,7 @@ struct MapChapterConfiguration: Identifiable {
     // Kept in data so the flower can be revealed without making chapter-specific views.
     let flowerAssetName: String
     let flowerDisplayName: String
+    let isComingSoon: Bool
 }
 
 enum MapChapterState {
@@ -23,7 +24,8 @@ enum MapChapterData {
             progressionTitle: "Scars to your beautiful",
             clue: "Small blue petals,\nin places you've been,\nbut not forgotten.",
             flowerAssetName: "forget-me-not-flower",
-            flowerDisplayName: "Forget-Me-Not"
+            flowerDisplayName: "Forget-Me-Not",
+            isComingSoon: false
         ),
         MapChapterConfiguration(
             id: "white-lily",
@@ -31,7 +33,8 @@ enum MapChapterData {
             progressionTitle: "Everything I wanted",
             clue: "Pure light\nthat blooms anew,\neven in silence.",
             flowerAssetName: "white-lily-flower",
-            flowerDisplayName: "White Lily"
+            flowerDisplayName: "White Lily",
+            isComingSoon: false
         ),
         MapChapterConfiguration(
             id: "balinese-frangipani",
@@ -39,7 +42,17 @@ enum MapChapterData {
             progressionTitle: "From Dusk till Dawn",
             clue: "Warm petals\nthat carry memories\nacross time.",
             flowerAssetName: "kamboja-bali-flower",
-            flowerDisplayName: "Balinese Frangipani"
+            flowerDisplayName: "Balinese Frangipani",
+            isComingSoon: false
+        ),
+        MapChapterConfiguration(
+            id: "chapter-4",
+            order: 4,
+            progressionTitle: "To Be Continued",
+            clue: "A new story\nwill bloom soon.",
+            flowerAssetName: "",
+            flowerDisplayName: "",
+            isComingSoon: true
         )
     ]
 

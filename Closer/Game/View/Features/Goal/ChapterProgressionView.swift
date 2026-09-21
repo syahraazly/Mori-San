@@ -71,7 +71,7 @@ private struct ChapterHeaderView: View {
     }
 
     private func romanNumeral(_ value: Int) -> String {
-        ["I", "II", "III"][max(0, min(value - 1, 2))]
+        ["I", "II", "III", "IV"][max(0, min(value - 1, 3))]
     }
 }
 
