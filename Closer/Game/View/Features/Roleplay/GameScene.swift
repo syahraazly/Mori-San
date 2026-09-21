@@ -449,7 +449,7 @@ final class GameScene: SKScene {
         let horizontalChange = constrainedX - platform.position.x
 
         if abs(horizontalChange) > 1 {
-            viewModel.disconnectSnappedConnections(for: platform.model.id)
+            viewModel.disconnectSnap(for: platform.model.id)
             didDragPlatform = true
             viewModel.disconnectSnap(for: platform.model.id)
             if viewModel.currentLevel.usesPerspective {
