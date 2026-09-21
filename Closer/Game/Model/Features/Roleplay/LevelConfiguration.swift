@@ -32,16 +32,45 @@ struct PetalConfiguration {
     let platformID: String
     let offset: CGPoint
     let assetName: String?
+    let perspectivePositionOverrides: [PerspectivePositionOverride]
 
     init(
         platformID: String,
         offset: CGPoint = CGPoint(x: 0, y: 48),
-        assetName: String? = nil
+        assetName: String? = nil,
+        perspectivePositionOverrides: [PerspectivePositionOverride] = []
     ) {
         self.platformID = platformID
         self.offset = offset
         self.assetName = assetName
+        self.perspectivePositionOverrides = perspectivePositionOverrides
     }
+}
+
+/// Optional position changes applied after a petal is collected.
+/// This lets a level expose a new perspective route without level-specific code.
+struct PerspectivePositionOverride {
+    let platformID: String
+    let frontPosition: CGPoint?
+    let sidePosition: CGPoint?
+
+    init(
+        platformID: String,
+        frontPosition: CGPoint? = nil,
+        sidePosition: CGPoint? = nil
+    ) {
+        self.platformID = platformID
+        self.frontPosition = frontPosition
+        self.sidePosition = sidePosition
+    }
+}
+
+/// Describes a route that only exists after Mori activates its lamp platform.
+/// The level data owns which platforms and connections are revealed.
+struct LightRevealConfiguration {
+    let lampPlatformID: String
+    let hiddenPlatformIDs: [String]
+    let activatedConnections: [ConnectionModel]
 }
 
 struct PortalDestination {
@@ -98,6 +127,7 @@ struct GameLevel {
     let movementMode: MoriMovementMode
     let usesProximityConnections: Bool
     let proximityConnectionTolerance: CGFloat
+    let lightRevealConfiguration: LightRevealConfiguration?
 
     init(
         id: LevelID,
@@ -115,7 +145,8 @@ struct GameLevel {
         backgroundAssetName: String? = nil,
         movementMode: MoriMovementMode = .pathfinding,
         usesProximityConnections: Bool = true,
-        proximityConnectionTolerance: CGFloat = 10
+        proximityConnectionTolerance: CGFloat = 10,
+        lightRevealConfiguration: LightRevealConfiguration? = nil
     ) {
         self.id = id
         self.category = category
@@ -133,6 +164,7 @@ struct GameLevel {
         self.movementMode = movementMode
         self.usesProximityConnections = usesProximityConnections
         self.proximityConnectionTolerance = proximityConnectionTolerance
+        self.lightRevealConfiguration = lightRevealConfiguration
     }
 
     var usesPerspective: Bool {
