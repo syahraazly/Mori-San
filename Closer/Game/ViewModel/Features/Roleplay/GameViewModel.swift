@@ -7,6 +7,7 @@ final class GameViewModel {
     private(set) var currentLevel: LevelConfiguration
 
     private(set) var connections: [ConnectionModel] = []
+    private var baseConnections: [ConnectionModel] = []
     private var perspectiveConnections: [ConnectionModel] = []
     private var snapConnections: [ConnectionModel] = []
     private(set) var hasReachedExit = false
@@ -37,9 +38,10 @@ final class GameViewModel {
 
     @discardableResult
     func connect(_ firstPlatformID: String, to secondPlatformID: String) -> Bool {
+        // The second platform is the movable platform. Its previous snap link
+        // must be replaced when it is snapped to a new target.
         snapConnections.removeAll {
-            ($0.firstPlatformID == firstPlatformID && $0.secondPlatformID == secondPlatformID)
-                || ($0.firstPlatformID == secondPlatformID && $0.secondPlatformID == firstPlatformID)
+            $0.firstPlatformID == secondPlatformID || $0.secondPlatformID == secondPlatformID
         }
 
         snapConnections.append(
@@ -63,19 +65,29 @@ final class GameViewModel {
         rebuildConnections()
     }
 
+    // Kept for the gameplay-dev caller that disconnects a bridge as soon as it moves.
+    func disconnectSnappedConnections(for platformID: String) {
+        disconnectSnap(for: platformID)
+    }
+
     private func rebuildConnections() {
-        var allConnections = currentLevel.initialConnections + perspectiveConnections
-        for snap in snapConnections {
-            if !allConnections.contains(where: {
-                ($0.firstPlatformID == snap.firstPlatformID && $0.secondPlatformID == snap.secondPlatformID)
-                    || ($0.firstPlatformID == snap.secondPlatformID && $0.secondPlatformID == snap.firstPlatformID)
-            }) {
-                allConnections.append(snap)
+        var resolvedConnections: [ConnectionModel] = []
+
+        for connection in baseConnections + perspectiveConnections + snapConnections
+        where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
+            let alreadyIncluded = resolvedConnections.contains {
+                ($0.firstPlatformID == connection.firstPlatformID
+                    && $0.secondPlatformID == connection.secondPlatformID)
+                    || ($0.firstPlatformID == connection.secondPlatformID
+                        && $0.secondPlatformID == connection.firstPlatformID)
+            }
+
+            if !alreadyIncluded {
+                resolvedConnections.append(connection)
             }
         }
-        connections = allConnections.filter {
-            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
-        }
+
+        connections = resolvedConnections
     }
 
     func canMoveMori(to platformID: String) -> Bool {
@@ -147,11 +159,10 @@ final class GameViewModel {
     }
 
     func setConnections(_ newConnections: [ConnectionModel]) {
+        baseConnections = newConnections
         perspectiveConnections = []
         snapConnections = []
-        connections = newConnections.filter {
-            isWalkable($0.firstPlatformID) && isWalkable($0.secondPlatformID)
-        }
+        rebuildConnections()
     }
 
     func setPerspectiveConnections(_ newConnections: [ConnectionModel]) {
@@ -171,6 +182,7 @@ final class GameViewModel {
     func loadLevel(_ configuration: LevelConfiguration) {
         currentLevel = configuration
         connections = []
+        baseConnections = currentLevel.initialConnections
         perspectiveConnections = []
         snapConnections = []
         hasReachedExit = false
@@ -189,26 +201,6 @@ final class GameViewModel {
 
     private func isWalkable(_ platformID: String) -> Bool {
         currentLevel.platforms.first(where: { $0.id == platformID })?.isWalkable == true
-    }
-
-    private func rebuildConnections() {
-        var resolvedConnections: [ConnectionModel] = []
-
-        for connection in generatedConnections + snappedConnections
-        where isWalkable(connection.firstPlatformID) && isWalkable(connection.secondPlatformID) {
-            let alreadyIncluded = resolvedConnections.contains {
-                ($0.firstPlatformID == connection.firstPlatformID
-                    && $0.secondPlatformID == connection.secondPlatformID)
-                    || ($0.firstPlatformID == connection.secondPlatformID
-                        && $0.secondPlatformID == connection.firstPlatformID)
-            }
-
-            if !alreadyIncluded {
-                resolvedConnections.append(connection)
-            }
-        }
-
-        connections = resolvedConnections
     }
 
 }
