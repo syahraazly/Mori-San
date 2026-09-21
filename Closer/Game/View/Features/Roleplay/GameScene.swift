@@ -732,6 +732,8 @@ final class GameScene: SKScene {
     }
 
     private let connectionTolerance: CGFloat = 4
+    private let surfaceContactOverlapTolerance: CGFloat = 3
+    private let collisionContactEpsilon: CGFloat = 0.5
 
     private func allowedConnections(
         from candidates: [ConnectionModel],
@@ -792,9 +794,11 @@ final class GameScene: SKScene {
                     gap = firstSurface.cellRect.minX - secondSurface.cellRect.maxX
                 }
 
-                // A tiny overlap is tolerated for SpriteKit rounding only. A visible
-                // gap is never navigable, and intersecting solid cells are rejected.
-                guard gap >= -1, gap <= connectionTolerance else { continue }
+                // Authored platform edges may overlap by a few points at contact.
+                // Positive gaps remain governed by connectionTolerance, so this
+                // never turns a visibly separated route into a walkable one.
+                guard gap >= -surfaceContactOverlapTolerance,
+                      gap <= connectionTolerance else { continue }
 
                 if bestPair == nil || abs(gap) < abs(bestPair!.gap) {
                     bestPair = (firstSurface, secondSurface, gap)
@@ -1608,30 +1612,28 @@ final class GameScene: SKScene {
         proposedX: CGFloat,
         previousX: CGFloat
     ) -> CGFloat {
-        // All shapes, including 1x1 stones, use their occupied solid cells.
         let y = draggablePlatform.position.y
-        let proposedPosition = CGPoint(x: proposedX, y: y)
+        let sweptX = sweptCollisionConstrainedX(
+            for: draggablePlatform,
+            proposedX: proposedX,
+            previousX: previousX
+        )
+        let proposedPosition = CGPoint(x: sweptX, y: y)
 
-        // Fast path: proposed position is already valid.
         if isPlacementValid(for: draggablePlatform, at: proposedPosition) {
-            return proposedX
+            return sweptX
         }
 
-        // If previousX itself is invalid (fast drag left us in an overlap),
-        // recover to the nearest valid position on the safe side first.
-        let safeX = nearestValidX(for: draggablePlatform, startX: previousX, directionX: proposedX)
+        let safeX = nearestValidX(for: draggablePlatform, startX: previousX, directionX: sweptX)
 
-        // If even the recovered position equals proposedX direction we cannot move further.
         guard isPlacementValid(for: draggablePlatform, at: CGPoint(x: safeX, y: y)) else {
             return safeX
         }
 
-        // Binary search between safeX and proposedX for the furthest valid position.
-        let movingRight = proposedX > safeX
+        let movingRight = sweptX > safeX
         var lo = safeX
-        var hi = proposedX
+        var hi = sweptX
 
-        // Run up to 16 iterations — precision ≈ |hi-lo| / 2^16 ≈ 0.002 pt at 100 pt range.
         for _ in 0..<16 {
             let mid = (lo + hi) / 2
             if isPlacementValid(for: draggablePlatform, at: CGPoint(x: mid, y: y)) {
@@ -1642,6 +1644,48 @@ final class GameScene: SKScene {
         }
 
         return movingRight ? lo : hi
+    }
+
+    private func sweptCollisionConstrainedX(
+        for draggablePlatform: PlatformNode,
+        proposedX: CGFloat,
+        previousX: CGFloat
+    ) -> CGFloat {
+        let horizontalDelta = proposedX - previousX
+        guard horizontalDelta != 0 else { return proposedX }
+
+        let previousPosition = CGPoint(x: previousX, y: draggablePlatform.position.y)
+        let previousRects = draggablePlatform.occupiedCellRects(at: previousPosition)
+        let proposedRects = draggablePlatform.occupiedCellRects(
+            at: CGPoint(x: proposedX, y: draggablePlatform.position.y)
+        )
+        var resolvedX = proposedX
+
+        for target in platformNodes.values where target.model.id != draggablePlatform.model.id
+            && !target.model.isDraggable
+            && !target.isHidden {
+            for targetRect in target.occupiedCellRects(at: target.position) {
+                for (previousRect, proposedRect) in zip(previousRects, proposedRects) {
+                    let overlapsVertically = previousRect.maxY > targetRect.minY
+                        && previousRect.minY < targetRect.maxY
+                    guard overlapsVertically else { continue }
+
+                    if horizontalDelta > 0,
+                       previousRect.maxX <= targetRect.minX + collisionContactEpsilon,
+                       proposedRect.maxX > targetRect.minX - collisionContactEpsilon {
+                        let boundaryX = previousX + targetRect.minX - previousRect.maxX
+                        resolvedX = min(resolvedX, boundaryX)
+                    } else if horizontalDelta < 0,
+                              previousRect.minX >= targetRect.maxX - collisionContactEpsilon,
+                              proposedRect.minX < targetRect.maxX + collisionContactEpsilon {
+                        let boundaryX = previousX + targetRect.maxX - previousRect.minX
+                        resolvedX = max(resolvedX, boundaryX)
+                    }
+                }
+            }
+        }
+
+        return resolvedX
     }
 
     private func createInstructionLabel() {
