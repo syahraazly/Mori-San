@@ -153,7 +153,7 @@ enum WhiteLilyLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.24),
-                sidePosition: CGPoint(x: 0.13, y: 0.55),
+                sidePosition: CGPoint(x: 0.13, y: 0.54),
                 shape: .single1x1
             ),
             PlatformModel(
@@ -172,7 +172,7 @@ enum WhiteLilyLevelData {
                 size: CGSize(width: 44, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.13, y: 0.55),
+                frontPosition: CGPoint(x: 0.13, y: 0.54),
                 sidePosition: CGPoint(x: 0.72, y: 0.49),
                 shape: .single1x1
             ),
@@ -224,7 +224,7 @@ enum WhiteLilyLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.34),
-                sidePosition: CGPoint(x: 0.48, y: 0.72),
+                sidePosition: CGPoint(x: 0.45, y: 0.72),
                 shape: .single1x1
             ),
             PlatformModel(
@@ -293,7 +293,7 @@ enum WhiteLilyLevelData {
                 id: "platformB",
                 horizontalPosition: 0.24,
                 size: CGSize(width: 44, height: 44),
-                isDraggable: true,
+                isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.24, y: 0.40),
                 sidePosition: CGPoint(x: 0.24, y: 0.64),
@@ -305,8 +305,8 @@ enum WhiteLilyLevelData {
                 size: CGSize(width: 92, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.62, y: 0.34),
-                sidePosition: CGPoint(x: 0.42, y: 0.34),
+                frontPosition: CGPoint(x: 0.62, y: 0.35),
+                sidePosition: CGPoint(x: 0.42, y: 0.35),
                 shape: .lShape
             ),
             PlatformModel(
@@ -323,7 +323,7 @@ enum WhiteLilyLevelData {
                 id: "platformE",
                 horizontalPosition: 0.50,
                 size: CGSize(width: 42, height: 44),
-                isDraggable: false,
+                isDraggable: true,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.72),
                 sidePosition: CGPoint(x: 0.64, y: 0.64),
@@ -336,7 +336,7 @@ enum WhiteLilyLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.80, y: 0.20),
-                sidePosition: CGPoint(x: 0.80, y: 0.34),
+                sidePosition: CGPoint(x: 0.80, y: 0.35),
                 shape: .reverseLShape
             )
         ],
@@ -344,7 +344,8 @@ enum WhiteLilyLevelData {
         exitPlatformID: "platformC",
         platformHeightRatio: 0.40,
         snapRules: [
-            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformE"], threshold: 50)
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformE"], threshold: 50),
+            SnapRule(draggablePlatformID: "platformC", targetPlatformIDs: ["platformB", "platformD"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
         petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55)),
@@ -408,8 +409,8 @@ enum WhiteLilyLevelData {
                     size: CGSize(width: 92, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.80, y: 0.44),
-                    sidePosition: CGPoint(x: 0.675, y: 0.24),
+                    frontPosition: CGPoint(x: 0.80, y: 0.45),
+                    sidePosition: CGPoint(x: 0.69, y: 0.24),
                     shape: .lShape
                 ),
                 PlatformModel(
@@ -428,7 +429,7 @@ enum WhiteLilyLevelData {
                     size: CGSize(width: 44, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
-                    frontPosition: CGPoint(x: 0.87, y: 0.73),
+                    frontPosition: CGPoint(x: 0.87, y: 0.72),
                     sidePosition: CGPoint(x: 0.87, y: 0.64),
                     shape: .single1x1
                 )
