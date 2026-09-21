@@ -16,7 +16,7 @@
 		A10000000000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A10000000000000000000005 /* Closer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Closer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000005 /* Mori-Chan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mori-Chan.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -40,12 +40,12 @@
 		A10000000000000000000031 = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000032 /* Closer */,
+				A10000000000000000000032 /* Mori-Chan */,
 				A10000000000000000000033 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		A10000000000000000000032 /* Closer */ = {
+		A10000000000000000000032 /* Mori-Chan */ = {
 			isa = PBXGroup;
 			children = (
 				842BBBEF30584A0C00BE65FE /* Shared */,
@@ -56,13 +56,13 @@
 				A10000000000000000000002 /* GameViewController.swift */,
 				A10000000000000000000004 /* Info.plist */,
 			);
-			path = Closer;
+			path = "Mori-Chan";
 			sourceTree = "<group>";
 		};
 		A10000000000000000000033 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000005 /* Closer.app */,
+				A10000000000000000000005 /* Mori-Chan.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,9 +70,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000000000000000000041 /* Closer */ = {
+		A10000000000000000000041 /* Mori-Chan */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000000000000000000042 /* Build configuration list for PBXNativeTarget "Closer" */;
+			buildConfigurationList = A10000000000000000000042 /* Build configuration list for PBXNativeTarget "Mori-Chan" */;
 			buildPhases = (
 				A10000000000000000000043 /* Sources */,
 				A10000000000000000000021 /* Frameworks */,
@@ -87,9 +87,9 @@
 				842BBBEA305849CC00BE65FE /* Game */,
 				842BBBEF30584A0C00BE65FE /* Shared */,
 			);
-			name = Closer;
+			name = "Mori-Chan";
 			productName = Closer;
-			productReference = A10000000000000000000005 /* Closer.app */;
+			productReference = A10000000000000000000005 /* Mori-Chan.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -107,7 +107,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A10000000000000000000052 /* Build configuration list for PBXProject "Closer" */;
+			buildConfigurationList = A10000000000000000000052 /* Build configuration list for PBXProject "Mori-Chan" */;
 			compatibilityVersion = "Xcode 16.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -120,7 +120,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A10000000000000000000041 /* Closer */,
+				A10000000000000000000041 /* Mori-Chan */,
 			);
 		};
 /* End PBXProject section */
@@ -191,7 +191,7 @@
 				INFOPLIST_FILE = Closer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.closer;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gamejam.mori-chan";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -209,7 +209,7 @@
 				INFOPLIST_FILE = Closer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.closer;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.gamejam.mori-chan";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -219,7 +219,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A10000000000000000000042 /* Build configuration list for PBXNativeTarget "Closer" */ = {
+		A10000000000000000000042 /* Build configuration list for PBXNativeTarget "Mori-Chan" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000063 /* Debug */,
@@ -228,7 +228,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A10000000000000000000052 /* Build configuration list for PBXProject "Closer" */ = {
+		A10000000000000000000052 /* Build configuration list for PBXProject "Mori-Chan" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000000000000000000061 /* Debug */,
