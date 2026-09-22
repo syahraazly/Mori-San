@@ -2,19 +2,29 @@ import SwiftUI
 
 struct StorylineScreen: View {
     @ObservedObject var appFlow: AppFlowViewModel
+    @StateObject private var viewModel: StorylineViewModel
+
+    init(appFlow: AppFlowViewModel) {
+        self.appFlow = appFlow
+        _viewModel = StateObject(wrappedValue: StorylineViewModel(
+            onComplete: { appFlow.openMap() }
+        ))
+    }
 
     var body: some View {
-        ZStack {
-            Color(red: 0.95, green: 0.90, blue: 0.82)
-                .ignoresSafeArea()
-            Text("I — APART")
-                .font(.system(size: 30, weight: .bold))
-                .foregroundStyle(Color(red: 0.22, green: 0.24, blue: 0.30))
-        }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                appFlow.openMap()
+        ZStack(alignment: .topTrailing) {
+            StoryPageView(beat: viewModel.currentBeat)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.advanceStory()
+                }
+
+            Button("Skip") {
+                viewModel.skipStory()
             }
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(Color(red: 0.38, green: 0.31, blue: 0.52))
+            .padding(20)
         }
     }
 }
