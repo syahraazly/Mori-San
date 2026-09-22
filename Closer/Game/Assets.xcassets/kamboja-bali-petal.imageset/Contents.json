@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "kamboja-bali-petal.PNG",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "kamboja-bali-petal 1.PNG",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "kamboja-bali-petal 2.PNG",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
