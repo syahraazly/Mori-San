@@ -1,6 +1,6 @@
-# 🌲 Mori-san: Closer
+# 🌱 Mori-chan
 
-A poetic, isometric puzzle game built for the **Very Disco Jam by Apple Developer Academy @CJKT** under the theme **"Compact"**. Developed natively for **iOS**.
+A poetic 2D perspective puzzle adventure created for the **Very Disco Jam by Apple Developer Academy @CJKT**, under the theme **"Compact"**. Built natively for **iOS**.
 
 > **"Some distances are meant to be closed. Bring the world closer."**
 
@@ -8,49 +8,99 @@ A poetic, isometric puzzle game built for the **Very Disco Jam by Apple Develope
 
 ## 🎮 Overview
 
-**Mori-san: Closer** is a cozy, minimal art puzzle game inspired by the optical aesthetics of *Monument Valley*. You guide **Mori**, a lonely forest spirit stranded on fragmented floating platforms. 
+**Mori-chan** is a cozy puzzle adventure about helping Mori find a way home through a fragmented and mysterious world.
 
-The world is broken and distant. Walking isn't enough—you must literally **drag the world and compress the space** to bridge the gaps. By compacting the environment, you create new paths, restore organic life, and bring the fractured world back together.
+Mori cannot jump or fight. Instead, the player must observe the environment, discover hidden connections, shift perspectives, align paths, and interact with the world to create a way forward.
 
-### 💡 The "Compact" Theme & Wordplay
-*   **Gameplay Mechanic:** "Compact" is translated into a core action—**compressing distances**. Players slide pieces of the world together to create a single, compact pathway.
-*   **The Name Origin (Easter Egg):** The title features a dual-meaning wordplay. Globally, **"Mori-san"** translates from Japanese as *"Mr./Ms. Forest"*. For Indonesian players, it's a clever phonetic play on **"Mari, San!"** (*"Come on, let's go!"*), acting as a gentle invitation for the player to help Mori close the distance.
+But getting home is not only about finding the right path.
+
+Along the journey, Mori discovers small fragments that seem to carry a deeper meaning. What they eventually become is something for the player to discover.
+
+---
+
+## 💡 The "Compact" Theme
+
+**Compact** is represented through both gameplay and story.
+
+In gameplay, distant and disconnected parts of the world can become connected through perspective, alignment, and interaction. Paths that initially seem impossible may become reachable when the player sees the world differently.
+
+Narratively, Mori's journey is also about slowly bringing scattered pieces closer together.
 
 ---
 
 ## ✨ Core Features
 
-*   **Drag & Snap Mechanics:** Intuitively slide parts of the world. Feel the satisfying haptic feedback and watch vines organically grow as paths connect.
-*   **Perspective Puzzles:** Manipulate isometric dioramas to solve seemingly impossible gaps through clever positioning.
-*   **Mori-Kei Aesthetic:** A soothing, earthy color palette paired with minimalist design and ambient acoustic soundscapes.
-*   **Tailored for iOS:** Designed from the ground up for mobile touch controls, one-handed play, and smooth performance on iOS devices.
+- **Perspective Puzzles** — Change the way the world is viewed to discover new connections and paths.
+- **Interactive Platforms** — Move and align parts of the environment to create traversable routes.
+- **Tap to Move** — Guide Mori across connected platforms with simple touch controls.
+- **Portal Exploration** — Discover portals that may lead Mori closer to—or further from—the way home.
+- **Hidden Discoveries** — Collect fragments throughout each chapter and uncover their meaning at the end of the journey.
+- **Three Chapters** — Explore three distinct chapters, each containing five puzzle levels and its own hidden story.
+- **Cozy Visual Direction** — A minimal, warm visual style designed around Mori's quiet journey.
 
 ---
 
-## 🛠️ Tech Stack & Development
+## 🗺️ Chapters
 
-*   **Platform:** iOS (Targeting iOS 16+)
-*   **Game Engine/Framework:** Swift + SpriteKit
-*   **Language:** Swift
-*   **Controls:** Touch Drag & Tap to Move.
+Mori-chan currently contains three chapters:
+
+### Chapter 1
+**Scars to your beautiful**
+
+### Chapter 2
+**Everything I wanted**
+
+### Chapter 3
+**From Dusk till Dawn**
+
+Each chapter contains **5 levels**.
+
+Throughout a chapter, players collect mysterious petals without knowing what they will eventually become. Their true form and meaning are only revealed after completing the chapter.
 
 ---
 
-## 🎬 How It Works (Gameplay Loop)
+## 🎬 Gameplay Loop
 
-1.  **Observe:** Mori is stuck; the exit door is far away.
-2.  **Compact:** Drag the distant platform closer.
-3.  **Snap:** The platforms lock together with a subtle glow and haptic pulse.
-4.  **Restore:** Tap the exit, guide Mori across, and watch the forest come back to life.
+1. **Observe** — Look at the environment and understand Mori's surroundings.
+2. **Explore** — Find which platforms and paths Mori can reach.
+3. **Change Perspective** — Discover connections that were previously hidden.
+4. **Align** — Manipulate the world when necessary to bring paths together.
+5. **Traverse** — Guide Mori through the newly connected route.
+6. **Discover** — Collect petals and continue toward the portal.
+7. **Reveal** — Complete the chapter to discover what the collected petals were leading to.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Platform:** iOS
+- **Language:** Swift
+- **UI Framework:** SwiftUI
+- **Game Framework:** SpriteKit
+- **Controls:** Touch, Tap, Drag & Swipe
+- **Architecture:** MVVM-oriented feature structure
+
+---
+
+## 🌿 Game Philosophy
+
+Mori-chan is designed around a simple idea:
+
+> Sometimes the path doesn't appear because you need to see things from a different perspective.
+
+The puzzles are not about speed, combat, or complex controls. They are about observing, experimenting, and slowly understanding how seemingly disconnected pieces belong together.
+
+The same idea carries through Mori's journey.
 
 ---
 
 ## 👥 Credits & Game Jam Team
 
-*   **Syahra Zulya** — Game Designer, Programmer & Artist
-*   **Dina Septy** — Game Designer, Programmer & Artist
-*   **Diana Novita** — Game Designer, Programmer & Artist
-*   **Rizki Fitriani** — Game Designer, Programmer & Artist
-*   **Safa Auliya** — Game Designer, Programmer & Artist
+- **Syahra Zulya** — Game Designer, Programmer & Artist
+- **Dina Septy** — Game Designer, Programmer & Artist
+- **Diana Novita** — Game Designer, Programmer & Artist
+- **Rizki Fitriani** — Game Designer, Programmer & Artist
+- **Safa Auliya** — Game Designer, Programmer & Artist
+- **Noorfi Azizah** — Game Designer, Programmer & Artist
 
-*Developed within 12Days for the Very Disco Jam by Apple Developer Academy @CJKT.*
+*Developed in 12 days for the Very Disco Jam by Apple Developer Academy @CJKT.*
