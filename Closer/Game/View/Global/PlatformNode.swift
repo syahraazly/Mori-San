@@ -67,6 +67,10 @@ final class PlatformNode: SKShapeNode {
                 asset.position = CGPoint(x: 0, y: -26)
             }
             
+            if model.id == "deadEnd" {
+                asset.position.y -= 27
+            }
+            
             let textureSize = texture.size()
             let visualBounds = model.visualSize ?? model.size
 
