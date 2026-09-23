@@ -334,7 +334,7 @@ enum WhiteLilyLevelData {
                 size: CGSize(width: 92, height: 44),
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.46, y: 0.20),
+                frontPosition: CGPoint(x: 0.52, y: 0.20),
                 sidePosition: CGPoint(x: 0.13, y: 0.40),
                 assetName: "stone2x1",
                 shape: .horizontal1x2
@@ -354,7 +354,7 @@ enum WhiteLilyLevelData {
                 id: "platformF",
                 horizontalPosition: 0.80,
                 size: CGSize(width: 92, height: 44),
-                isDraggable: true,
+                isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.80, y: 0.20),
                 sidePosition: CGPoint(x: 0.80, y: 0.35),
@@ -371,7 +371,7 @@ enum WhiteLilyLevelData {
 //            SnapRule(draggablePlatformID: "platformC", targetPlatformIDs: ["platformB", "platformD"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 40)),
         backgroundAssetName: "background-chapter-2"
     )
 
