@@ -7,7 +7,7 @@ enum BalineseFrangipaniLevelData {
         interaction: .perspectiveCompact,
         platforms: [
             stone(id: "start", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.12, y: 0.65), side: CGPoint(x: 0.12, y: 0.65)),
-            stone(id: "blueBridge", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.29, y: 0.65), side: CGPoint(x: 0.29, y: 0.65), draggable: true),
+            stone(id: "blueBridge", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.29, y: 0.65), side: CGPoint(x: 0.50, y: 0.37), draggable: true),
             stone(id: "greenTarget", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.70, y: 0.65), side: CGPoint(x: 0.70, y: 0.65)),
             stone(id: "returnPlatform", asset: "stone2x1", size: CGSize(width: 92, height: 44), shape: .horizontal1x2, front: CGPoint(x: 0.20, y: 0.18), side: CGPoint(x: 0.20, y: 0.18)),
             stone(id: "petalStone", asset: "stone1x1", size: CGSize(width: 44, height: 44), shape: .single1x1, front: CGPoint(x: 0.37, y: 0.18), side: CGPoint(x: 0.37, y: 0.18)),
