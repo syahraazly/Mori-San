@@ -86,6 +86,49 @@ final class MapView: SKNode {
         addChild(title)
 
         addChild(pagesNode)
+        buildSwipeHint()
+    }
+
+    private func buildSwipeHint() {
+        guard viewModel.chapters.count > 1 else { return }
+
+        let hint = SKNode()
+        hint.name = "map-swipe-hint"
+        hint.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.075)
+        hint.zPosition = 10
+
+        let leftChevron = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        leftChevron.text = "‹"
+        leftChevron.fontSize = 28
+        leftChevron.fontColor = .white.withAlphaComponent(0.82)
+        leftChevron.verticalAlignmentMode = .center
+        leftChevron.position = CGPoint(x: -88, y: 1)
+        hint.addChild(leftChevron)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        label.text = "SWIPE TO EXPLORE"
+        label.fontSize = 13
+        label.fontColor = .white.withAlphaComponent(0.82)
+        label.verticalAlignmentMode = .center
+        hint.addChild(label)
+
+        let rightChevron = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        rightChevron.text = "›"
+        rightChevron.fontSize = 28
+        rightChevron.fontColor = .white.withAlphaComponent(0.82)
+        rightChevron.verticalAlignmentMode = .center
+        rightChevron.position = CGPoint(x: 88, y: 1)
+        hint.addChild(rightChevron)
+
+        hint.run(
+            SKAction.repeatForever(
+                SKAction.sequence([
+                    .fadeAlpha(to: 0.55, duration: 1.0),
+                    .fadeAlpha(to: 0.82, duration: 1.0)
+                ])
+            )
+        )
+        addChild(hint)
     }
 
     private func buildPages() {
@@ -117,6 +160,17 @@ final class MapView: SKNode {
         chapterNumber.fontColor = .white
         chapterNumber.position = CGPoint(x: 0, y: sceneSize.height * 0.19)
         page.addChild(chapterNumber)
+
+        if chapter.isComingSoon {
+            addClue(chapter.clue, to: page, y: 20)
+            addStateLabel(
+                chapter.progressionTitle,
+                to: page,
+                y: -sceneSize.height * 0.16,
+                color: .white.withAlphaComponent(0.82)
+            )
+            return page
+        }
 
         switch state {
         case .locked:
@@ -230,6 +284,7 @@ final class MapView: SKNode {
         case 1: return "I"
         case 2: return "II"
         case 3: return "III"
+        case 4: return "IV"
         default: return "\(value)"
         }
     }

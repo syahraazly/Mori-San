@@ -16,7 +16,7 @@
 		A10000000000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		A10000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A10000000000000000000005 /* Closer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Closer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000005 /* Mori-chan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mori-chan.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -62,7 +62,7 @@
 		A10000000000000000000033 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000005 /* Closer.app */,
+				A10000000000000000000005 /* Mori-chan.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -89,7 +89,7 @@
 			);
 			name = Closer;
 			productName = Closer;
-			productReference = A10000000000000000000005 /* Closer.app */;
+			productReference = A10000000000000000000005 /* Mori-chan.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -183,16 +183,19 @@
 		A10000000000000000000063 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2QKLKP6CXJ;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Closer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Mori-chan";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.closer;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.morichan;
+				PRODUCT_NAME = "Mori-chan";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -201,16 +204,19 @@
 		A10000000000000000000064 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 2QKLKP6CXJ;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Closer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Mori-chan";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.closer;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.gamejam.morichan;
+				PRODUCT_NAME = "Mori-chan";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
