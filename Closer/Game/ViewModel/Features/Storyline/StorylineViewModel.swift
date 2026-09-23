@@ -46,11 +46,16 @@ final class StorylineViewModel: ObservableObject {
     // MARK: - Default Content
 
     static let defaultBeats: [StoryBeat] = [
-        StoryBeat(id: 1, imageName: "story-scene-01", thought: "Everything I need is right here."),
-        StoryBeat(id: 2, imageName: "story-scene-02", thought: "A peaceful day, as always."),
-        StoryBeat(id: 3, imageName: "story-scene-03", thought: "...That wasn't there before."),
-        StoryBeat(id: 4, imageName: "story-scene-04", thought: "Wait...!"),
-        StoryBeat(id: 5, imageName: "story-scene-05", thought: "—!"),
-        StoryBeat(id: 6, imageName: "story-scene-06", thought: "...Where am I?"),
+        StoryBeat(
+            id: 1,
+            imageName: "story-scene-01",
+            narration: "Mori lives in a small, cozy world.\nEverything feels close.",
+            thought: "Everything I need is right here."
+        ),
+        StoryBeat(id: 2, imageName: "story-scene-02", narration: nil, thought: "I could stay like this forever."),
+        StoryBeat(id: 3, imageName: "story-scene-03", narration: nil, thought: "...That wasn't there before."),
+        StoryBeat(id: 4, imageName: "story-scene-04", narration: nil, thought: "Why is everything moving away?"),
+        StoryBeat(id: 5, imageName: "story-scene-05", narration: nil, thought: "No—!"),
+        StoryBeat(id: 6, imageName: "story-scene-06", narration: nil, thought: "...Where am I?"),
     ]
 }

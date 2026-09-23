@@ -12,19 +12,18 @@ struct StorylineScreen: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            StoryPageView(beat: viewModel.currentBeat)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    viewModel.advanceStory()
-                }
-
-            Button("Skip") {
-                viewModel.skipStory()
+        StoryPageView(beat: viewModel.currentBeat)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                viewModel.advanceStory()
             }
-            .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(Color(red: 0.38, green: 0.31, blue: 0.52))
-            .padding(20)
-        }
+            .safeAreaInset(edge: .top, alignment: .trailing, spacing: 0) {
+                Button("Skip") {
+                    viewModel.skipStory()
+                }
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Color(red: 0.38, green: 0.31, blue: 0.52))
+                .padding(20)
+            }
     }
 }
