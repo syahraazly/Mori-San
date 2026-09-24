@@ -6,4 +6,4 @@ type("appstore")
 
 app_identifier(["com.gamejam.morichan"])
 
-readonly(ENV["CI"])
+readonly(ENV["CI"] == "true")

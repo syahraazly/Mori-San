@@ -14,7 +14,7 @@ platform :ios do
     match(
       type: "appstore",
       app_identifier: "com.gamejam.morichan",
-      readonly: ENV["CI"],
+      readonly: ENV["CI"] == "true",
       api_key: api_key
     )
 
