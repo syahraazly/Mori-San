@@ -32,7 +32,7 @@ struct ChapterProgressionView: View {
                                 Label("Map", systemImage: "chevron.left")
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(.white)
-                                    .frame(width: 140, height: 40)
+                                    .frame(width: 90, height: 40)
                                     .background(
                                         Color.moriPurple.opacity(0.94),
                                         in: RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -272,6 +272,15 @@ private enum LevelNodeState {
         case .current: return .moriTerracotta
         case .locked: return .moriLocked
         }
+    }
+}
+
+struct ChapterProgressionView_Previews: PreviewProvider {
+    static var previews: some View {
+        ChapterProgressionView(
+            appFlow: AppFlowViewModel(),
+            goalID: "forget-me-not"
+        )
     }
 }
 
