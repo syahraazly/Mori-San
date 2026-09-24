@@ -176,8 +176,9 @@ final class MapView: SKNode {
         let goal = FlowerGoalData.goal(for: chapter.id)
         let actionY = -sceneSize.height * 0.19
 
+        let cardSize = CGSize(width: pageWidth * 0.82, height: sceneSize.height * 0.53)
         let card = SKShapeNode(
-            rectOf: CGSize(width: pageWidth * 0.82, height: sceneSize.height * 0.53),
+            rectOf: cardSize,
             cornerRadius: 26
         )
         card.fillColor = SKColor(red: 0.13, green: 0.16, blue: 0.23, alpha: 0.80)
@@ -185,6 +186,22 @@ final class MapView: SKNode {
         card.lineWidth = 1
         card.zPosition = -2
         page.addChild(card)
+
+        if state == .locked {
+            let lockBackground = SKSpriteNode(imageNamed: "lock")
+            lockBackground.size = cardSize
+            lockBackground.position = .zero
+            lockBackground.alpha = 0.34
+
+            let lockCrop = SKCropNode()
+            let mask = SKShapeNode(rectOf: cardSize, cornerRadius: 26)
+            mask.fillColor = .white
+            mask.strokeColor = .clear
+            lockCrop.maskNode = mask
+            lockCrop.addChild(lockBackground)
+            lockCrop.zPosition = -1
+            page.addChild(lockCrop)
+        }
 
         let chapterNumber = SKLabelNode(fontNamed: "AvenirNext-Bold")
         chapterNumber.text = "CHAPTER \(romanNumeral(chapter.order))"
@@ -214,7 +231,6 @@ final class MapView: SKNode {
         switch state {
         case .locked:
             addClue(chapter.clue, to: page, y: 20)
-            addStateLabel("🔒", to: page, y: -sceneSize.height * 0.16, color: .white.withAlphaComponent(0.72), size: 23)
             addActionButton("Locked", chapterID: chapter.id, to: page, y: actionY, enabled: false)
 
         case .unlocked:
