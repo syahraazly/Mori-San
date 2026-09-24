@@ -58,6 +58,19 @@ final class PlatformNode: SKShapeNode {
         if let assetName = model.assetName {
             let texture = SKTexture(imageNamed: assetName)
             let asset = SKSpriteNode(texture: texture)
+            if model.shape == .lShape {
+                asset.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                asset.position = CGPoint(x: 0, y: -22)
+            }
+            if model.shape == .reverseLShape {
+                asset.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+                asset.position = CGPoint(x: 0, y: -26)
+            }
+            
+            if model.id == "deadEnd" {
+                asset.position.y -= 27
+            }
+            
             let textureSize = texture.size()
             let visualBounds = model.visualSize ?? model.size
 

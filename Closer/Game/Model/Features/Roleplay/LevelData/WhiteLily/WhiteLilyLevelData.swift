@@ -15,6 +15,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.28, y: 0.60),
                 sidePosition: CGPoint(x: 0.28, y: 0.33),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -25,6 +26,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.45, y: 0.33),
                 sidePosition: CGPoint(x: 0.45, y: 0.33),
+                assetName: "stone2x1",
                 shape: .horizontal1x2
             ),
             PlatformModel(
@@ -35,6 +37,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.33),
                 sidePosition: CGPoint(x: 0.71, y: 0.55),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -45,6 +48,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.68, y: 0.60),
                 sidePosition: CGPoint(x: 0.45, y: 0.64),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -55,6 +59,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.55),
                 sidePosition: CGPoint(x: 0.82, y: 0.55),
+                assetName: "stone1x1",
                 shape: .single1x1
             )
         ],
@@ -65,7 +70,7 @@ enum WhiteLilyLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformD", offset: CGPoint(x: 0, y: 48)),
         backgroundAssetName: "background-chapter-2"
     )
-
+    
     // Level 2.2: Introduction of 1x3 shape
     static let level2_2 = GameLevel(
         id: "2.2",
@@ -80,6 +85,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.16, y: 0.42),
                 sidePosition: CGPoint(x: 0.16, y: 0.42),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -90,6 +96,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.42, y: 0.24),
                 sidePosition: CGPoint(x: 0.42, y: 0.42),
+                assetName: "stone2x1",
                 shape: .horizontal1x2
             ),
             PlatformModel(
@@ -100,16 +107,19 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.24),
                 sidePosition: CGPoint(x: 0.71, y: 0.42),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformD",
                 horizontalPosition: 0.45,
-                size: CGSize(width: 44, height: 44),
+                size: CGSize(width: 132, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.45, y: 0.42),
                 sidePosition: CGPoint(x: 0.68, y: 0.64),
+                assetName: "stone3x1",
+                visualSize: CGSize(width: 120, height: 80),
                 shape: .horizontal1x3
             ),
             PlatformModel(
@@ -120,6 +130,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.68, y: 0.52),
                 sidePosition: CGPoint(x: 0.24, y: 0.64),
+                assetName: "stone1x1",
                 shape: .single1x1
             )
         ],
@@ -130,17 +141,8 @@ enum WhiteLilyLevelData {
         petalConfiguration: PetalConfiguration(platformID: "platformC", offset: CGPoint(x: 0, y: 48)),
         backgroundAssetName: "background-chapter-2"
     )
-
+    
     // Level 2.3: Pengenalan L-shape
-    // Layar 390pt. A (1x1, eff=92): center=50.7, right=96.7
-    // B (lShape, eff=132) start x=0.52: center=202.8, left=136.8, right=268.8
-    //   Gap A↔B = 136.8-96.7 = 40.1 > 25 → tidak auto-connect ✓
-    //   Gap B↔C = 293.3-268.8 = 24.5 ≤ 25 → auto-connect via perspectiveConnections ✓
-    // C (1x1, eff=92) x=0.87: center=339.3, left=293.3
-    // Setelah snap B→A: B.center=162.7, B.right=228.7 → gap B↔C=64.6 > 25 (perspConn hilang)
-    //   → initialConnection B↔C mempertahankan link ✓
-    // Level 2.3: Pengenalan L-shape
-    // Puzzle: drag B kiri → snap A → jalan A→B(petal) → drag B kanan → snap C → jalan B→C(exit)
     static let level2_3 = GameLevel(
         id: "2.3",
         category: .family,
@@ -154,16 +156,19 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.24),
                 sidePosition: CGPoint(x: 0.13, y: 0.54),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
                 horizontalPosition: 0.52,
-                size: CGSize(width: 92, height: 44),
+                size: CGSize(width: 132, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.48, y: 0.49),
-                sidePosition: CGPoint(x: 0.48, y: 0.49),
+                frontPosition: CGPoint(x: 0.36, y: 0.49),
+                sidePosition: CGPoint(x: 0.38, y: 0.49),
+                assetName: "stone3x2",
+                visualSize: CGSize(width: 130, height: 86),
                 shape: .lShape
             ),
             PlatformModel(
@@ -174,16 +179,19 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.54),
                 sidePosition: CGPoint(x: 0.72, y: 0.49),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformD",
                 horizontalPosition: 0.52,
-                size: CGSize(width: 44, height: 44),
+                size: CGSize(width: 90, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.68, y: 0.24),
-                sidePosition: CGPoint(x: 0.68, y: 0.24),
+                sidePosition: CGPoint(x: 0.62, y: 0.24),
+                assetName: "stone2x1",
+//                visualSize: CGSize(width: 128, height: 80),
                 shape: .horizontal1x2
             ),
             PlatformModel(
@@ -194,6 +202,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.87, y: 0.40),
                 sidePosition: CGPoint(x: 0.87, y: 0.24),
+                assetName: "stone1x1",
                 shape: .single1x1
             )
         ],
@@ -225,26 +234,31 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.34),
                 sidePosition: CGPoint(x: 0.45, y: 0.72),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
                 id: "platformB",
                 horizontalPosition: 0.52,
-                size: CGSize(width: 92, height: 44),
+                size: CGSize(width: 132, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.52, y: 0.34),
                 sidePosition: CGPoint(x: 0.52, y: 0.54),
+                assetName: "stone2x3",
+                visualSize: CGSize(width: 126, height: 90),
                 shape: .reverseLShape
             ),
             PlatformModel(
                 id: "platformC",
                 horizontalPosition: 0.52,
-                size: CGSize(width: 44, height: 44),
+                size: CGSize(width: 128, height: 44),
                 isDraggable: true,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.42, y: 0.54),
-                sidePosition: CGPoint(x: 0.64, y: 0.72),
+                sidePosition: CGPoint(x: 0.68, y: 0.72),
+                assetName: "stone2x1",
+//                visualSize: CGSize(width: 128, height: 80),
                 shape: .horizontal1x2
             ),
             PlatformModel(
@@ -255,6 +269,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.87, y: 0.54),
                 sidePosition: CGPoint(x: 0.87, y: 0.40),
+                assetName: "stone1x1",
                 shape: .single1x1
             )
         ],
@@ -287,6 +302,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.13, y: 0.40),
                 sidePosition: CGPoint(x: 0.13, y: 0.24),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -297,6 +313,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.24, y: 0.40),
                 sidePosition: CGPoint(x: 0.24, y: 0.64),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -307,16 +324,19 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.35),
                 sidePosition: CGPoint(x: 0.42, y: 0.35),
+                assetName: "stone3x2",
+                visualSize: CGSize(width: 132, height: 88),
                 shape: .lShape
             ),
             PlatformModel(
                 id: "platformD",
                 horizontalPosition: 0.50,
                 size: CGSize(width: 92, height: 44),
-                isDraggable: true,
+                isDraggable: false,
                 remainsDraggableWhenConnected: false,
-                frontPosition: CGPoint(x: 0.42, y: 0.20),
+                frontPosition: CGPoint(x: 0.52, y: 0.20),
                 sidePosition: CGPoint(x: 0.13, y: 0.40),
+                assetName: "stone2x1",
                 shape: .horizontal1x2
             ),
             PlatformModel(
@@ -327,6 +347,7 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.82, y: 0.72),
                 sidePosition: CGPoint(x: 0.64, y: 0.64),
+                assetName: "stone1x1",
                 shape: .single1x1
             ),
             PlatformModel(
@@ -337,6 +358,8 @@ enum WhiteLilyLevelData {
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.80, y: 0.20),
                 sidePosition: CGPoint(x: 0.80, y: 0.35),
+                assetName: "stone2x3",
+                visualSize: CGSize(width: 132, height: 88),
                 shape: .reverseLShape
             )
         ],
@@ -344,11 +367,11 @@ enum WhiteLilyLevelData {
         exitPlatformID: "platformC",
         platformHeightRatio: 0.40,
         snapRules: [
-            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformE"], threshold: 50),
-            SnapRule(draggablePlatformID: "platformC", targetPlatformIDs: ["platformB", "platformD"], threshold: 50)
+            SnapRule(draggablePlatformID: "platformB", targetPlatformIDs: ["platformA", "platformE"], threshold: 50)
+//            SnapRule(draggablePlatformID: "platformC", targetPlatformIDs: ["platformB", "platformD"], threshold: 50)
         ],
         exitConfiguration: ExitConfiguration(platformID: "platformE", offset: CGPoint(x: 0, y: 55)),
-        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 55)),
+        petalConfiguration: PetalConfiguration(platformID: "platformF", offset: CGPoint(x: 0, y: 40)),
         backgroundAssetName: "background-chapter-2"
     )
 
@@ -371,6 +394,7 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.13, y: 0.50),
                     sidePosition: CGPoint(x: 0.13, y: 0.24),
+                    assetName: "stone1x1",
                     shape: .single1x1
                 ),
                 PlatformModel(
@@ -381,6 +405,8 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.24, y: 0.34),
                     sidePosition: CGPoint(x: 0.24, y: 0.64),
+                    assetName: "stone3x2",
+                    visualSize: CGSize(width: 132, height: 88),
                     shape: .lShape
                 ),
                 PlatformModel(
@@ -391,6 +417,8 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.64, y: 0.67),
                     sidePosition: CGPoint(x: 0.35, y: 0.24),
+                    assetName: "stone2x3",
+                    visualSize: CGSize(width: 132, height: 88),
                     shape: .reverseLShape
                 ),
                 PlatformModel(
@@ -401,6 +429,8 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.36, y: 0.50),
                     sidePosition: CGPoint(x: 0.36, y: 0.52),
+                    assetName: "stone3x1",
+                    visualSize: CGSize(width: 132, height: 88),
                     shape: .horizontal1x3
                 ),
                 PlatformModel(
@@ -411,16 +441,19 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.80, y: 0.45),
                     sidePosition: CGPoint(x: 0.69, y: 0.24),
+                    assetName: "stone3x2",
+                    visualSize: CGSize(width: 132, height: 88),
                     shape: .lShape
                 ),
                 PlatformModel(
                     id: "platformF",
                     horizontalPosition: 0.50,
-                    size: CGSize(width: 44, height: 44),
+                    size: CGSize(width: 92, height: 44),
                     isDraggable: false,
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.36, y: 0.67),
                     sidePosition: CGPoint(x: 0.64, y: 0.64),
+                    assetName: "stone2x1",
                     shape: .horizontal1x2
                 ),
                 PlatformModel(
@@ -431,6 +464,7 @@ enum WhiteLilyLevelData {
                     remainsDraggableWhenConnected: false,
                     frontPosition: CGPoint(x: 0.87, y: 0.72),
                     sidePosition: CGPoint(x: 0.87, y: 0.64),
+                    assetName: "stone1x1",
                     shape: .single1x1
                 )
             ],
