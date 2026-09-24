@@ -147,6 +147,10 @@ final class GameScene: SKScene {
             },
             isChapterCompleted: { [weak self] chapterID in
                 self?.appFlow.isChapterCompleted(chapterID) ?? false
+            },
+            petalCount: { [weak self] chapterID in
+                guard let self, let goal = FlowerGoalData.goal(for: chapterID) else { return 0 }
+                return self.appFlow.progress.petalCount(for: goal)
             }
         )
         let map = MapView(

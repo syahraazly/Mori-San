@@ -8,15 +8,18 @@ final class MapViewModel {
 
     private let isChapterUnlocked: (GoalID) -> Bool
     private let isChapterCompleted: (GoalID) -> Bool
+    private let petalCount: (GoalID) -> Int
 
     init(
         chapters: [MapChapterConfiguration] = MapChapterData.chapters,
         isChapterUnlocked: @escaping (GoalID) -> Bool,
-        isChapterCompleted: @escaping (GoalID) -> Bool
+        isChapterCompleted: @escaping (GoalID) -> Bool,
+        petalCount: @escaping (GoalID) -> Int = { _ in 0 }
     ) {
         self.chapters = chapters.sorted { $0.order < $1.order }
         self.isChapterUnlocked = isChapterUnlocked
         self.isChapterCompleted = isChapterCompleted
+        self.petalCount = petalCount
     }
 
     convenience init(
@@ -36,6 +39,10 @@ final class MapViewModel {
         }
 
         return isChapterUnlocked(chapter.id) ? .unlocked : .locked
+    }
+
+    func collectedPetals(for chapter: MapChapterConfiguration) -> Int {
+        petalCount(chapter.id)
     }
 }
 

@@ -54,6 +54,7 @@ final class FlowerRevealView: SKNode {
     private var flowerContainer: SKNode?
     private var titleLabel: SKLabelNode?
     private var subtitleLabel: SKLabelNode?
+    private var followUpLabel: SKLabelNode?
     private var tapPromptNode: SKNode?
     private var moriNode: PlayerNode?
 
@@ -110,27 +111,39 @@ final class FlowerRevealView: SKNode {
 
     private func setupHeader() {
         let tag = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        tag.text = "CHAPTER COMPLETE"
+        tag.text = "A QUIET MOMENT"
         tag.fontSize = 13
         tag.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.50, alpha: 1.0)
         tag.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.88)
         addChild(tag)
 
         let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        title.text = "Gathering Memory Petals"
-        title.fontSize = 25
+        title.text = info.endingNarrative
+        title.fontSize = 18
+        title.numberOfLines = 2
+        title.preferredMaxLayoutWidth = sceneSize.width * 0.82
         title.fontColor = .white
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.83)
+        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.80)
         addChild(title)
         self.titleLabel = title
 
         let subtitle = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        subtitle.text = "All \(info.totalPetals) petals are uniting as one..."
-        subtitle.fontSize = 14
+        subtitle.text = "Mori: \(info.moriResponse)"
+        subtitle.fontSize = 16
         subtitle.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
-        subtitle.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.79)
+        subtitle.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.72)
         addChild(subtitle)
         self.subtitleLabel = subtitle
+
+        if let endingFollowUp = info.endingFollowUp {
+            let followUp = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            followUp.text = endingFollowUp
+            followUp.fontSize = 14
+            followUp.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
+            followUp.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.67)
+            addChild(followUp)
+            self.followUpLabel = followUp
+        }
     }
 
     private func setupPlatformAndMori() {

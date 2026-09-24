@@ -17,39 +17,66 @@ struct ChapterProgressionView: View {
     var body: some View {
         Group {
             if let goal, let chapter {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
-                        Button(action: appFlow.openMap) {
-                            Label("Map", systemImage: "chevron.left")
-                                .font(.headline)
-                                .foregroundStyle(Color.moriInk)
-                                .frame(minHeight: 44)
-                        }
-                        .accessibilityLabel("Kembali ke Map")
+                ZStack {
+                    Image(chapter.backgroundAssetName)
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
 
-                        ChapterHeaderView(chapter: chapter)
-                        PetalProgressView(
-                            collected: appFlow.progress.petalCount(for: goal),
-                            total: goal.totalPetals,
-                            petalAssetName: goal.petalAssetName
-                        )
-                        LevelPathView(
-                            levelIDs: goal.levelIDs,
-                            isCompleted: appFlow.isLevelCompleted,
-                            isUnlocked: appFlow.isLevelUnlocked,
-                            onSelectLevel: appFlow.startLevel
-                        )
+                    Color.black.opacity(0.08)
+                        .ignoresSafeArea()
+
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 20) {
+                            Button(action: appFlow.openMap) {
+                                Label("Map", systemImage: "chevron.left")
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 140, height: 40)
+                                    .background(
+                                        Color.moriPurple.opacity(0.94),
+                                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    )
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .stroke(Color.white.opacity(0.35), lineWidth: 2)
+                                    }
+                            }
+                            .accessibilityLabel("Kembali ke Map")
+
+                            ChapterHeaderView(chapter: chapter)
+                                .padding(20)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            PetalProgressView(
+                                collected: appFlow.progress.petalCount(for: goal),
+                                total: goal.totalPetals,
+                                petalAssetName: goal.petalAssetName
+                            )
+                            .padding(20)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                            LevelPathView(
+                                levelIDs: goal.levelIDs,
+                                isCompleted: appFlow.isLevelCompleted,
+                                isUnlocked: appFlow.isLevelUnlocked,
+                                onSelectLevel: appFlow.startLevel
+                            )
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 54)
+                        .padding(.bottom, 18)
+                        .frame(maxWidth: 620)
+                        .frame(maxWidth: .infinity)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 20)
-                    .frame(maxWidth: 620, alignment: .leading)
-                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             } else {
                 ContentUnavailableView("Chapter tidak ditemukan", systemImage: "map")
             }
         }
-        .background(Color.moriCream.ignoresSafeArea())
     }
 }
 
@@ -60,12 +87,12 @@ private struct ChapterHeaderView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("CHAPTER \(romanNumeral(chapter.order))")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color.moriMutedInk)
+                .foregroundStyle(Color.white.opacity(0.72))
                 .tracking(1.2)
 
             Text(chapter.progressionTitle)
                 .font(.system(.title, design: .serif).weight(.semibold))
-                .foregroundStyle(Color.moriInk)
+                .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -83,10 +110,10 @@ private struct PetalProgressView: View {
     let petalAssetName: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .center, spacing: 12) {
             Text("\(collected)/\(total) petals")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.moriInk)
+                .foregroundStyle(.white)
 
             HStack(spacing: 10) {
                 ForEach(0..<total, id: \.self) { index in
@@ -97,6 +124,7 @@ private struct PetalProgressView: View {
                         .accessibilityHidden(true)
                 }
             }
+            .frame(maxWidth: .infinity)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(collected) dari \(total) kelopak terkumpul")
         }
@@ -113,7 +141,9 @@ private struct PetalMark: View {
             .scaledToFit()
             .frame(width: 28, height: 28)
             .saturation(isCollected ? 1 : 0)
-            .opacity(isCollected ? 1 : 0.25)
+            .opacity(isCollected ? 1 : 0.28)
+            .padding(5)
+            .background(Color.white.opacity(isCollected ? 0.14 : 0.06), in: Circle())
     }
 }
 
@@ -154,8 +184,8 @@ private struct LevelPathView: View {
 
     private func journeyPoints(count: Int, in size: CGSize) -> [CGPoint] {
         let layout: [(CGFloat, CGFloat)] = [
-            (0.16, 0.14), (0.43, 0.25), (0.74, 0.19),
-            (0.58, 0.52), (0.30, 0.68), (0.68, 0.82)
+            (0.14, 0.16), (0.50, 0.16), (0.86, 0.16),
+            (0.67, 0.50), (0.28, 0.50), (0.50, 0.78)
         ]
         return layout.prefix(count).map { point in
             CGPoint(x: size.width * point.0, y: size.height * point.1)
@@ -163,7 +193,7 @@ private struct LevelPathView: View {
     }
 
     private func journeyHeight(for count: Int) -> CGFloat {
-        count > 4 ? 310 : 240
+        count > 4 ? 290 : 225
     }
 }
 
@@ -248,6 +278,7 @@ private enum LevelNodeState {
 private extension Color {
     static let moriCream = Color(red: 0.95, green: 0.90, blue: 0.82)
     static let moriInk = Color(red: 0.22, green: 0.24, blue: 0.30)
+    static let moriPurple = Color(red: 0.38, green: 0.31, blue: 0.52)
     static let moriMutedInk = Color(red: 0.38, green: 0.31, blue: 0.52)
     static let moriTerracotta = Color(red: 0.66, green: 0.31, blue: 0.23)
     static let moriCompleted = Color(red: 0.37, green: 0.35, blue: 0.43)
