@@ -37,12 +37,28 @@ final class AppFlowViewModel: ObservableObject {
 
     func openChapter(_ chapterID: GoalID) {
         guard isChapterUnlocked(chapterID) else { return }
+
+        // Chapter 1.0 is a playable introduction and is intentionally absent
+        // from the chapter progression nodes.
+        if chapterID == "forget-me-not", !isLevelCompleted("1.0") {
+            activeGoalID = chapterID
+            startLevel("1.0")
+            return
+        }
+
         openGoal(chapterID)
     }
 
     func startLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
         guard LevelCatalog.configuration(for: canonicalID) != nil else { return }
+
+        if canonicalID == "1.1", !isLevelCompleted("1.0") {
+            activeGoalID = "forget-me-not"
+            startLevel("1.0")
+            return
+        }
+
         if activeGoalID == nil {
             activeGoalID = LevelCatalog.goalID(for: canonicalID)
         }
