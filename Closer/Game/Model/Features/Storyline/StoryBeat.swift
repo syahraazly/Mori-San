@@ -1,11 +1,23 @@
 struct StoryBeat {
+
     /// Scene number (1–6), matching storyboard scene numbering.
     let id: Int
+
     /// Asset catalog name for the scene illustration.
-    /// Placeholder names (story-scene-01…06) until final art is delivered.
     let imageName: String
-    /// External narrator / world voice for this beat. Only some beats have narration.
+
+    /// External narrator voice.
     let narration: String?
-    /// Mori's inner monologue for this beat. nil = visual-only beat.
+
+    /// Mori's inner thought.
     let thought: String?
+
+    /// General text placement for the scene.
+    let layout: StoryTextLayout
+}
+
+enum StoryTextLayout {
+    case topLeading
+    case centerLeading
+    case bottomLeading
 }
