@@ -1,0 +1,9 @@
+git_url("git@github.com:syahraazly/ios-certificates.git")
+
+storage_mode("git")
+
+type("appstore")
+
+app_identifier(["com.gamejam.morichan"])
+
+readonly(ENV["CI"])
