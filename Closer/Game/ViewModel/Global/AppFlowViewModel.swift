@@ -83,7 +83,7 @@ final class AppFlowViewModel: ObservableObject {
         startLevel("1.0")
     }
 
-    // MARK: - Level Completion Transition
+    // Level Completion Transition
 
     func completeLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
