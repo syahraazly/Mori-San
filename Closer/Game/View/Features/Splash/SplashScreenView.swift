@@ -33,7 +33,7 @@ struct SplashScreenView: View {
                     // "TAP TO BEGIN" pulsing in the lower section
                     VStack(spacing: 8) {
                         Text("TAP TO BEGIN")
-                            .font(.custom("AvenirNext-DemiBold", size: 16))
+                            .font(.custom("Montserrat-SemiBold", size: 16))
                             .tracking(3.5)
                             .foregroundStyle(Color.white)
                             .shadow(color: Color.black.opacity(0.55), radius: 8, x: 0, y: 2)

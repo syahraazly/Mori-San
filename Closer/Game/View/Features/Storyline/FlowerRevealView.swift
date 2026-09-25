@@ -140,7 +140,7 @@ final class FlowerRevealView: SKNode {
         let tagY = sceneSize.height * 0.69
         let chapterTitle = MapChapterData.chapter(for: goalID)?.progressionTitle.uppercased() ?? "SCARS TO YOUR BEAUTIFUL"
         
-        let tagShadow = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let tagShadow = SKLabelNode(fontNamed: "Montserrat-Bold")
         tagShadow.text = chapterTitle
         tagShadow.fontSize = 12.5
         tagShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
@@ -148,7 +148,7 @@ final class FlowerRevealView: SKNode {
         tagShadow.zPosition = 5.9
         addChild(tagShadow)
 
-        let tag = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let tag = SKLabelNode(fontNamed: "Montserrat-Bold")
         tag.text = chapterTitle
         tag.fontSize = 12.5
         tag.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.50, alpha: 1.0)
@@ -159,7 +159,7 @@ final class FlowerRevealView: SKNode {
         // Narrative text below chapter title, still inside card
         let titleY = sceneSize.height * 0.64
         if let narrative = info.endingNarrative {
-            let titleShadow = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let titleShadow = SKLabelNode(fontNamed: "Montserrat-Bold")
             titleShadow.text = narrative
             titleShadow.fontSize = 17.5
             titleShadow.numberOfLines = 2
@@ -170,7 +170,7 @@ final class FlowerRevealView: SKNode {
             addChild(titleShadow)
         }
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = info.endingNarrative
         title.fontSize = 17.5
         title.numberOfLines = 2
@@ -183,7 +183,7 @@ final class FlowerRevealView: SKNode {
 
         // Subtitle (post-bloom: "Forget-me-not Bloomed!") — placed above flower
         let subtitleY = sceneSize.height * 0.69
-        let subtitle = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let subtitle = SKLabelNode(fontNamed: "Montserrat-Medium")
         subtitle.fontSize = 15
         subtitle.fontColor = SKColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 0.92)
         subtitle.position = CGPoint(x: sceneSize.width / 2, y: subtitleY)
@@ -193,7 +193,7 @@ final class FlowerRevealView: SKNode {
 
         if let endingFollowUp = info.endingFollowUp {
             let followUpY = sceneSize.height * 0.61
-            let followUpShadow = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            let followUpShadow = SKLabelNode(fontNamed: "Montserrat-Medium")
             followUpShadow.text = endingFollowUp
             followUpShadow.fontSize = 13
             followUpShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
@@ -201,7 +201,7 @@ final class FlowerRevealView: SKNode {
             followUpShadow.zPosition = 5.9
             addChild(followUpShadow)
 
-            let followUp = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            let followUp = SKLabelNode(fontNamed: "Montserrat-Medium")
             followUp.text = endingFollowUp
             followUp.fontSize = 13.5
             followUp.fontColor = SKColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 0.88)
