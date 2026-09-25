@@ -446,31 +446,73 @@ final class ChapterCompletionView: SKNode {
     }
 
     private func setupBackground() {
-        let background = SKShapeNode(rectOf: sceneSize)
-        background.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
-        background.fillColor = SKColor(red: 0.98, green: 0.95, blue: 0.89, alpha: 1)
-        background.strokeColor = .clear
-        background.zPosition = -1
-        addChild(background)
+        let bg = SKSpriteNode(imageNamed: chapter.backgroundAssetName)
+        bg.size = sceneSize
+        bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+        bg.zPosition = -1
+        addChild(bg)
     }
 
     private func setupHeader() {
-        let label = SKLabelNode(fontNamed: "Montserrat-SemiBold")
-        label.text = "A QUIET MOMENT"
-        label.fontSize = 15
-        label.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
-        label.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.91)
+        let cardWidth = sceneSize.width * 0.90
+        // Card sits just above flower (flower center = height * 0.59)
+        // Small top margin, bottom edge close to flower top
+        let cardTop: CGFloat = sceneSize.height * 0.76
+        let cardBottom: CGFloat = sceneSize.height * 0.24
+        let cardHeight = cardTop - cardBottom
+        let cardY = (cardTop + cardBottom) / 2
+        
+        let headerCard = SKShapeNode(rectOf: CGSize(width: cardWidth, height: cardHeight), cornerRadius: 16)
+        headerCard.position = CGPoint(x: sceneSize.width / 2, y: cardY)
+        headerCard.fillColor = SKColor(red: 0.12, green: 0.15, blue: 0.24, alpha: 0.65)
+        headerCard.strokeColor = SKColor.white.withAlphaComponent(0.35)
+        headerCard.lineWidth = 1.2
+        headerCard.zPosition = 3
+        addChild(headerCard)
+
+        // "SCARS TO YOUR BEAUTIFUL" — small top margin from card (0.75 - tiny gap = 0.72)
+        let labelY = sceneSize.height * 0.72
+        let labelShadow = SKLabelNode(fontNamed: "Montserrat-Bold")
+        labelShadow.text = chapter.progressionTitle.uppercased()
+        labelShadow.fontSize = 12.5
+        labelShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
+        labelShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: labelY - 1.5)
+        labelShadow.zPosition = 5.9
+        addChild(labelShadow)
+
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
+        label.text = chapter.progressionTitle.uppercased()
+        label.fontSize = 12.5
+        label.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.50, alpha: 1.0)
+        label.position = CGPoint(x: sceneSize.width / 2, y: labelY)
+        label.zPosition = 6
         addChild(label)
 
-        let title = SKLabelNode(fontNamed: "Montserrat-Medium")
+        let titleY = sceneSize.height * 0.67
+        if let narrativeText = FlowerCelebrationInfo.info(for: goal.id).endingNarrative {
+            let titleShadow = SKLabelNode(fontNamed: "Montserrat-Bold")
+            titleShadow.text = narrativeText
+            titleShadow.numberOfLines = 2
+            titleShadow.preferredMaxLayoutWidth = cardWidth - 28
+            titleShadow.fontSize = 17
+            titleShadow.fontColor = SKColor.black.withAlphaComponent(0.75)
+            titleShadow.horizontalAlignmentMode = .center
+            titleShadow.verticalAlignmentMode = .center
+            titleShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: titleY - 1.5)
+            titleShadow.zPosition = 5.9
+            addChild(titleShadow)
+        }
+
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = FlowerCelebrationInfo.info(for: goal.id).endingNarrative
         title.numberOfLines = 2
-        title.preferredMaxLayoutWidth = sceneSize.width * 0.82
-        title.fontSize = 15
-        title.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
+        title.preferredMaxLayoutWidth = cardWidth - 28
+        title.fontSize = 17
+        title.fontColor = .white
         title.horizontalAlignmentMode = .center
         title.verticalAlignmentMode = .center
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.84)
+        title.position = CGPoint(x: sceneSize.width / 2, y: titleY)
+        title.zPosition = 6
         addChild(title)
 
         let response = SKLabelNode(fontNamed: "Montserrat-MediumItalic")
@@ -481,23 +523,33 @@ final class ChapterCompletionView: SKNode {
         addChild(response)
 
         if let followUp = FlowerCelebrationInfo.info(for: goal.id).endingFollowUp {
+            let followUpY = sceneSize.height * 0.64
+            let followUpShadow = SKLabelNode(fontNamed: "Montserrat-Medium")
+            followUpShadow.text = followUp
+            followUpShadow.fontSize = 13.5
+            followUpShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
+            followUpShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: followUpY - 1.5)
+            followUpShadow.zPosition = 5.9
+            addChild(followUpShadow)
+
             let followUpLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
             followUpLabel.text = followUp
-            followUpLabel.fontSize = 13
-            followUpLabel.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 0.86)
-            followUpLabel.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.70)
+            followUpLabel.fontSize = 13.5
+            followUpLabel.fontColor = SKColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 0.88)
+            followUpLabel.position = CGPoint(x: sceneSize.width / 2, y: followUpY)
+            followUpLabel.zPosition = 6
             addChild(followUpLabel)
         }
     }
 
     // MARK: - Flower Reveal
-
     private func setupReveal() {
         let center = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.54)
         let reduceMotion = UIAccessibility.isReduceMotionEnabled
 
         let petals = SKNode()
         petals.position = center
+        petals.zPosition = 10
         addChild(petals)
 
         let petalCount = max(goal.totalPetals, 1)
@@ -512,26 +564,50 @@ final class ChapterCompletionView: SKNode {
         flower.position = center
         flower.size = CGSize(width: min(sceneSize.width * 0.58, 220), height: min(sceneSize.width * 0.44, 168))
         flower.alpha = 0
-        flower.zPosition = 2
+        flower.zPosition = 10
         addChild(flower)
 
-        let flowerName = SKLabelNode(fontNamed: "Montserrat-SemiBold")
+        let fnShadow = SKLabelNode(fontNamed: "Montserrat-Bold")
+        fnShadow.text = chapter.flowerDisplayName
+        fnShadow.fontSize = 26
+        fnShadow.fontColor = SKColor.black.withAlphaComponent(0.75)
+        fnShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: sceneSize.height * 0.39 - 2)
+        fnShadow.zPosition = 5.9
+        fnShadow.alpha = 0
+        addChild(fnShadow)
+
+        let flowerName = SKLabelNode(fontNamed: "Montserrat-Bold")
         flowerName.text = chapter.flowerDisplayName
-        flowerName.fontSize = 28
-        flowerName.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
-        flowerName.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.34)
+        flowerName.fontSize = 26
+        flowerName.fontColor = .white
+        flowerName.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.39)
+        flowerName.zPosition = 6
         flowerName.alpha = 0
         addChild(flowerName)
 
-        let message = SKLabelNode(fontNamed: "Montserrat-Regular")
+        let msgShadow = SKLabelNode(fontNamed: "Montserrat-Medium")
+        msgShadow.text = completionMessage
+        msgShadow.fontSize = 14
+        msgShadow.fontColor = SKColor.black.withAlphaComponent(0.80)
+        msgShadow.numberOfLines = 3
+        msgShadow.preferredMaxLayoutWidth = sceneSize.width * 0.80
+        msgShadow.horizontalAlignmentMode = .center
+        msgShadow.verticalAlignmentMode = .top
+        msgShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: sceneSize.height * 0.33 - 1.5)
+        msgShadow.zPosition = 5.9
+        msgShadow.alpha = 0
+        addChild(msgShadow)
+
+        let message = SKLabelNode(fontNamed: "Montserrat-Medium")
         message.text = completionMessage
         message.fontSize = 14
-        message.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 1)
+        message.fontColor = SKColor(red: 0.94, green: 0.96, blue: 1.0, alpha: 0.95)
         message.numberOfLines = 3
-        message.preferredMaxLayoutWidth = sceneSize.width * 0.78
+        message.preferredMaxLayoutWidth = sceneSize.width * 0.80
         message.horizontalAlignmentMode = .center
         message.verticalAlignmentMode = .top
-        message.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.28)
+        message.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.33)
+        message.zPosition = 6
         message.alpha = 0
         addChild(message)
 
@@ -558,7 +634,9 @@ final class ChapterCompletionView: SKNode {
             },
             .wait(forDuration: 0.18),
             .run {
+                fnShadow.run(.fadeIn(withDuration: 0.2))
                 flowerName.run(.fadeIn(withDuration: 0.2))
+                msgShadow.run(.fadeIn(withDuration: 0.2))
                 message.run(.fadeIn(withDuration: 0.2))
                 continueButton.run(.fadeIn(withDuration: 0.2)) { [weak self] in
                     self?.canContinue = true
@@ -590,7 +668,7 @@ final class ChapterCompletionView: SKNode {
             let angle = CGFloat(index) / 5 * .pi * 2
             sparkle.position = CGPoint(
                 x: sceneSize.width / 2 + cos(angle) * 88,
-                y: sceneSize.height * 0.54 + sin(angle) * 54
+                y: sceneSize.height * 0.59 + sin(angle) * 54
             )
             sparkle.alpha = 0.2
             addChild(sparkle)
@@ -607,7 +685,7 @@ final class ChapterCompletionView: SKNode {
     private func makeContinueButton() -> SKNode {
         let container = SKNode()
         container.name = "chapter-completion-continue"
-        container.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.13)
+        container.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.18)
 
         let button = SKShapeNode(
             rectOf: CGSize(width: min(sceneSize.width * 0.62, 250), height: 52),
