@@ -13,9 +13,13 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     @Published private(set) var screen: Screen = .onboarding
-    @Published private(set) var progress = GoalProgress()
+    @Published private(set) var progress: GoalProgress
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
+
+    init() {
+        progress = GoalProgress.load()
+    }
 
     func openStoryline() {
         screen = .storyline
@@ -79,6 +83,7 @@ final class AppFlowViewModel: ObservableObject {
     func completeLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
         progress.completeLevel(canonicalID)
+        progress.save()
 
         if let nextTutorialLevelID = LevelCatalog.nextTutorialLevel(after: canonicalID) {
             pendingLevelID = nextTutorialLevelID
@@ -103,6 +108,7 @@ final class AppFlowViewModel: ObservableObject {
 
     func claimPetal(for levelID: LevelID) {
         progress.claimPetal(for: levelID)
+        progress.save()
     }
 
     // MARK: - Chapter Completion / Flower Reveal
