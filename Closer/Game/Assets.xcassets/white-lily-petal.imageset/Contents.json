@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "white-lily-petal.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "white-lily-petal 1.png",
+      "filename" : "white-lily-petal.PNG",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "white-lily-petal 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

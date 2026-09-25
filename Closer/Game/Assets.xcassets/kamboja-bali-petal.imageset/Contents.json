@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "kamboja-bali-petal.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "kamboja-bali-petal 1.png",
+      "filename" : "kamboja-bali-petal.PNG",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "kamboja-bali-petal 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
