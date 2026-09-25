@@ -1,4 +1,5 @@
 import SpriteKit
+import UIKit
 
 final class GameScene: SKScene {
     private let authoredGameplayWidth: CGFloat = 390
@@ -18,6 +19,7 @@ final class GameScene: SKScene {
     private var chapterProgressLabel: SKLabelNode?
     private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
+    private var tutorialGestureNode: SKNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
     /// Tracks the exact surface (cell) position Mori is standing on within a multi-cell platform.
@@ -147,6 +149,10 @@ final class GameScene: SKScene {
             },
             isChapterCompleted: { [weak self] chapterID in
                 self?.appFlow.isChapterCompleted(chapterID) ?? false
+            },
+            petalCount: { [weak self] chapterID in
+                guard let self, let goal = FlowerGoalData.goal(for: chapterID) else { return 0 }
+                return self.appFlow.progress.petalCount(for: goal)
             }
         )
         let map = MapView(
@@ -172,6 +178,7 @@ final class GameScene: SKScene {
         levelBackButton = nil
         chapterProgressLabel = nil
         chapterProgressGoal = nil
+        tutorialGestureNode = nil
         moriCurrentSurfacePosition = nil
         pendingDragPlatform = nil
         didDragPlatform = false
@@ -570,6 +577,7 @@ final class GameScene: SKScene {
                 }
                 draggedPlatform = nil
                 didDragPlatform = false
+                updateInstruction()
                 return
             }
             
@@ -594,6 +602,7 @@ final class GameScene: SKScene {
                 }
             }
             perspectiveSwipeStart = nil
+            updateInstruction()
             return
         }
         
@@ -618,6 +627,7 @@ final class GameScene: SKScene {
         }
         draggedPlatform = nil
         didDragPlatform = false
+        updateInstruction()
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -631,6 +641,7 @@ final class GameScene: SKScene {
         pendingDragPlatform = nil
         didDragPlatform = false
         perspectiveSwipeStart = nil
+        updateInstruction()
     }
     
     private func position(for platform: PlatformModel) -> CGPoint {
@@ -930,6 +941,8 @@ final class GameScene: SKScene {
                 )
             }
         }
+
+        updateInstruction()
     }
     
     private func updatePerspectiveConnections() {
@@ -1767,18 +1780,29 @@ final class GameScene: SKScene {
     
     private func createInstructionLabel() {
         let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        label.fontSize = 16
-        label.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
+        let isTutorial = viewModel.currentLevel.category == .tutorial
+        label.fontSize = isTutorial ? 17 : 16
+        label.fontColor = isTutorial ? .white : SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
         label.horizontalAlignmentMode = .center
-        label.position = CGPoint(x: size.width / 2, y: size.height * 0.82)
-        label.zPosition = 10
+        label.verticalAlignmentMode = .center
+        label.numberOfLines = 3
+        label.preferredMaxLayoutWidth = size.width * (isTutorial ? 0.76 : 0.82)
+        label.position = CGPoint(x: size.width / 2, y: size.height * (isTutorial ? 0.10 : 0.82))
+        label.zPosition = 21
         addChild(label)
         instructionLabel = label
+
+        guard isTutorial else { return }
     }
     
     private func updateInstruction() {
         let level = viewModel.currentLevel
-        
+
+        if level.category == .tutorial {
+            updateTutorialInstruction(for: level)
+            return
+        }
+
         if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
             instructionLabel?.text = nil
             return
@@ -1807,7 +1831,168 @@ final class GameScene: SKScene {
             instructionLabel?.text = "Tap the black hole"
         }
     }
-    
+
+    private func updateTutorialInstruction(for level: LevelConfiguration) {
+        guard let bridgeID = level.platforms.first(where: { $0.isDraggable })?.id,
+              let petalID = level.petalConfiguration?.platformID else {
+            setTutorialInstruction("Swipe to reveal Mori's route")
+            showTutorialGesture(.swipe)
+            return
+        }
+
+        let startID = level.player.startingPlatformID
+
+        if !viewModel.hasCollectedPetal {
+            if viewModel.moriPlatformID == startID {
+                if viewModel.areConnected(startID, bridgeID) {
+                    setTutorialInstruction("Tap the bridge to move Mori\nSwipe to change perspective")
+                    showTutorialGesture(.tap(platformID: bridgeID))
+                } else {
+                    setTutorialInstruction("Drag the bridge back beside Mori\nIt must connect before Mori can move")
+                    showTutorialGesture(.drag(platformID: bridgeID))
+                }
+            } else if !viewModel.areConnected(bridgeID, petalID) {
+                setTutorialInstruction("Drag the bridge toward the next stone\nIt connects when aligned")
+                showTutorialGesture(.drag(platformID: bridgeID))
+            } else {
+                setTutorialInstruction("Tap the petal stone to move Mori\nCollect the petal before entering the black hole")
+                showTutorialGesture(.tap(platformID: petalID))
+            }
+            return
+        }
+
+        let portalPlatformID = resolvedExitPlatformID(for: level)
+        if viewModel.canMoveMori(to: portalPlatformID) {
+            setTutorialInstruction("Tap the portal platform to move Mori\nThe black hole is reached automatically")
+            showTutorialGesture(.portal(platformID: portalPlatformID))
+        } else {
+            setTutorialInstruction("Swipe sideways to reveal the final route")
+            showTutorialGesture(.swipe)
+        }
+
+    }
+
+    private func setTutorialInstruction(_ text: String) {
+        guard let label = instructionLabel else { return }
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let font = UIFont(name: label.fontName ?? "AvenirNext-Medium", size: label.fontSize)
+            ?? UIFont.systemFont(ofSize: label.fontSize, weight: .medium)
+        label.attributedText = NSAttributedString(
+            string: text,
+            attributes: [
+                .font: font,
+                .foregroundColor: UIColor.white,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+        label.horizontalAlignmentMode = .center
+        label.position.x = size.width / 2
+    }
+
+    private enum TutorialGesture {
+        case tap(platformID: String)
+        case portal(platformID: String)
+        case drag(platformID: String)
+        case swipe
+    }
+
+    private func showTutorialGesture(_ gesture: TutorialGesture) {
+        tutorialGestureNode?.removeFromParent()
+        enumerateChildNodes(withName: "tutorial-gesture") { node, _ in
+            node.removeFromParent()
+        }
+
+        let node = SKNode()
+        node.name = "tutorial-gesture"
+        node.zPosition = 25
+        var gestureParent: SKNode = self
+
+        switch gesture {
+        case .tap(let platformID):
+            guard let platform = platformNodes[platformID] else { return }
+            let hand = tutorialHandSprite(systemName: "hand.tap.fill")
+            if let petalNode, petalNode.platformID == platformID {
+                let target = petalNode.convert(CGPoint.zero, to: self)
+                hand.position = CGPoint(x: target.x, y: target.y - 18)
+            } else {
+                let target = platform.convert(CGPoint.zero, to: self)
+                hand.position = CGPoint(x: target.x, y: target.y - 18)
+            }
+            node.addChild(hand)
+            hand.run(.repeatForever(.sequence([
+                .scale(to: 0.78, duration: 0.16),
+                .scale(to: 1.0, duration: 0.16),
+                .wait(forDuration: 0.25)
+            ])))
+
+        case .portal(let platformID):
+            guard let platform = platformNodes[platformID] else { return }
+            let hand = tutorialHandSprite(systemName: "hand.point.up.fill")
+            hand.position = CGPoint(x: 0, y: -18)
+            gestureParent = platform
+            node.addChild(hand)
+            hand.run(.repeatForever(.sequence([
+                .scale(to: 0.86, duration: 0.16),
+                .scale(to: 1.0, duration: 0.16),
+                .wait(forDuration: 0.25)
+            ])))
+
+        case .drag(let platformID):
+            guard let platform = platformNodes[platformID] else { return }
+            let hand = tutorialHandSprite(systemName: "hand.point.up.fill")
+            hand.position = CGPoint(x: 0, y: -18)
+            gestureParent = platform
+            node.addChild(hand)
+            hand.run(.repeatForever(.sequence([
+                .moveBy(x: 34, y: 0, duration: 0.65),
+                .moveBy(x: -34, y: 0, duration: 0.65),
+                .wait(forDuration: 0.2)
+            ])))
+
+        case .swipe:
+            let hand = tutorialHandSprite(systemName: "hand.draw.fill")
+            hand.position = CGPoint(x: size.width / 2 - 44, y: size.height * 0.18)
+            node.addChild(hand)
+            hand.run(.repeatForever(.sequence([
+                .moveBy(x: 88, y: 0, duration: 0.75),
+                .moveBy(x: -88, y: 0, duration: 0.75),
+                .wait(forDuration: 0.2)
+            ])))
+        }
+
+        gestureParent.addChild(node)
+        tutorialGestureNode = node
+    }
+
+    private func tutorialHandSprite(systemName: String) -> SKSpriteNode {
+        let gestureColor = UIColor(red: 251.0 / 255.0,
+                                   green: 248.0 / 255.0,
+                                   blue: 244.0 / 255.0,
+                                   alpha: 1.0)
+        let configuration = UIImage.SymbolConfiguration(
+            pointSize: 34,
+            weight: .semibold,
+            scale: .medium
+        )
+        let palette = UIImage.SymbolConfiguration(paletteColors: [gestureColor])
+        let symbolImage = UIImage(
+            systemName: systemName,
+            withConfiguration: configuration.applying(palette)
+        )
+        let imageSize = CGSize(width: 48, height: 48)
+        let image = symbolImage.map { symbol in
+            let tintedSymbol = symbol.withTintColor(gestureColor, renderingMode: .alwaysOriginal)
+            return UIGraphicsImageRenderer(size: imageSize).image { _ in
+                tintedSymbol.draw(in: CGRect(origin: .zero, size: imageSize))
+            }
+        }
+        let hand = SKSpriteNode(texture: image.map(SKTexture.init(image:)))
+        hand.size = CGSize(width: 38, height: 38)
+        return hand
+    }
+
     private func snapTarget(for draggablePlatform: PlatformNode) -> (platform: PlatformNode, position: CGPoint)? {
         var nearestTarget: (platform: PlatformNode, position: CGPoint, gap: CGFloat)?
         let snapRule = viewModel.currentLevel.snapRules.first {

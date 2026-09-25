@@ -73,7 +73,7 @@ final class StorylineViewModel: ObservableObject {
             id: 2,
             imageName: "story-scene-02",
             narration: """
-            His days are simple and familiar.
+            Mori's days are simple and familiar.
             And that's enough for Mori.
             """,
             thought: "I could stay like this forever.",
@@ -107,7 +107,7 @@ final class StorylineViewModel: ObservableObject {
             id: 5,
             imageName: "story-scene-05",
             narration: """
-            Mori tries to hold on. But his little world is already slipping away.
+            Mori tries to hold on. But Mori's little world is already slipping away.
             """,
             thought: "No—!",
             layout: .bottomLeading
@@ -118,7 +118,7 @@ final class StorylineViewModel: ObservableObject {
             id: 6,
             imageName: "story-scene-06",
             narration: """
-            When Mori opens his eyes, the world he knows is gone.
+            When Mori opens eyes, the world Mori's knows is gone.
             """,
             thought: "...Where am I?",
             layout: .topLeading
