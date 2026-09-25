@@ -66,6 +66,14 @@ final class AppFlowViewModel: ObservableObject {
         screen = .gameplay(canonicalID)
     }
 
+    /// Opens the introduction from the map without changing chapter progress.
+    /// The tutorial can therefore be replayed whenever the player needs it.
+    func openTutorial() {
+        activeGoalID = nil
+        pendingLevelID = nil
+        startLevel("1.0")
+    }
+
     // MARK: - Level Completion Transition
 
     func completeLevel(_ levelID: LevelID) {

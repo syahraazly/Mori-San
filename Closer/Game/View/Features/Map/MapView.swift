@@ -4,6 +4,7 @@ final class MapView: SKNode {
     private let sceneSize: CGSize
     private let viewModel: MapViewModel
     private let onSelectChapter: (GoalID) -> Void
+    private let onOpenTutorial: () -> Void
     private let pagesNode = SKNode()
     private let pageWidth: CGFloat
 
@@ -14,11 +15,13 @@ final class MapView: SKNode {
     init(
         sceneSize: CGSize,
         viewModel: MapViewModel,
-        onSelectChapter: @escaping (GoalID) -> Void
+        onSelectChapter: @escaping (GoalID) -> Void,
+        onOpenTutorial: @escaping () -> Void
     ) {
         self.sceneSize = sceneSize
         self.viewModel = viewModel
         self.onSelectChapter = onSelectChapter
+        self.onOpenTutorial = onOpenTutorial
         pageWidth = sceneSize.width * 0.90
         super.init()
 
@@ -91,7 +94,9 @@ final class MapView: SKNode {
 
         let mori = SKSpriteNode(imageNamed: "mori-idle-1")
         mori.name = "map-mori-observing"
-        mori.size = CGSize(width: 64, height: 82)
+        // The idle assets use a square canvas; keep a 1:1 sprite ratio so Mori
+        // is not vertically stretched on the map.
+        mori.size = CGSize(width: 74, height: 74)
         mori.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.135)
         mori.zPosition = 5
         addChild(mori)
@@ -106,7 +111,26 @@ final class MapView: SKNode {
         ])))
 
         addChild(pagesNode)
+        addTutorialButton()
         buildSwipeHint()
+    }
+
+    private func addTutorialButton() {
+        let button = SKShapeNode(rectOf: CGSize(width: 116, height: 38), cornerRadius: 14)
+        button.name = "map-tutorial"
+        button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.94)
+        button.strokeColor = .white.withAlphaComponent(0.35)
+        button.lineWidth = 1.5
+        button.position = CGPoint(x: sceneSize.width - 72, y: sceneSize.height * 0.87)
+        button.zPosition = 10
+        addChild(button)
+
+        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        label.text = "Tutorial"
+        label.fontSize = 14
+        label.fontColor = .white
+        label.verticalAlignmentMode = .center
+        button.addChild(label)
     }
 
     private func buildSwipeHint() {
@@ -415,6 +439,10 @@ final class MapView: SKNode {
         var node: SKNode? = atPoint(location)
 
         while let currentNode = node {
+            if currentNode.name == "map-tutorial" {
+                onOpenTutorial()
+                return
+            }
             if let name = currentNode.name, name.hasPrefix("map-chapter-") {
                 let chapterID = String(name.dropFirst("map-chapter-".count))
                 guard let chapter = viewModel.chapters.first(where: { $0.id == chapterID }),

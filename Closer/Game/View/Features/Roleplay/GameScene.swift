@@ -160,6 +160,9 @@ final class GameScene: SKScene {
             viewModel: mapViewModel,
             onSelectChapter: { [weak self] chapterID in
                 self?.appFlow.openChapter(chapterID)
+            },
+            onOpenTutorial: { [weak self] in
+                self?.appFlow.openTutorial()
             }
         )
         addChild(map)
