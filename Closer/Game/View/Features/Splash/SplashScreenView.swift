@@ -73,7 +73,7 @@ struct SplashScreenView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            appFlow.startGameplay()
+            appFlow.begin()
         }
     }
 }

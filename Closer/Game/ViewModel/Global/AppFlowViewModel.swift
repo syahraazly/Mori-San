@@ -17,6 +17,21 @@ final class AppFlowViewModel: ObservableObject {
     @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
+    private let userDefaults: UserDefaults
+    private static let hasBegunKey = "hasBegunGame"
+
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+    }
+
+    func begin() {
+        if userDefaults.bool(forKey: Self.hasBegunKey) {
+            openMap()
+        } else {
+            userDefaults.set(true, forKey: Self.hasBegunKey)
+            screen = .onboarding
+        }
+    }
 
     func openSplash() {
         screen = .splash
