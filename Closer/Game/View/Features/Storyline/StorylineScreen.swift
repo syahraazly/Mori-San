@@ -22,7 +22,7 @@ struct StorylineScreen: View {
                     viewModel.skipStory()
                 }
                 .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Color(red: 0.38, green: 0.31, blue: 0.52))
+                .foregroundStyle(Color(.white))
                 .padding(20)
             }
     }

@@ -15,21 +15,31 @@ final class StorylineViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(beats: [StoryBeat] = StorylineViewModel.defaultBeats,
-         onComplete: @escaping () -> Void = {}) {
-        precondition(!beats.isEmpty, "StorylineViewModel requires at least one beat.")
+    init(
+        beats: [StoryBeat] = StorylineViewModel.defaultBeats,
+        onComplete: @escaping () -> Void = {}
+    ) {
+        precondition(
+            !beats.isEmpty,
+            "StorylineViewModel requires at least one beat."
+        )
+
         self.beats = beats
         self.onComplete = onComplete
     }
 
     // MARK: - Derived State
 
-    var currentBeat: StoryBeat { beats[currentBeatIndex] }
-    var isLastBeat: Bool { currentBeatIndex == beats.count - 1 }
+    var currentBeat: StoryBeat {
+        beats[currentBeatIndex]
+    }
+
+    var isLastBeat: Bool {
+        currentBeatIndex == beats.count - 1
+    }
 
     // MARK: - Actions
 
-    /// Advances to the next beat, or signals completion on the final beat.
     func advanceStory() {
         if isLastBeat {
             onComplete()
@@ -38,7 +48,6 @@ final class StorylineViewModel: ObservableObject {
         }
     }
 
-    /// Skips the entire sequence and signals completion immediately.
     func skipStory() {
         onComplete()
     }
@@ -46,16 +55,73 @@ final class StorylineViewModel: ObservableObject {
     // MARK: - Default Content
 
     static let defaultBeats: [StoryBeat] = [
+
+        // 01 — A Small World
         StoryBeat(
             id: 1,
             imageName: "story-scene-01",
-            narration: "Mori lives in a small, cozy world.\nEverything feels close.",
-            thought: "Everything I need is right here."
+            narration: """
+            Mori's world has always been small.
+            Everything he knows is right here.
+            """,
+            thought: "I like it this way.",
+            layout: .topLeading
         ),
-        StoryBeat(id: 2, imageName: "story-scene-02", narration: nil, thought: "I could stay like this forever."),
-        StoryBeat(id: 3, imageName: "story-scene-03", narration: nil, thought: "...That wasn't there before."),
-        StoryBeat(id: 4, imageName: "story-scene-04", narration: nil, thought: "Why is everything moving away?"),
-        StoryBeat(id: 5, imageName: "story-scene-05", narration: nil, thought: "No—!"),
-        StoryBeat(id: 6, imageName: "story-scene-06", narration: nil, thought: "...Where am I?"),
+
+        // 02 — Little Moments
+        StoryBeat(
+            id: 2,
+            imageName: "story-scene-02",
+            narration: """
+            Mori's days are simple and familiar.
+            And that's enough for Mori.
+            """,
+            thought: "I could stay like this forever.",
+            layout: .topLeading
+        ),
+
+        // 03 — Something Changes
+        StoryBeat(
+            id: 3,
+            imageName: "story-scene-03",
+            narration: """
+            Until one night, something feels different.
+            """,
+            thought: "...Was that always there?",
+            layout: .topLeading
+        ),
+
+        // 04 — The World Breaks
+        StoryBeat(
+            id: 4,
+            imageName: "story-scene-04",
+            narration: """
+            One by one, the things that were always close begin to drift away.
+            """,
+            thought: "Wait... what's happening?",
+            layout: .centerLeading
+        ),
+
+        // 05 — Pulled In
+        StoryBeat(
+            id: 5,
+            imageName: "story-scene-05",
+            narration: """
+            Mori tries to hold on. But Mori's little world is already slipping away.
+            """,
+            thought: "No—!",
+            layout: .bottomLeading
+        ),
+
+        // 06 — Waking Up
+        StoryBeat(
+            id: 6,
+            imageName: "story-scene-06",
+            narration: """
+            When Mori opens eyes, the world Mori's knows is gone.
+            """,
+            thought: "...Where am I?",
+            layout: .topLeading
+        )
     ]
 }
