@@ -12,7 +12,7 @@ final class AppFlowViewModel: ObservableObject {
         case congratulations(GoalID)
     }
 
-    @Published private(set) var screen: Screen = .onboarding {
+    @Published private(set) var screen: Screen = .storyline {
         didSet {
             AudioManager.shared.updateMusic(for: screen)
         }

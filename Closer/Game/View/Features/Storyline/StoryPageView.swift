@@ -1,15 +1,8 @@
 import SwiftUI
-import UIKit
 
 struct StoryPageView: View {
 
     let beat: StoryBeat
-
-    @State private var idleFrame: Int = 0
-
-    private var hasIllustration: Bool {
-        UIImage(named: beat.imageName) != nil
-    }
 
     var body: some View {
         ZStack {
@@ -19,49 +12,18 @@ struct StoryPageView: View {
             Color.storyNightIndigo
                 .ignoresSafeArea()
 
-            if hasIllustration {
-                Image(beat.imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            }
-
-            // MARK: - Temporary Mori
-
-            if !hasIllustration {
-                Image(
-                    idleFrame == 0
-                        ? "mori-idle-1"
-                        : "mori-idle-2"
-                )
+            // All beats now have fully composed artwork.
+            Image(beat.imageName)
                 .resizable()
-                .scaledToFit()
-                .frame(width: 220)
-            }
+                .scaledToFill()
+                .ignoresSafeArea()
 
             // MARK: - Story Text
 
             storyText
                 .padding(.horizontal, 32)
-                .padding(.top, 110)
+                .padding(.top, beat.textTopPadding ?? 110)
                 .padding(.bottom, 110)
-        }
-        .task(id: beat.id) {
-            guard !hasIllustration else { return }
-
-            idleFrame = 0
-
-            while !Task.isCancelled {
-                try? await Task.sleep(
-                    nanoseconds: 550_000_000
-                )
-
-                guard !Task.isCancelled else {
-                    break
-                }
-
-                idleFrame = idleFrame == 0 ? 1 : 0
-            }
         }
     }
 
