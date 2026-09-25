@@ -37,13 +37,26 @@ final class GoalDetailView: SKNode {
         backButton.position = CGPoint(x: 68, y: sceneSize.height - 42)
         addChild(backButton)
 
+        let backIconImage = UIImage(
+            systemName: "chevron.left",
+            withConfiguration: UIImage.SymbolConfiguration(
+                pointSize: 16,
+                weight: .bold
+            )
+        )!
+
+        let backIcon = SKSpriteNode(texture: SKTexture(image: backIconImage))
+        backIcon.position = CGPoint(x: -20, y: 0)
+        backButton.addChild(backIcon)
+
         let backLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        backLabel.text = "‹ Map"
+        backLabel.text = "Map"
         backLabel.fontSize = 16
         backLabel.verticalAlignmentMode = .center
         backLabel.fontColor = .white
+        backLabel.position = CGPoint(x: 4, y: 0)
         backButton.addChild(backLabel)
-
+        
         addLevelCategory(
             levelIDs: goal.levelIDs,
             yPosition: sceneSize.height * 0.50,

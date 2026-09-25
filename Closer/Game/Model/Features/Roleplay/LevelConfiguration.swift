@@ -172,7 +172,9 @@ struct GameLevel {
     }
 
     var allowsCompact: Bool {
-        interaction == .compact || interaction == .perspectiveCompact
+        interaction == .compact ||
+        interaction == .perspectiveCompact ||
+        interaction == .perspective
     }
 
     // Keeps the original single-exit levels working while new levels use portals.
