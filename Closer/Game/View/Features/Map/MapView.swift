@@ -273,7 +273,7 @@ final class MapView: SKNode {
                 width: flowerSize,
                 height: flowerSize * textureSize.height / max(textureSize.width, 1)
             )
-            flower.position = CGPoint(x: 0, y: 48)
+            flower.position = CGPoint(x: 0, y: 32)
             flower.zPosition = 1
             addFlowerHighlight(behind: flower, radius: flowerSize * 0.60, to: page)
             page.addChild(flower)
@@ -283,7 +283,7 @@ final class MapView: SKNode {
             flowerName.text = chapter.flowerDisplayName
             flowerName.fontSize = 16
             flowerName.fontColor = .white
-            flowerName.position = CGPoint(x: 0, y: -72)
+            flowerName.position = CGPoint(x: 0, y: -90)
             page.addChild(flowerName)
 
             if let goal {

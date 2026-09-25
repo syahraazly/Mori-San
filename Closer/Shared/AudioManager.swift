@@ -139,7 +139,7 @@ final class AudioManager {
             if !playMusic(named: "congrats0") {
                 playMusic(named: "onboarding0")
             }
-        case .onboarding, .storyline, .map, .goal, .levelTransition, .flowerReveal:
+        case .splash, .onboarding, .storyline, .map, .goal, .levelTransition, .flowerReveal:
             playMusic(named: "onboarding0")
         }
     }

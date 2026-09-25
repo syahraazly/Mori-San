@@ -2,6 +2,7 @@ import SwiftUI
 
 final class AppFlowViewModel: ObservableObject {
     enum Screen: Equatable {
+        case splash
         case onboarding
         case storyline
         case map
@@ -12,7 +13,7 @@ final class AppFlowViewModel: ObservableObject {
         case congratulations(GoalID)
     }
 
-    @Published private(set) var screen: Screen = .storyline {
+    @Published private(set) var screen: Screen = .splash {
         didSet {
             AudioManager.shared.updateMusic(for: screen)
         }
@@ -20,14 +21,42 @@ final class AppFlowViewModel: ObservableObject {
     @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
+    private let userDefaults: UserDefaults
+    private static let hasBegunKey = "hasBegunGame"
 
-    init() {
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
         progress = GoalProgress.load()
         AudioManager.shared.updateMusic(for: screen)
     }
 
+    func begin() {
+        if userDefaults.bool(forKey: Self.hasBegunKey) {
+            openMap()
+        } else {
+            userDefaults.set(true, forKey: Self.hasBegunKey)
+            screen = .onboarding
+        }
+    }
+
+    func openSplash() {
+        screen = .splash
+    }
+
     func openStoryline() {
         screen = .storyline
+    }
+
+    func startGameplay() {
+        if !isLevelCompleted("1.0") {
+            activeGoalID = "forget-me-not"
+            startLevel("1.0")
+        } else if let uncompleted = FlowerGoalData.goal(for: "forget-me-not")?.levelIDs.first(where: { !isLevelCompleted($0) }) {
+            activeGoalID = "forget-me-not"
+            startLevel(uncompleted)
+        } else {
+            openChapter("forget-me-not")
+        }
     }
 
     // MARK: - Chapter Navigation
