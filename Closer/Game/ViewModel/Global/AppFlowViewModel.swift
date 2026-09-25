@@ -13,8 +13,7 @@ final class AppFlowViewModel: ObservableObject {
         case congratulations(GoalID)
     }
 
-    @Published private(set) var screen: Screen = .splash
-    @Published private(set) var screen: Screen = .onboarding {
+    @Published private(set) var screen: Screen = .splash {
         didSet {
             AudioManager.shared.updateMusic(for: screen)
         }
@@ -27,6 +26,8 @@ final class AppFlowViewModel: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+        progress = GoalProgress.load()
+        AudioManager.shared.updateMusic(for: screen)
     }
 
     func begin() {
@@ -40,11 +41,6 @@ final class AppFlowViewModel: ObservableObject {
 
     func openSplash() {
         screen = .splash
-    }
-
-    init() {
-        progress = GoalProgress.load()
-        AudioManager.shared.updateMusic(for: screen)
     }
 
     func openStoryline() {
