@@ -103,7 +103,7 @@ final class FlowerRevealView: SKNode {
             CGPoint(x: sceneSize.width * 0.85, y: sceneSize.height * 0.64),
             CGPoint(x: sceneSize.width * 0.50, y: sceneSize.height * 0.84)
         ].enumerated() {
-            let star = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let star = SKLabelNode(fontNamed: "Montserrat-Bold")
             star.text = i.isMultiple(of: 2) ? "✦" : "✧"
             star.fontSize = i.isMultiple(of: 2) ? 22 : 17
             star.fontColor = SKColor(red: 1.0, green: 0.93, blue: 0.65, alpha: 0.85)
@@ -275,7 +275,7 @@ final class FlowerRevealView: SKNode {
             petalContainer.addChild(petal)
 
             // Sparkle on each petal
-            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let sparkle = SKLabelNode(fontNamed: "Montserrat-Bold")
             sparkle.text = "✦"
             sparkle.fontSize = 15
             sparkle.fontColor = SKColor(red: 1.0, green: 0.94, blue: 0.60, alpha: 0.9)
@@ -372,7 +372,7 @@ final class FlowerRevealView: SKNode {
 
         // Star sparkles burst outward
         for i in 0..<10 {
-            let spark = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let spark = SKLabelNode(fontNamed: "Montserrat-Bold")
             spark.text = i.isMultiple(of: 2) ? "✦" : "✧"
             spark.fontSize = CGFloat.random(in: 18...26)
             spark.fontColor = SKColor(red: 1.0, green: 0.92, blue: 0.50, alpha: 1.0)
@@ -488,7 +488,7 @@ final class FlowerRevealView: SKNode {
         buttonShape.lineWidth = 1.5
         promptContainer.addChild(buttonShape)
 
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.text = "✦  Tap to Celebrate  ✦"
         label.fontSize = 15
         label.fontColor = .white
@@ -568,7 +568,7 @@ final class FlowerRevealView: SKNode {
 
         // Sparkle explosion
         for i in 0..<12 {
-            let spark = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let spark = SKLabelNode(fontNamed: "Montserrat-Bold")
             spark.text = "✦"
             spark.fontSize = 24
             spark.fontColor = SKColor(red: 1.0, green: 0.95, blue: 0.65, alpha: 1.0)

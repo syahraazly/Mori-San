@@ -11,7 +11,7 @@ final class GoalDetailView: SKNode {
     ) {
         super.init()
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = goal.title
         title.fontSize = 28
         title.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
@@ -20,7 +20,7 @@ final class GoalDetailView: SKNode {
 
         let completedPetals = progress?.petalCount(for: goal) ?? 0
         let totalPetals = goal.totalPetals
-        let progressNode = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let progressNode = SKLabelNode(fontNamed: "Montserrat-Medium")
         progressNode.name = "goal-progress-label"
         progressNode.text = "\(completedPetals)/\(totalPetals) petals"
         progressNode.fontSize = 18
@@ -49,7 +49,7 @@ final class GoalDetailView: SKNode {
         backIcon.position = CGPoint(x: -20, y: 0)
         backButton.addChild(backIcon)
 
-        let backLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let backLabel = SKLabelNode(fontNamed: "Montserrat-Bold")
         backLabel.text = "Map"
         backLabel.fontSize = 16
         backLabel.verticalAlignmentMode = .center
@@ -84,7 +84,7 @@ final class GoalDetailView: SKNode {
             button.position = CGPoint(x: spacing * CGFloat(index + 1), y: yPosition)
             addChild(button)
 
-            let number = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let number = SKLabelNode(fontNamed: "Montserrat-Bold")
             number.text = levelID
             number.fontSize = 18
             number.verticalAlignmentMode = .center

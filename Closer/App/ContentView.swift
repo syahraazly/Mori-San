@@ -5,7 +5,12 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
+            Color(red: 0.173, green: 0.165, blue: 0.322)
+                .ignoresSafeArea()
+
             switch appFlow.screen {
+            case .splash:
+                SplashScreenView(appFlow: appFlow)
             case .onboarding:
                 OnboardingScreen(appFlow: appFlow)
             case .storyline:
@@ -17,6 +22,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
             }
         }
+        .font(.custom("Montserrat-Regular", size: 17, relativeTo: .body))
         .animation(.easeInOut(duration: 0.35), value: appFlow.screen)
     }
 }
