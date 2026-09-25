@@ -219,27 +219,16 @@ private struct LevelNodeView: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                Circle()
-                    .fill(state.fillColor)
-                    .frame(width: 52, height: 52)
-                    .overlay {
-                        Circle().stroke(Color.white.opacity(0.8), lineWidth: state == .current ? 2 : 1)
-                    }
-
-                if state == .completed {
-                    Image(systemName: "checkmark")
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(.white)
-                } else {
-                    Text(displayLevelID)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(state == .locked ? Color.moriMutedInk : .white)
-                }
+                Image(state.assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .opacity(1)
             }
             .frame(width: 60, height: 60)
         }
         .buttonStyle(.plain)
-        .disabled(state == .locked)
+        .allowsHitTesting(state != .locked)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(state == .locked ? "Level masih terkunci" : "Buka level")
     }
@@ -266,11 +255,11 @@ private enum LevelNodeState {
     case current
     case locked
 
-    var fillColor: Color {
+    var assetName: String {
         switch self {
-        case .completed: return .moriCompleted
-        case .current: return .moriTerracotta
-        case .locked: return .moriLocked
+        case .completed: return "block-done"
+        case .current: return "block-current"
+        case .locked: return "block-lock"
         }
     }
 }

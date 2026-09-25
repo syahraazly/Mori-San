@@ -4,6 +4,7 @@ final class MapView: SKNode {
     private let sceneSize: CGSize
     private let viewModel: MapViewModel
     private let onSelectChapter: (GoalID) -> Void
+    private let onOpenTutorial: () -> Void
     private let pagesNode = SKNode()
     private let pageWidth: CGFloat
 
@@ -14,11 +15,13 @@ final class MapView: SKNode {
     init(
         sceneSize: CGSize,
         viewModel: MapViewModel,
-        onSelectChapter: @escaping (GoalID) -> Void
+        onSelectChapter: @escaping (GoalID) -> Void,
+        onOpenTutorial: @escaping () -> Void
     ) {
         self.sceneSize = sceneSize
         self.viewModel = viewModel
         self.onSelectChapter = onSelectChapter
+        self.onOpenTutorial = onOpenTutorial
         pageWidth = sceneSize.width * 0.90
         super.init()
 
@@ -86,12 +89,14 @@ final class MapView: SKNode {
         title.text = "MORI JOURNEY"
         title.fontSize = 20
         title.fontColor = .white
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.80)
+        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.85)
         addChild(title)
 
         let mori = SKSpriteNode(imageNamed: "mori-idle-1")
         mori.name = "map-mori-observing"
-        mori.size = CGSize(width: 64, height: 82)
+        // The idle assets use a square canvas; keep a 1:1 sprite ratio so Mori
+        // is not vertically stretched on the map.
+        mori.size = CGSize(width: 74, height: 74)
         mori.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.135)
         mori.zPosition = 5
         addChild(mori)
@@ -106,7 +111,22 @@ final class MapView: SKNode {
         ])))
 
         addChild(pagesNode)
+        addTutorialButton()
         buildSwipeHint()
+    }
+
+    private func addTutorialButton() {
+        let button = SKSpriteNode(imageNamed: "hint-tutorial")
+        button.name = "map-tutorial"
+        let textureSize = button.texture?.size() ?? CGSize(width: 1, height: 1)
+        let iconHeight: CGFloat = 52
+        button.size = CGSize(
+            width: iconHeight * textureSize.width / max(textureSize.height, 1),
+            height: iconHeight
+        )
+        button.position = CGPoint(x: sceneSize.width - 72, y: sceneSize.height * 0.86)
+        button.zPosition = 10
+        addChild(button)
     }
 
     private func buildSwipeHint() {
@@ -415,6 +435,10 @@ final class MapView: SKNode {
         var node: SKNode? = atPoint(location)
 
         while let currentNode = node {
+            if currentNode.name == "map-tutorial" {
+                onOpenTutorial()
+                return
+            }
             if let name = currentNode.name, name.hasPrefix("map-chapter-") {
                 let chapterID = String(name.dropFirst("map-chapter-".count))
                 guard let chapter = viewModel.chapters.first(where: { $0.id == chapterID }),
