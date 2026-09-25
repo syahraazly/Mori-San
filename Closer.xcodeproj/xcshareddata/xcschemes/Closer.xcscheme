@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A10000000000000000000041"
                BuildableName = "Mori-chan.app"
+               BlueprintName = "Closer"
                ReferencedContainer = "container:Closer.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,6 +47,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000041"
             BuildableName = "Mori-chan.app"
+            BlueprintName = "Closer"
             ReferencedContainer = "container:Closer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,6 +64,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000000000000000000041"
             BuildableName = "Mori-chan.app"
+            BlueprintName = "Closer"
             ReferencedContainer = "container:Closer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

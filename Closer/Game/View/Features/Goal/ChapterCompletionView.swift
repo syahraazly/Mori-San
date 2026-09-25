@@ -456,18 +456,38 @@ final class ChapterCompletionView: SKNode {
 
     private func setupHeader() {
         let label = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
-        label.text = "CHAPTER \(chapter.order) COMPLETE"
+        label.text = "A QUIET MOMENT"
         label.fontSize = 15
         label.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
-        label.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.84)
+        label.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.91)
         addChild(label)
 
         let title = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        title.text = chapter.progressionTitle
-        title.fontSize = 22
+        title.text = FlowerCelebrationInfo.info(for: goal.id).endingNarrative
+        title.numberOfLines = 2
+        title.preferredMaxLayoutWidth = sceneSize.width * 0.82
+        title.fontSize = 15
         title.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.79)
+        title.horizontalAlignmentMode = .center
+        title.verticalAlignmentMode = .center
+        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.84)
         addChild(title)
+
+        let response = SKLabelNode(fontNamed: "AvenirNext-MediumItalic")
+        response.text = "Mori: \(FlowerCelebrationInfo.info(for: goal.id).moriResponse)"
+        response.fontSize = 15
+        response.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 1)
+        response.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.75)
+        addChild(response)
+
+        if let followUp = FlowerCelebrationInfo.info(for: goal.id).endingFollowUp {
+            let followUpLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            followUpLabel.text = followUp
+            followUpLabel.fontSize = 13
+            followUpLabel.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 0.86)
+            followUpLabel.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.70)
+            addChild(followUpLabel)
+        }
     }
 
     // MARK: - Flower Reveal
@@ -532,7 +552,10 @@ final class ChapterCompletionView: SKNode {
             .wait(forDuration: reduceMotion ? 0.2 : 0.55),
             .run { petals.run(petalsOut) },
             .wait(forDuration: reduceMotion ? 0.2 : 0.35),
-            .run { flower.run(flowerIn) },
+            .run {
+                flower.run(flowerIn)
+                self.animateRevealedFlower(flower, reduceMotion: reduceMotion)
+            },
             .wait(forDuration: 0.18),
             .run {
                 flowerName.run(.fadeIn(withDuration: 0.2))
@@ -542,6 +565,41 @@ final class ChapterCompletionView: SKNode {
                 }
             }
         ]))
+    }
+
+    private func animateRevealedFlower(_ flower: SKSpriteNode, reduceMotion: Bool) {
+        guard !reduceMotion else { return }
+
+        flower.run(.repeatForever(.sequence([
+            .group([
+                .scale(to: 1.04, duration: 0.7),
+                .rotate(byAngle: 0.025, duration: 0.7)
+            ]),
+            .group([
+                .scale(to: 0.98, duration: 0.7),
+                .rotate(byAngle: -0.05, duration: 0.7)
+            ]),
+            .rotate(byAngle: 0.025, duration: 0.7)
+        ])), withKey: "flowerPulse")
+
+        for index in 0..<5 {
+            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            sparkle.text = index.isMultiple(of: 2) ? "✦" : "✧"
+            sparkle.fontSize = 12
+            sparkle.fontColor = SKColor(red: 0.74, green: 0.55, blue: 0.23, alpha: 0.9)
+            let angle = CGFloat(index) / 5 * .pi * 2
+            sparkle.position = CGPoint(
+                x: sceneSize.width / 2 + cos(angle) * 88,
+                y: sceneSize.height * 0.54 + sin(angle) * 54
+            )
+            sparkle.alpha = 0.2
+            addChild(sparkle)
+            sparkle.run(.repeatForever(.sequence([
+                .wait(forDuration: 0.12 * Double(index)),
+                .fadeAlpha(to: 1.0, duration: 0.3),
+                .fadeAlpha(to: 0.2, duration: 0.55)
+            ])))
+        }
     }
 
     // MARK: - Completion Actions

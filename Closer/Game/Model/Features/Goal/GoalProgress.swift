@@ -1,6 +1,23 @@
-struct GoalProgress {
+import Foundation
+
+struct GoalProgress: Codable {
+    private static let storageKey = "mori.goalProgress"
+
     private(set) var completedLevelIDs: Set<LevelID> = []
     private(set) var claimedPetalLevelIDs: Set<LevelID> = []
+
+    static func load() -> GoalProgress {
+        guard let data = UserDefaults.standard.data(forKey: storageKey),
+              let progress = try? JSONDecoder().decode(GoalProgress.self, from: data) else {
+            return GoalProgress()
+        }
+        return progress
+    }
+
+    func save() {
+        guard let data = try? JSONEncoder().encode(self) else { return }
+        UserDefaults.standard.set(data, forKey: Self.storageKey)
+    }
 
     mutating func completeLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
