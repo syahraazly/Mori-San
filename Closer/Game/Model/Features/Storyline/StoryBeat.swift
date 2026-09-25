@@ -1,3 +1,5 @@
+import Foundation
+
 struct StoryBeat {
 
     /// Scene number (1–6), matching storyboard scene numbering.
@@ -14,6 +16,13 @@ struct StoryBeat {
 
     /// General text placement for the scene.
     let layout: StoryTextLayout
+
+    /// Optional override for the top padding (in points) of the text block.
+    /// When nil, StoryPageView uses its default value of 110pt.
+    /// Increase to push text lower; decrease to push it higher.
+    var textTopPadding: CGFloat? = nil
+    
+    var textLeadingPadding: CGFloat? = nil
 }
 
 enum StoryTextLayout {
