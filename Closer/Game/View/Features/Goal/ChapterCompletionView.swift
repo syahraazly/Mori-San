@@ -4,11 +4,23 @@ import UIKit
 // MARK: - Chapter Completion
 
 final class ChapterCompletionView: SKNode {
+    private enum Phase {
+        case narration
+        case blooming
+        case completion
+    }
+    
     private let sceneSize: CGSize
     private let chapter: MapChapterConfiguration
     private let goal: FlowerGoal
     private let completionMessage: String
     private let isFinalChapter: Bool
+    
+    private var phase: Phase = .completion
+    private var config: EndingChapterConfig?
+    private var currentBeatIndex = 0
+    private var narrationContainer: SKNode?
+    
     private var canContinue = false
 
     init?(sceneSize: CGSize, goalID: GoalID, isFinalChapter: Bool) {
@@ -22,12 +34,17 @@ final class ChapterCompletionView: SKNode {
         self.goal = goal
         self.completionMessage = FlowerCelebrationInfo.info(for: goalID).moriLearnedQuote
         self.isFinalChapter = isFinalChapter
+        self.config = EndingChapterConfig.config(for: goalID)
+        
         super.init()
 
         name = "chapter-completion-screen"
-        setupBackground()
-        setupHeader()
-        setupReveal()
+        
+        if config != nil {
+            setupNarrationPhase()
+        } else {
+            setupCompletionPhase()
+        }
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -35,11 +52,159 @@ final class ChapterCompletionView: SKNode {
     }
 
     func handleTap(at location: CGPoint) -> Bool {
-        guard canContinue,
-              containsNode(named: "chapter-completion-continue", at: location) else {
+        switch phase {
+        case .narration:
+            guard let config = config else { return false }
+            if currentBeatIndex < config.beats.count - 1 {
+                currentBeatIndex += 1
+                renderCurrentBeat()
+            } else {
+                transitionToBlooming()
+            }
             return false
+            
+        case .blooming:
+            return false
+            
+        case .completion:
+            guard canContinue,
+                  containsNode(named: "chapter-completion-continue", at: location) else {
+                return false
+            }
+            return true
         }
-        return true
+    }
+    
+    // MARK: - Narration Phase
+    
+    private func setupNarrationPhase() {
+        phase = .narration
+        let container = SKNode()
+        addChild(container)
+        self.narrationContainer = container
+        
+        if let bgName = config?.backgroundName {
+            let bg = SKSpriteNode(imageNamed: bgName)
+            bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+            let scale = max(sceneSize.width / bg.size.width, sceneSize.height / bg.size.height)
+            bg.setScale(scale)
+            bg.zPosition = -1
+            container.addChild(bg)
+        }
+        
+        let texture1 = SKTexture(imageNamed: "mori-idle-1")
+        let texture2 = SKTexture(imageNamed: "mori-idle-2")
+        
+        let targetHeight: CGFloat = 150
+        let aspectRatio = texture1.size().width / max(texture1.size().height, 1)
+        let targetSize = CGSize(width: targetHeight * aspectRatio, height: targetHeight)
+        
+        let mori = SKSpriteNode(texture: texture1, size: targetSize)
+        // Position center so the bottom of the sprite is 40 points above the bottom edge
+        mori.position = CGPoint(x: sceneSize.width / 2, y: (targetSize.height / 2) + 40)
+        container.addChild(mori)
+        
+        let idleAction = SKAction.repeatForever(SKAction.animate(with: [
+            texture1, texture2
+        ], timePerFrame: 0.55, resize: false, restore: false))
+        mori.run(idleAction)
+        
+        let textY = sceneSize.height * 0.55
+        
+        let narrationLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        narrationLabel.name = "narration-label"
+        narrationLabel.fontSize = 19
+        narrationLabel.fontColor = .white
+        narrationLabel.numberOfLines = 0
+        narrationLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        narrationLabel.horizontalAlignmentMode = .center
+        narrationLabel.position = CGPoint(x: sceneSize.width / 2, y: textY)
+        
+        let shadow1 = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        shadow1.name = "narration-shadow"
+        shadow1.fontSize = 19
+        shadow1.fontColor = SKColor.black.withAlphaComponent(0.6)
+        shadow1.numberOfLines = 0
+        shadow1.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        shadow1.horizontalAlignmentMode = .center
+        shadow1.position = CGPoint(x: sceneSize.width / 2, y: textY - 2)
+        shadow1.zPosition = -0.1
+        
+        let thoughtLabel = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        thoughtLabel.name = "thought-label"
+        thoughtLabel.fontSize = 19
+        thoughtLabel.fontColor = .white
+        thoughtLabel.numberOfLines = 0
+        thoughtLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        thoughtLabel.horizontalAlignmentMode = .center
+        thoughtLabel.position = CGPoint(x: sceneSize.width / 2, y: textY - 80)
+        
+        let shadow2 = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        shadow2.name = "thought-shadow"
+        shadow2.fontSize = 19
+        shadow2.fontColor = SKColor.black.withAlphaComponent(0.6)
+        shadow2.numberOfLines = 0
+        shadow2.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        shadow2.horizontalAlignmentMode = .center
+        shadow2.position = CGPoint(x: sceneSize.width / 2, y: textY - 82)
+        shadow2.zPosition = -0.1
+        
+        container.addChild(shadow1)
+        container.addChild(narrationLabel)
+        container.addChild(shadow2)
+        container.addChild(thoughtLabel)
+        
+        renderCurrentBeat()
+    }
+    
+    private func renderCurrentBeat() {
+        guard let config = config,
+              let container = narrationContainer else { return }
+        let beat = config.beats[currentBeatIndex]
+        
+        let narrationLabel = container.childNode(withName: "narration-label") as? SKLabelNode
+        let narrationShadow = container.childNode(withName: "narration-shadow") as? SKLabelNode
+        let thoughtLabel = container.childNode(withName: "thought-label") as? SKLabelNode
+        let thoughtShadow = container.childNode(withName: "thought-shadow") as? SKLabelNode
+        
+        narrationLabel?.text = beat.narration
+        narrationShadow?.text = beat.narration
+        
+        thoughtLabel?.text = beat.thought
+        thoughtShadow?.text = beat.thought
+    }
+    
+    private func transitionToBlooming() {
+        phase = .blooming
+        let whiteFade = SKShapeNode(rectOf: sceneSize)
+        whiteFade.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+        whiteFade.fillColor = .white
+        whiteFade.strokeColor = .clear
+        whiteFade.zPosition = 100
+        whiteFade.alpha = 0
+        addChild(whiteFade)
+        
+        whiteFade.run(.sequence([
+            .fadeIn(withDuration: 1.5),
+            .run { [weak self] in
+                self?.narrationContainer?.removeFromParent()
+                self?.narrationContainer = nil
+                self?.setupCompletionPhase()
+            },
+            .fadeOut(withDuration: 0.5),
+            .run { [weak self] in
+                self?.phase = .completion
+            },
+            .removeFromParent()
+        ]))
+    }
+
+    // MARK: - Completion Phase
+    
+    private func setupCompletionPhase() {
+        setupBackground()
+        setupHeader()
+        setupReveal()
     }
 
     private func setupBackground() {
