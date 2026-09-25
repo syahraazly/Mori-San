@@ -1107,6 +1107,7 @@ final class GameScene: SKScene {
         appFlow.claimPetal(for: viewModel.currentLevel.id)
         updateChapterProgressHUD()
         HapticManager.playSnapFeedback()
+        AudioManager.shared.playSFX(named: "petal")
         petalNode.collect { [weak self] in
             self?.petalNode = nil
         }
@@ -1380,9 +1381,11 @@ final class GameScene: SKScene {
     private func handlePortalOutcome(_ portal: PortalConfiguration) {
         switch portal.outcome {
         case .completesLevel:
+            AudioManager.shared.playSFX(named: "portal_happy")
             enterExit(portal: portal)
             
         case .loops(let destination):
+            AudioManager.shared.playSFX(named: "portal_fake")
             guard let destinationPlatform = platformNodes[destination.platformID],
                   let moriNode else { return }
             
@@ -1414,6 +1417,7 @@ final class GameScene: SKScene {
             return
         }
         
+        AudioManager.shared.playSFX(named: "portal_happy")
         viewModel.markExitReached()
         print("Mori reached the exit")
         
