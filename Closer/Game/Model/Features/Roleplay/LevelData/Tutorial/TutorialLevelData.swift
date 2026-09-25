@@ -71,7 +71,7 @@ enum TutorialLevelData {
             PortalConfiguration(
                 id: "tutorial-correct",
                 platformID: "tutorialPortal",
-                offset: CGPoint(x: 0, y: 52),
+                offset: CGPoint(x: 0, y: 30),
                 outcome: .completesLevel,
                 anchor: .walkableSurface
             )

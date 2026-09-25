@@ -93,7 +93,7 @@ final class FlowerRevealView: SKNode {
             CGPoint(x: sceneSize.width * 0.85, y: sceneSize.height * 0.64),
             CGPoint(x: sceneSize.width * 0.50, y: sceneSize.height * 0.84)
         ].enumerated() {
-            let star = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let star = SKLabelNode(fontNamed: "Montserrat-Bold")
             star.text = i.isMultiple(of: 2) ? "✦" : "✧"
             star.fontSize = i.isMultiple(of: 2) ? 22 : 17
             star.fontColor = SKColor(red: 1.0, green: 0.93, blue: 0.65, alpha: 0.85)
@@ -110,14 +110,14 @@ final class FlowerRevealView: SKNode {
     }
 
     private func setupHeader() {
-        let tag = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let tag = SKLabelNode(fontNamed: "Montserrat-Bold")
         tag.text = "A QUIET MOMENT"
         tag.fontSize = 13
         tag.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.50, alpha: 1.0)
         tag.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.88)
         addChild(tag)
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = info.endingNarrative
         title.fontSize = 18
         title.numberOfLines = 2
@@ -127,7 +127,7 @@ final class FlowerRevealView: SKNode {
         addChild(title)
         self.titleLabel = title
 
-        let subtitle = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let subtitle = SKLabelNode(fontNamed: "Montserrat-Medium")
         subtitle.text = "Mori: \(info.moriResponse)"
         subtitle.fontSize = 16
         subtitle.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
@@ -136,7 +136,7 @@ final class FlowerRevealView: SKNode {
         self.subtitleLabel = subtitle
 
         if let endingFollowUp = info.endingFollowUp {
-            let followUp = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            let followUp = SKLabelNode(fontNamed: "Montserrat-Medium")
             followUp.text = endingFollowUp
             followUp.fontSize = 14
             followUp.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
@@ -209,7 +209,7 @@ final class FlowerRevealView: SKNode {
             petalContainer.addChild(petal)
 
             // Sparkle on each petal
-            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let sparkle = SKLabelNode(fontNamed: "Montserrat-Bold")
             sparkle.text = "✦"
             sparkle.fontSize = 15
             sparkle.fontColor = SKColor(red: 1.0, green: 0.94, blue: 0.60, alpha: 0.9)
@@ -306,7 +306,7 @@ final class FlowerRevealView: SKNode {
 
         // Star sparkles burst outward
         for i in 0..<10 {
-            let spark = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let spark = SKLabelNode(fontNamed: "Montserrat-Bold")
             spark.text = i.isMultiple(of: 2) ? "✦" : "✧"
             spark.fontSize = CGFloat.random(in: 18...26)
             spark.fontColor = SKColor(red: 1.0, green: 0.92, blue: 0.50, alpha: 1.0)
@@ -422,7 +422,7 @@ final class FlowerRevealView: SKNode {
         buttonShape.lineWidth = 1.5
         promptContainer.addChild(buttonShape)
 
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.text = "✦  Tap to Celebrate  ✦"
         label.fontSize = 15
         label.fontColor = .white
@@ -502,7 +502,7 @@ final class FlowerRevealView: SKNode {
 
         // Sparkle explosion
         for i in 0..<12 {
-            let spark = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let spark = SKLabelNode(fontNamed: "Montserrat-Bold")
             spark.text = "✦"
             spark.fontSize = 24
             spark.fontColor = SKColor(red: 1.0, green: 0.95, blue: 0.65, alpha: 1.0)

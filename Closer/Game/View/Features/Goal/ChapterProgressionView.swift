@@ -30,7 +30,7 @@ struct ChapterProgressionView: View {
                         VStack(alignment: .leading, spacing: 20) {
                             Button(action: appFlow.openMap) {
                                 Label("Map", systemImage: "chevron.left")
-                                    .font(.subheadline.weight(.bold))
+                                    .font(.custom("Montserrat-Bold", size: 15, relativeTo: .subheadline))
                                     .foregroundStyle(.white)
                                     .frame(width: 90, height: 40)
                                     .background(
@@ -86,12 +86,12 @@ private struct ChapterHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("CHAPTER \(romanNumeral(chapter.order))")
-                .font(.caption.weight(.bold))
+                .font(.custom("Montserrat-Bold", size: 12, relativeTo: .caption))
                 .foregroundStyle(Color.white.opacity(0.72))
                 .tracking(1.2)
 
             Text(chapter.progressionTitle)
-                .font(.system(.title, design: .serif).weight(.semibold))
+                .font(.custom("Montserrat-SemiBold", size: 28, relativeTo: .title))
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -112,7 +112,7 @@ private struct PetalProgressView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 12) {
             Text("\(collected)/\(total) petals")
-                .font(.subheadline.weight(.semibold))
+                .font(.custom("Montserrat-SemiBold", size: 15, relativeTo: .subheadline))
                 .foregroundStyle(.white)
 
             HStack(spacing: 10) {
@@ -219,27 +219,16 @@ private struct LevelNodeView: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                Circle()
-                    .fill(state.fillColor)
-                    .frame(width: 52, height: 52)
-                    .overlay {
-                        Circle().stroke(Color.white.opacity(0.8), lineWidth: state == .current ? 2 : 1)
-                    }
-
-                if state == .completed {
-                    Image(systemName: "checkmark")
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(.white)
-                } else {
-                    Text(displayLevelID)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(state == .locked ? Color.moriMutedInk : .white)
-                }
+                Image(state.assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .opacity(1)
             }
             .frame(width: 60, height: 60)
         }
         .buttonStyle(.plain)
-        .disabled(state == .locked)
+        .allowsHitTesting(state != .locked)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(state == .locked ? "Level masih terkunci" : "Buka level")
     }
@@ -266,11 +255,11 @@ private enum LevelNodeState {
     case current
     case locked
 
-    var fillColor: Color {
+    var assetName: String {
         switch self {
-        case .completed: return .moriCompleted
-        case .current: return .moriTerracotta
-        case .locked: return .moriLocked
+        case .completed: return "block-done"
+        case .current: return "block-current"
+        case .locked: return "block-lock"
         }
     }
 }

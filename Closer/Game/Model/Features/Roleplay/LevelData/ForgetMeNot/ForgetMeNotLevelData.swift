@@ -13,7 +13,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.20, y: 0.33),
-                sidePosition: CGPoint(x: 0.264, y: 0.33)
+                sidePosition: CGPoint(x: 0.264, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformB",
@@ -22,7 +23,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.50, y: 0.52),
-                sidePosition: CGPoint(x: 0.50, y: 0.33)
+                sidePosition: CGPoint(x: 0.50, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformC",
@@ -31,7 +33,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.80, y: 0.33),
-                sidePosition: CGPoint(x: 0.736, y: 0.33)
+                sidePosition: CGPoint(x: 0.736, y: 0.33),
+                assetName: "stone1x2"
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
@@ -54,7 +57,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.18, y: 0.33),
-                sidePosition: CGPoint(x: 0.18, y: 0.55)
+                sidePosition: CGPoint(x: 0.18, y: 0.55),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformB",
@@ -63,7 +67,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.41, y: 0.33),
-                sidePosition: CGPoint(x: 0.38, y: 0.33)
+                sidePosition: CGPoint(x: 0.38, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformC",
@@ -72,7 +77,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.64, y: 0.55),
-                sidePosition: CGPoint(x: 0.61, y: 0.33)
+                sidePosition: CGPoint(x: 0.61, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformD",
@@ -81,7 +87,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.87, y: 0.55),
-                sidePosition: CGPoint(x: 0.84, y: 0.55)
+                sidePosition: CGPoint(x: 0.84, y: 0.55),
+                assetName: "stone1x2"
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
@@ -104,7 +111,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.16, y: 0.33),
-                sidePosition: CGPoint(x: 0.16, y: 0.55)
+                sidePosition: CGPoint(x: 0.16, y: 0.55),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformB",
@@ -113,7 +121,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.39, y: 0.33),
-                sidePosition: CGPoint(x: 0.39, y: 0.33)
+                sidePosition: CGPoint(x: 0.39, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformTrap",
@@ -122,7 +131,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.33),
-                sidePosition: CGPoint(x: 0.62, y: 0.15)
+                sidePosition: CGPoint(x: 0.62, y: 0.15),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformBridge",
@@ -131,7 +141,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.39, y: 0.55),
-                sidePosition: CGPoint(x: 0.62, y: 0.33)
+                sidePosition: CGPoint(x: 0.62, y: 0.33),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformD",
@@ -140,7 +151,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.55),
-                sidePosition: CGPoint(x: 0.85, y: 0.55)
+                sidePosition: CGPoint(x: 0.85, y: 0.55),
+                assetName: "stone1x2"
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
@@ -163,7 +175,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.16, y: 0.25),
-                sidePosition: CGPoint(x: 0.16, y: 0.50)
+                sidePosition: CGPoint(x: 0.16, y: 0.50),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformB",
@@ -172,7 +185,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.39, y: 0.25),
-                sidePosition: CGPoint(x: 0.35, y: 0.40)
+                sidePosition: CGPoint(x: 0.35, y: 0.40),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformC",
@@ -181,7 +195,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.42, y: 0.55),
-                sidePosition: CGPoint(x: 0.58, y: 0.40)
+                sidePosition: CGPoint(x: 0.58, y: 0.40),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformD",
@@ -190,7 +205,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.65, y: 0.55),
-                sidePosition: CGPoint(x: 0.58, y: 0.70)
+                sidePosition: CGPoint(x: 0.58, y: 0.70),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformE",
@@ -199,7 +215,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.88, y: 0.55),
-                sidePosition: CGPoint(x: 0.81, y: 0.70)
+                sidePosition: CGPoint(x: 0.81, y: 0.70),
+                assetName: "stone1x2"
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),
@@ -222,7 +239,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.16, y: 0.28),
-                sidePosition: CGPoint(x: 0.16, y: 0.65)
+                sidePosition: CGPoint(x: 0.16, y: 0.65),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformB",
@@ -231,7 +249,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.39, y: 0.28),
-                sidePosition: CGPoint(x: 0.30, y: 0.44)
+                sidePosition: CGPoint(x: 0.30, y: 0.44),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformTrap",
@@ -240,7 +259,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.28),
-                sidePosition: CGPoint(x: 0.75, y: 0.25)
+                sidePosition: CGPoint(x: 0.75, y: 0.25),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformC",
@@ -249,7 +269,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.39, y: 0.60),
-                sidePosition: CGPoint(x: 0.53, y: 0.44)
+                sidePosition: CGPoint(x: 0.53, y: 0.44),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformD",
@@ -258,7 +279,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.62, y: 0.60),
-                sidePosition: CGPoint(x: 0.53, y: 0.65)
+                sidePosition: CGPoint(x: 0.53, y: 0.65),
+                assetName: "stone1x2"
             ),
             PlatformModel(
                 id: "platformExit",
@@ -267,7 +289,8 @@ enum ForgetMeNotLevelData {
                 isDraggable: false,
                 remainsDraggableWhenConnected: false,
                 frontPosition: CGPoint(x: 0.85, y: 0.40),
-                sidePosition: CGPoint(x: 0.76, y: 0.65)
+                sidePosition: CGPoint(x: 0.76, y: 0.65),
+                assetName: "stone1x2"
             )
         ],
         player: PlayerModel(name: "Mori", startingPlatformID: "platformA"),

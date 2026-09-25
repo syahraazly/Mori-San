@@ -14,6 +14,11 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     @Published private(set) var screen: Screen = .splash
+    @Published private(set) var screen: Screen = .onboarding {
+        didSet {
+            AudioManager.shared.updateMusic(for: screen)
+        }
+    }
     @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
@@ -35,6 +40,11 @@ final class AppFlowViewModel: ObservableObject {
 
     func openSplash() {
         screen = .splash
+    }
+
+    init() {
+        progress = GoalProgress.load()
+        AudioManager.shared.updateMusic(for: screen)
     }
 
     func openStoryline() {
@@ -98,11 +108,20 @@ final class AppFlowViewModel: ObservableObject {
         screen = .gameplay(canonicalID)
     }
 
-    // MARK: - Level Completion Transition
+    /// Opens the introduction from the map without changing chapter progress.
+    /// The tutorial can therefore be replayed whenever the player needs it.
+    func openTutorial() {
+        activeGoalID = nil
+        pendingLevelID = nil
+        startLevel("1.0")
+    }
+
+    // Level Completion Transition
 
     func completeLevel(_ levelID: LevelID) {
         let canonicalID = LevelCatalog.canonicalID(for: levelID)
         progress.completeLevel(canonicalID)
+        progress.save()
 
         if let nextTutorialLevelID = LevelCatalog.nextTutorialLevel(after: canonicalID) {
             pendingLevelID = nextTutorialLevelID
@@ -127,6 +146,7 @@ final class AppFlowViewModel: ObservableObject {
 
     func claimPetal(for levelID: LevelID) {
         progress.claimPetal(for: levelID)
+        progress.save()
     }
 
     // MARK: - Chapter Completion / Flower Reveal
