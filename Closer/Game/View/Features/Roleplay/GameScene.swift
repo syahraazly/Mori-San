@@ -706,12 +706,11 @@ final class GameScene: SKScene {
         }
         
         guard let lampPlatform = platformNodes[lightReveal.lampPlatformID] else { return }
-        let indicator = SKShapeNode(circleOfRadius: 8)
+        let assetName = viewModel.isLightRevealed ? "lamp-on" : "lamp-off"
+        let indicator = SKSpriteNode(imageNamed: assetName)
         indicator.name = "lamp-indicator"
-        indicator.fillColor = SKColor(red: 1.0, green: 0.80, blue: 0.30, alpha: 1.0)
-        indicator.strokeColor = SKColor.white.withAlphaComponent(0.7)
-        indicator.lineWidth = 1.5
-        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 12)
+        indicator.size = CGSize(width: 34, height: 46)
+        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 23)
         indicator.zPosition = 12
         lampPlatform.addChild(indicator)
         
@@ -719,8 +718,8 @@ final class GameScene: SKScene {
             indicator.run(
                 SKAction.repeatForever(
                     SKAction.sequence([
-                        .fadeAlpha(to: 0.45, duration: 0.65),
-                        .fadeAlpha(to: 1.0, duration: 0.65)
+                        .scale(to: 1.08, duration: 0.75),
+                        .scale(to: 1.0, duration: 0.75)
                     ])
                 ),
                 withKey: "lampPulse"
@@ -749,9 +748,13 @@ final class GameScene: SKScene {
             )
         }
         
-        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") {
+        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") as? SKSpriteNode {
             lamp.removeAction(forKey: "lampPulse")
-            lamp.run(SKAction.scale(to: 1.45, duration: 0.16))
+            lamp.texture = SKTexture(imageNamed: "lamp-on")
+            lamp.run(SKAction.sequence([
+                .scale(to: 1.25, duration: 0.14),
+                .scale(to: 1.0, duration: 0.12)
+            ]))
         }
         
         if viewModel.currentLevel.usesPerspective {
