@@ -135,7 +135,7 @@ final class ChapterCompletionView: SKNode {
         
         let narrationLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
         narrationLabel.name = "narration-label"
-        narrationLabel.fontSize = 19
+        narrationLabel.fontSize = 18
         narrationLabel.fontColor = .white
         narrationLabel.numberOfLines = 0
         narrationLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
@@ -144,7 +144,7 @@ final class ChapterCompletionView: SKNode {
         
         let shadow1 = SKLabelNode(fontNamed: "AvenirNext-Medium")
         shadow1.name = "narration-shadow"
-        shadow1.fontSize = 19
+        shadow1.fontSize = 18
         shadow1.fontColor = SKColor.black.withAlphaComponent(0.6)
         shadow1.numberOfLines = 0
         shadow1.preferredMaxLayoutWidth = sceneSize.width * 0.8
@@ -154,7 +154,7 @@ final class ChapterCompletionView: SKNode {
         
         let thoughtLabel = SKLabelNode(fontNamed: "AvenirNext-Italic")
         thoughtLabel.name = "thought-label"
-        thoughtLabel.fontSize = 19
+        thoughtLabel.fontSize = 18
         thoughtLabel.fontColor = .white
         thoughtLabel.numberOfLines = 0
         thoughtLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
@@ -163,7 +163,7 @@ final class ChapterCompletionView: SKNode {
         
         let shadow2 = SKLabelNode(fontNamed: "AvenirNext-Italic")
         shadow2.name = "thought-shadow"
-        shadow2.fontSize = 19
+        shadow2.fontSize = 18
         shadow2.fontColor = SKColor.black.withAlphaComponent(0.6)
         shadow2.numberOfLines = 0
         shadow2.preferredMaxLayoutWidth = sceneSize.width * 0.8
@@ -179,7 +179,7 @@ final class ChapterCompletionView: SKNode {
         let skipLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
         skipLabel.name = "narration-skip"
         skipLabel.text = "Skip"
-        skipLabel.fontSize = 17
+        skipLabel.fontSize = 15
         skipLabel.fontColor = SKColor.white.withAlphaComponent(0.7)
         // sceneSize.height * 0.88 places Skip ~12% from the top in portrait,
         // matching the visual position of the Storyline Skip (safeArea top + ~20pt padding).

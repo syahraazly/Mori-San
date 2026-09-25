@@ -30,19 +30,18 @@ extension EndingChapterConfig {
             return EndingChapterConfig(
                 backgroundName: "background-chapter-2",
                 beats: [
-                    EndingChapterBeat(assetName: nil, narration: "You called it home.", thought: nil, customThoughtPosition: nil),
-                    EndingChapterBeat(assetName: nil, narration: "But were you ever really there?", thought: nil, customThoughtPosition: nil),
-                    EndingChapterBeat(assetName: nil, narration: nil, thought: "\"...were they?\"", customThoughtPosition: nil)
+                    EndingChapterBeat(assetName: "endingchapter-lv2-1", narration: "You called it home.", thought: nil, customThoughtPosition: nil),
+                    EndingChapterBeat(assetName: "endingchapter-lv2-2", narration: "But were you ever really there?", thought: nil, customThoughtPosition: nil),
+                    EndingChapterBeat(assetName: "endingchapter-lv2-3", narration: nil, thought: "\"...were they?\"", customThoughtPosition: CGPoint(x: 0.64, y: 0.53))
                 ]
             )
         case "balinese-frangipani", "chapter-3":
             return EndingChapterConfig(
                 backgroundName: "background-chapter-3",
                 beats: [
-                    EndingChapterBeat(assetName: nil, narration: "You said you needed no one.", thought: nil, customThoughtPosition: nil),
-                    EndingChapterBeat(assetName: nil, narration: "Did you believe it?", thought: nil, customThoughtPosition: nil),
-                    EndingChapterBeat(assetName: nil, narration: nil, thought: "\"I wanted to.\"", customThoughtPosition: nil),
-                    EndingChapterBeat(assetName: nil, narration: "Then why do you still leave the door open?", thought: nil, customThoughtPosition: nil)
+                    EndingChapterBeat(assetName: "endingchapter-lv3-1", narration: "You said you needed no one.\nDid you believe it?", thought: nil, customThoughtPosition: nil),
+                    EndingChapterBeat(assetName: "endingchapter-lv3-2", narration: nil, thought: "\"I wanted to.\"", customThoughtPosition: CGPoint(x: 0.68, y: 0.47)),
+                    EndingChapterBeat(assetName: "endingchapter-lv3-3", narration: "Then why do you still leave the door open?", thought: nil, customThoughtPosition: nil)
                 ]
             )
         default:
