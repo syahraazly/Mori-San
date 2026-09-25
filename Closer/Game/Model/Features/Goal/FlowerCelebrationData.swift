@@ -13,6 +13,9 @@ struct FlowerCelebrationInfo {
     let aboutDescription: String
     let moriLearnedQuote: String
     let playAgainSubtitle: String
+    let endingNarrative: String
+    let moriResponse: String
+    let endingFollowUp: String?
 
     static func info(for goalID: GoalID) -> FlowerCelebrationInfo {
         let normalized = FlowerGoalData.goal(for: goalID)?.id ?? goalID
@@ -30,12 +33,15 @@ struct FlowerCelebrationInfo {
                 aboutTitle: "About White Lily",
                 aboutDescription: "White Lily symbolizes pure renewal and resilience, showing that even after the deepest silence, hope gently blossoms. It reminds us that every ending is simply a quiet prelude to beginning anew.",
                 moriLearnedQuote: "Mori learned that standing tall does not mean never trembling. Grace is found in moving forward anyway.",
-                playAgainSubtitle: "Play Chapter II again"
+                playAgainSubtitle: "Play Chapter II again",
+                endingNarrative: "you called it home.\nbut were you ever really there?",
+                moriResponse: "...were they?",
+                endingFollowUp: nil
             )
         case "chapter-3", "balinese-frangipani":
             return FlowerCelebrationInfo(
                 goalID: "chapter-3",
-                flowerName: "Kamboja Bali",
+                flowerName: "Balinese Frangipani",
                 chapterRoman: "Chapter III",
                 chapterSubtitle: "in Chapter III",
                 flowerAssetName: "kamboja-bali-flower",
@@ -45,12 +51,15 @@ struct FlowerCelebrationInfo {
                 aboutTitle: "About Kamboja Bali",
                 aboutDescription: "Kamboja Bali symbolizes eternal devotion and inner peace, carrying a fragrant blessing that lingers in the air. It reflects the beauty of embracing our true journey with humility and warmth.",
                 moriLearnedQuote: "Mori learned that the greatest warmth comes from within. Wherever you go, you carry your own gentle light.",
-                playAgainSubtitle: "Play Chapter III again"
+                playAgainSubtitle: "Play Chapter III again",
+                endingNarrative: "you said you needed no one.\ndid you believe it?",
+                moriResponse: "i wanted to.",
+                endingFollowUp: "then why do you still leave the door open?"
             )
         default:
             return FlowerCelebrationInfo(
                 goalID: "chapter-1",
-                flowerName: "Forget Me Not",
+                flowerName: "Forget-Me-Not",
                 chapterRoman: "Chapter I",
                 chapterSubtitle: "in Chapter I",
                 flowerAssetName: "forget-me-not-flower",
@@ -60,7 +69,10 @@ struct FlowerCelebrationInfo {
                 aboutTitle: "About Forget Me Not",
                 aboutDescription: "Forget Me Not symbolizes a lasting memory, a quiet reminder that even the smallest moments still matter. No matter where you go, the kindness, people, and places you've encountered will always be a part of you.",
                 moriLearnedQuote: "Mori learned that every step, even the small ones, leaves a trace. Nothing truly disappears.",
-                playAgainSubtitle: "Play Chapter I again"
+                playAgainSubtitle: "Play Chapter I again",
+                endingNarrative: "you've been walking for so long.\nbut when was the last time you looked at yourself?",
+                moriResponse: "I... forgot.",
+                endingFollowUp: nil
             )
         }
     }
