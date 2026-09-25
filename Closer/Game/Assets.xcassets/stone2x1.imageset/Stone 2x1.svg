@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 309 155" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+<svg width="100%" height="100%" viewBox="0 0 309 155" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
     <g transform="matrix(1,0,0,1,-2058.328017,-84.576208)">
         <g id="Stone-2x1" affinity:id="Stone 2x1" transform="matrix(1,0,0,1,393,-426)">
             <g id="Stone-2x11" affinity:id="Stone 2x1" transform="matrix(1,0,0,0.99313,545,6.509092)">
@@ -13,6 +13,7 @@
                         <use xlink:href="#_Image2" x="2017" y="40" width="388px" height="244px"/>
                     </g>
                 </g>
+                <path d="M1143,511C1143,511 1262.002,511.792 1273,516C1273,516 1285.264,510.211 1289,511C1289,511 1412.276,509.456 1417,515C1417,515 1424.028,522.025 1423,526L1422,637C1422,637 1425.036,659.31 1401,656L1282,655C1282,655 1275.191,650.702 1272,650C1272,650 1272.763,655.094 1259,654L1140,655C1140,655 1126.769,653.152 1128,646L1130,526C1130,526 1129.105,508.624 1143,511Z" style="fill:none;stroke:rgb(204,204,204);stroke-width:4.18px;"/>
             </g>
             <g transform="matrix(1,0,0,1,-2,0)">
                 <g transform="matrix(1,0,0,1,548,6)">

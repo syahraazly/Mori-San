@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 150 166" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+<svg width="100%" height="100%" viewBox="0 0 150 166" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
     <g transform="matrix(1,0,0,1,-2166.637324,-369.734331)">
         <g id="Stone-1x1" affinity:id="Stone 1x1" transform="matrix(1,0,0,1,327,37)">
             <g transform="matrix(1,0,0,1,1352,174)">
@@ -13,6 +13,7 @@
                         <use xlink:href="#_Image2" x="4353" y="3887" width="241px" height="235px"/>
                     </g>
                 </g>
+                <path d="M515,171L609,171C609,171 633.163,166.258 630,195L631,288C631,288 637.342,323.164 606,319L508,318C508,318 489.932,321.892 491,298L491,198C491,198 481.518,166.633 515,171Z" style="fill:none;stroke:rgb(204,204,204);stroke-width:4.17px;"/>
             </g>
             <g transform="matrix(1,0,0,1,420,-414)">
                 <path d="M1538,898C1538,898 1524.206,895.787 1522,899C1522,899 1523.452,890.191 1513,891C1513,891 1506.818,893.737 1511,902C1511,902 1501.695,898.143 1502,903C1502,903 1490.315,901.276 1493,906C1493,906 1493.493,910.788 1510,909C1510,909 1529.386,909.422 1531,908C1532.614,906.578 1538,898 1538,898Z" style="fill:rgb(101,118,73);"/>
