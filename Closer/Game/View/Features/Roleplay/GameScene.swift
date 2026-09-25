@@ -19,6 +19,7 @@ final class GameScene: SKScene {
     private var chapterProgressLabel: SKLabelNode?
     private var chapterProgressGoal: FlowerGoal?
     private var instructionLabel: SKLabelNode?
+    private var extraInstructionLabel: SKLabelNode?
     private var tutorialGestureNode: SKNode?
     private var perspectiveSwipeStart: CGPoint?
     private var isRestartingLevel = false
@@ -705,12 +706,11 @@ final class GameScene: SKScene {
         }
         
         guard let lampPlatform = platformNodes[lightReveal.lampPlatformID] else { return }
-        let indicator = SKShapeNode(circleOfRadius: 8)
+        let assetName = viewModel.isLightRevealed ? "lamp-on" : "lamp-off"
+        let indicator = SKSpriteNode(imageNamed: assetName)
         indicator.name = "lamp-indicator"
-        indicator.fillColor = SKColor(red: 1.0, green: 0.80, blue: 0.30, alpha: 1.0)
-        indicator.strokeColor = SKColor.white.withAlphaComponent(0.7)
-        indicator.lineWidth = 1.5
-        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 12)
+        indicator.size = CGSize(width: 34, height: 46)
+        indicator.position = CGPoint(x: 0, y: lampPlatform.model.effectiveHeight / 2 + 23)
         indicator.zPosition = 12
         lampPlatform.addChild(indicator)
         
@@ -718,8 +718,8 @@ final class GameScene: SKScene {
             indicator.run(
                 SKAction.repeatForever(
                     SKAction.sequence([
-                        .fadeAlpha(to: 0.45, duration: 0.65),
-                        .fadeAlpha(to: 1.0, duration: 0.65)
+                        .scale(to: 1.08, duration: 0.75),
+                        .scale(to: 1.0, duration: 0.75)
                     ])
                 ),
                 withKey: "lampPulse"
@@ -748,9 +748,13 @@ final class GameScene: SKScene {
             )
         }
         
-        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") {
+        if let lamp = platformNodes[platformID]?.childNode(withName: "lamp-indicator") as? SKSpriteNode {
             lamp.removeAction(forKey: "lampPulse")
-            lamp.run(SKAction.scale(to: 1.45, duration: 0.16))
+            lamp.texture = SKTexture(imageNamed: "lamp-on")
+            lamp.run(SKAction.sequence([
+                .scale(to: 1.25, duration: 0.14),
+                .scale(to: 1.0, duration: 0.12)
+            ]))
         }
         
         if viewModel.currentLevel.usesPerspective {
@@ -1120,6 +1124,7 @@ final class GameScene: SKScene {
         appFlow.claimPetal(for: viewModel.currentLevel.id)
         updateChapterProgressHUD()
         HapticManager.playSnapFeedback()
+        AudioManager.shared.playSFX(named: "petal")
         petalNode.collect { [weak self] in
             self?.petalNode = nil
         }
@@ -1393,9 +1398,11 @@ final class GameScene: SKScene {
     private func handlePortalOutcome(_ portal: PortalConfiguration) {
         switch portal.outcome {
         case .completesLevel:
+            AudioManager.shared.playSFX(named: "portal_happy")
             enterExit(portal: portal)
             
         case .loops(let destination):
+            AudioManager.shared.playSFX(named: "portal_fake")
             guard let destinationPlatform = platformNodes[destination.platformID],
                   let moriNode else { return }
             
@@ -1427,6 +1434,7 @@ final class GameScene: SKScene {
             return
         }
         
+        AudioManager.shared.playSFX(named: "portal_happy")
         viewModel.markExitReached()
         print("Mori reached the exit")
         
@@ -1787,6 +1795,17 @@ final class GameScene: SKScene {
         label.zPosition = 21
         addChild(label)
         instructionLabel = label
+        
+        let extraLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        extraLabel.fontSize = 14
+        extraLabel.fontColor = .white
+        extraLabel.horizontalAlignmentMode = .center
+        extraLabel.verticalAlignmentMode = .center
+        extraLabel.isHidden = true
+
+        addChild(extraLabel)
+
+        extraInstructionLabel = extraLabel
 
         guard isTutorial else { return }
     }
@@ -1799,32 +1818,24 @@ final class GameScene: SKScene {
             return
         }
 
+        if let lightReveal = level.lightRevealConfiguration,
+           viewModel.moriPlatformID == lightReveal.lampPlatformID,
+           !viewModel.isLightRevealed {
+            setTutorialInstruction("Tap the platform to reveal the path")
+            showTutorialGesture(.tap(platformID: lightReveal.lampPlatformID))
+            return
+        } else {
+            hideTutorialGesture()
+        }
+
         if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
             instructionLabel?.text = nil
+            instructionLabel?.attributedText = nil
             return
         }
         
-        if viewModel.hasPetalToCollect && viewModel.hasCollectedPetal {
-            instructionLabel?.text = "Tap black hole untuk keluar"
+        guard level.platforms.first(where: { $0.isDraggable }) != nil else {
             return
-        }
-        
-        guard let draggablePlatform = level.platforms.first(where: { $0.isDraggable }) else {
-            return
-        }
-        
-        let exitPlatformID = resolvedExitPlatformID(for: level)
-        
-        if !viewModel.isConnected {
-            instructionLabel?.text = "Drag Platform B to connect the path"
-        } else if exitPlatformID == draggablePlatform.id {
-            instructionLabel?.text = "Tap the black hole"
-        } else if viewModel.moriPlatformID == level.player.startingPlatformID {
-            instructionLabel?.text = "Tap Platform B to move Mori"
-        } else if !viewModel.areConnected(draggablePlatform.id, exitPlatformID) {
-            instructionLabel?.text = "Drag Platform B to Platform C"
-        } else {
-            instructionLabel?.text = "Tap the black hole"
         }
     }
 
@@ -1837,26 +1848,40 @@ final class GameScene: SKScene {
         }
 
         let startID = level.player.startingPlatformID
-
         if !viewModel.hasCollectedPetal {
             if viewModel.moriPlatformID == startID {
+                clearExtraTutorialInstruction()
+                
                 if viewModel.areConnected(startID, bridgeID) {
-                    setTutorialInstruction("Tap the bridge to move Mori\nSwipe to change perspective")
+                    setTutorialInstruction(
+                        "Tap the bridge to move Mori\nSwipe to change perspective"
+                    )
                     showTutorialGesture(.tap(platformID: bridgeID))
                 } else {
-                    setTutorialInstruction("Drag the bridge back beside Mori\nIt must connect before Mori can move")
+                    setTutorialInstruction(
+                        "Drag the bridge back beside Mori\nIt must connect before Mori can move"
+                    )
                     showTutorialGesture(.drag(platformID: bridgeID))
                 }
             } else if !viewModel.areConnected(bridgeID, petalID) {
-                setTutorialInstruction("Drag the bridge toward the next stone\nIt connects when aligned")
+                setTutorialInstruction(
+                    "Drag the bridge toward the next stone\nIt connects when aligned"
+                )
+                setExtraTutorialInstruction(
+                    "Where should you drag it? That's the challenge!"
+                )
                 showTutorialGesture(.drag(platformID: bridgeID))
             } else {
-                setTutorialInstruction("Tap the petal stone to move Mori\nCollect the petal before entering the black hole")
+                clearExtraTutorialInstruction()
+
+                setTutorialInstruction(
+                    "Tap the petal stone to move Mori\nCollect the petal before entering the black hole"
+                )
                 showTutorialGesture(.tap(platformID: petalID))
             }
             return
         }
-
+        
         let portalPlatformID = resolvedExitPlatformID(for: level)
         if viewModel.canMoveMori(to: portalPlatformID) {
             setTutorialInstruction("Tap the portal platform to move Mori\nThe black hole is reached automatically")
@@ -1886,6 +1911,45 @@ final class GameScene: SKScene {
         label.horizontalAlignmentMode = .center
         label.position.x = size.width / 2
     }
+    
+    private func clearExtraTutorialInstruction() {
+        extraInstructionLabel?.text = nil
+        extraInstructionLabel?.attributedText = nil
+        extraInstructionLabel?.isHidden = true
+    }
+    
+    private func setExtraTutorialInstruction(_ text: String) {
+        guard let label = extraInstructionLabel else { return }
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let font = UIFont(
+            name: "AvenirNext-Medium",
+            size: 14
+        ) ?? UIFont.systemFont(
+            ofSize: 14,
+            weight: .medium
+        )
+
+        label.attributedText = NSAttributedString(
+            string: text,
+            attributes: [
+                .font: font,
+                .foregroundColor: UIColor.white,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+
+        label.horizontalAlignmentMode = .center
+        label.position.x = size.width / 2
+        label.isHidden = false
+
+        if let mainLabel = instructionLabel {
+            label.position.y = mainLabel.position.y + mainLabel.frame.height + 120
+        }
+    }
+
 
     private enum TutorialGesture {
         case tap(platformID: String)
@@ -1894,11 +1958,16 @@ final class GameScene: SKScene {
         case swipe
     }
 
-    private func showTutorialGesture(_ gesture: TutorialGesture) {
+    private func hideTutorialGesture() {
         tutorialGestureNode?.removeFromParent()
+        tutorialGestureNode = nil
         enumerateChildNodes(withName: "tutorial-gesture") { node, _ in
             node.removeFromParent()
         }
+    }
+
+    private func showTutorialGesture(_ gesture: TutorialGesture) {
+        hideTutorialGesture()
 
         let node = SKNode()
         node.name = "tutorial-gesture"

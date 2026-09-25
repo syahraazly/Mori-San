@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "forget-me-not-petal.PNG",
+      "filename" : "forget-me-not-petal.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "forget-me-not-petal 1.PNG",
+      "filename" : "forget-me-not-petal 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "forget-me-not-petal 2.PNG",
+      "filename" : "forget-me-not-petal 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
