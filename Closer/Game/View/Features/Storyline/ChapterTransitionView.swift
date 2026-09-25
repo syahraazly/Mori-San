@@ -4,7 +4,7 @@ final class ChapterTransitionView: SKNode {
     init(sceneSize: CGSize) {
         super.init()
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = "II — BETWEEN"
         title.fontSize = 30
         title.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
@@ -36,7 +36,7 @@ final class ChapterTransitionView: SKNode {
         addChild(mori)
         mori.run(SKAction.move(to: destinationPoint.position, duration: 0.6))
 
-        let continueLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let continueLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
         continueLabel.text = "Tap to continue"
         continueLabel.fontSize = 16
         continueLabel.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 0.8)

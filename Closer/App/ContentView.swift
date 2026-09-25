@@ -17,6 +17,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
             }
         }
+        .font(.custom("Montserrat-Regular", size: 17, relativeTo: .body))
         .animation(.easeInOut(duration: 0.35), value: appFlow.screen)
     }
 }

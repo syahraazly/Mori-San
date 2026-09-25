@@ -61,7 +61,7 @@ final class ExitNode: SKShapeNode {
         ]
 
         for (index, position) in sparklePositions.enumerated() {
-            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let sparkle = SKLabelNode(fontNamed: "Montserrat-Bold")
             sparkle.text = index.isMultiple(of: 2) ? "✦" : "✧"
             sparkle.fontSize = index.isMultiple(of: 2) ? 11 : 8
             sparkle.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.55, alpha: 0.95)
