@@ -4,11 +4,24 @@ import UIKit
 // MARK: - Chapter Completion
 
 final class ChapterCompletionView: SKNode {
+    private enum Phase {
+        case narration
+        case blooming
+        case completion
+    }
+    
     private let sceneSize: CGSize
     private let chapter: MapChapterConfiguration
     private let goal: FlowerGoal
     private let completionMessage: String
     private let isFinalChapter: Bool
+    
+    private var phase: Phase = .completion
+    private var config: EndingChapterConfig?
+    private var currentBeatIndex = 0
+    private var narrationContainer: SKNode?
+    
+    private var isTransitioningBeat = false
     private var canContinue = false
 
     init?(sceneSize: CGSize, goalID: GoalID, isFinalChapter: Bool) {
@@ -22,12 +35,17 @@ final class ChapterCompletionView: SKNode {
         self.goal = goal
         self.completionMessage = FlowerCelebrationInfo.info(for: goalID).moriLearnedQuote
         self.isFinalChapter = isFinalChapter
+        self.config = EndingChapterConfig.config(for: goalID)
+        
         super.init()
 
         name = "chapter-completion-screen"
-        setupBackground()
-        setupHeader()
-        setupReveal()
+        
+        if config != nil {
+            setupNarrationPhase()
+        } else {
+            setupCompletionPhase()
+        }
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -35,11 +53,396 @@ final class ChapterCompletionView: SKNode {
     }
 
     func handleTap(at location: CGPoint) -> Bool {
-        guard canContinue,
-              containsNode(named: "chapter-completion-continue", at: location) else {
+        switch phase {
+        case .narration:
+            guard !isTransitioningBeat else { return false }
+            guard let config = config else { return false }
+            
+            if let skipNode = narrationContainer?.childNode(withName: "ui-layer/narration-skip"),
+               skipNode.contains(location) {
+                transitionToBlooming()
+                return false
+            }
+            
+            if currentBeatIndex < config.beats.count - 1 {
+                advanceBeat()
+            } else {
+                transitionToBlooming()
+            }
             return false
+            
+        case .blooming:
+            return false
+            
+        case .completion:
+            guard canContinue,
+                  containsNode(named: "chapter-completion-continue", at: location) else {
+                return false
+            }
+            return true
         }
-        return true
+    }
+    
+    // MARK: - Narration Phase
+    
+    private func setupNarrationPhase() {
+        phase = .narration
+        let container = SKNode()
+        addChild(container)
+        self.narrationContainer = container
+        
+        // --- Artwork layer (fades in first) ---
+        let artworkNode = SKNode()
+        artworkNode.name = "artwork-layer"
+        artworkNode.alpha = 0
+        container.addChild(artworkNode)
+        
+        if let bgName = config?.backgroundName {
+            let bg = SKSpriteNode(imageNamed: bgName)
+            bg.name = "background-sprite"
+            bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+            let scale = max(sceneSize.width / bg.size.width, sceneSize.height / bg.size.height)
+            bg.setScale(scale)
+            bg.zPosition = -1
+            artworkNode.addChild(bg)
+        }
+        
+        let texture1 = SKTexture(imageNamed: "mori-idle-1")
+        let texture2 = SKTexture(imageNamed: "mori-idle-2")
+        
+        let targetHeight: CGFloat = 150
+        let aspectRatio = texture1.size().width / max(texture1.size().height, 1)
+        let targetSize = CGSize(width: targetHeight * aspectRatio, height: targetHeight)
+        
+        let mori = SKSpriteNode(texture: texture1, size: targetSize)
+        mori.name = "mori-sprite"
+        // Position center so the bottom of the sprite is 40 points above the bottom edge
+        mori.position = CGPoint(x: sceneSize.width / 2, y: (targetSize.height / 2) + 40)
+        artworkNode.addChild(mori)
+        
+        let idleAction = SKAction.repeatForever(SKAction.animate(with: [
+            texture1, texture2
+        ], timePerFrame: 0.55, resize: false, restore: false))
+        mori.run(idleAction, withKey: "idle")
+        
+        // --- UI layer (narration + Skip, fades in slightly after artwork) ---
+        let uiNode = SKNode()
+        uiNode.name = "ui-layer"
+        uiNode.alpha = 0
+        container.addChild(uiNode)
+        
+        let textY = sceneSize.height * 0.55
+        
+        let narrationLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        narrationLabel.name = "narration-label"
+        narrationLabel.fontSize = 18
+        narrationLabel.fontColor = .white
+        narrationLabel.numberOfLines = 0
+        narrationLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        narrationLabel.horizontalAlignmentMode = .center
+        narrationLabel.position = CGPoint(x: sceneSize.width / 2, y: textY)
+        
+        let shadow1 = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        shadow1.name = "narration-shadow"
+        shadow1.fontSize = 18
+        shadow1.fontColor = SKColor.black.withAlphaComponent(0.6)
+        shadow1.numberOfLines = 0
+        shadow1.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        shadow1.horizontalAlignmentMode = .center
+        shadow1.position = CGPoint(x: sceneSize.width / 2, y: textY - 2)
+        shadow1.zPosition = -0.1
+        
+        let thoughtLabel = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        thoughtLabel.name = "thought-label"
+        thoughtLabel.fontSize = 18
+        thoughtLabel.fontColor = .white
+        thoughtLabel.numberOfLines = 0
+        thoughtLabel.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        thoughtLabel.horizontalAlignmentMode = .center
+        thoughtLabel.position = CGPoint(x: sceneSize.width / 2, y: textY - 80)
+        
+        let shadow2 = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        shadow2.name = "thought-shadow"
+        shadow2.fontSize = 18
+        shadow2.fontColor = SKColor.black.withAlphaComponent(0.6)
+        shadow2.numberOfLines = 0
+        shadow2.preferredMaxLayoutWidth = sceneSize.width * 0.8
+        shadow2.horizontalAlignmentMode = .center
+        shadow2.position = CGPoint(x: sceneSize.width / 2, y: textY - 82)
+        shadow2.zPosition = -0.1
+        
+        uiNode.addChild(shadow1)
+        uiNode.addChild(narrationLabel)
+        uiNode.addChild(shadow2)
+        uiNode.addChild(thoughtLabel)
+        
+        let skipLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        skipLabel.name = "narration-skip"
+        skipLabel.text = "Skip"
+        skipLabel.fontSize = 15
+        skipLabel.fontColor = SKColor.white.withAlphaComponent(0.7)
+        // sceneSize.height * 0.88 places Skip ~12% from the top in portrait,
+        // matching the visual position of the Storyline Skip (safeArea top + ~20pt padding).
+        // This is proportional rather than a hardcoded pixel value.
+        skipLabel.position = CGPoint(x: sceneSize.width - 32, y: sceneSize.height * 0.88)
+        skipLabel.zPosition = 50
+        uiNode.addChild(skipLabel)
+        
+        // --- Entrance animation ---
+        // Artwork fades in immediately over 0.85s.
+        artworkNode.run(.fadeIn(withDuration: 0.85))
+        // Narration UI fades in 0.35s later, giving artwork a head start.
+        uiNode.run(.sequence([
+            .wait(forDuration: 0.35),
+            .fadeIn(withDuration: 0.65)
+        ]))
+        
+        renderCurrentBeat()
+    }
+
+    
+    private func advanceBeat() {
+        guard let config = config,
+              let container = narrationContainer else { return }
+        isTransitioningBeat = true
+
+        let nextIndex   = currentBeatIndex + 1
+        let currentBeat = config.beats[currentBeatIndex]
+        let nextBeat    = config.beats[nextIndex]
+
+        // True cross-dissolve only when BOTH beats use composed per-beat assets.
+        // Fallback chapters and mixed transitions use the simple fade-swap path.
+        if currentBeat.assetName != nil, let nextAssetName = nextBeat.assetName {
+            performCrossDissolve(
+                nextAssetName: nextAssetName,
+                nextIndex: nextIndex,
+                container: container
+            )
+        } else {
+            performSimpleTransition(nextIndex: nextIndex, container: container)
+        }
+    }
+
+    // MARK: - Cross-Dissolve (composed-asset → composed-asset)
+
+    private func performCrossDissolve(
+        nextAssetName: String,
+        nextIndex: Int,
+        container: SKNode
+    ) {
+        let dissolveDuration: TimeInterval = 0.32
+        let textOutDuration:  TimeInterval = 0.15
+        let textInDelay:      TimeInterval = 0.10
+        let textInDuration:   TimeInterval = 0.20
+
+        guard let artworkNode = container.childNode(withName: "artwork-layer"),
+              let bgSprite = container.childNode(withName: "artwork-layer/background-sprite")
+                  as? SKSpriteNode
+        else {
+            // Node structure unexpected — fall back to simple swap.
+            performSimpleTransition(nextIndex: nextIndex, container: container)
+            return
+        }
+
+        let textNodes: [SKNode] = [
+            container.childNode(withName: "ui-layer/narration-label"),
+            container.childNode(withName: "ui-layer/narration-shadow"),
+            container.childNode(withName: "ui-layer/thought-label"),
+            container.childNode(withName: "ui-layer/thought-shadow")
+        ].compactMap { $0 }
+
+        // Build incoming sprite starting at 0.98x for a subtle zoom-in feel.
+        let incomingTexture = SKTexture(imageNamed: nextAssetName)
+        let targetScale = max(
+            sceneSize.width  / incomingTexture.size().width,
+            sceneSize.height / incomingTexture.size().height
+        )
+        let incomingSprite = SKSpriteNode(texture: incomingTexture)
+        incomingSprite.name      = "incoming-sprite"
+        incomingSprite.position  = bgSprite.position
+        incomingSprite.zPosition = bgSprite.zPosition + 0.5   // renders on top of outgoing
+        incomingSprite.setScale(targetScale * 0.98)
+        incomingSprite.alpha = 0
+        artworkNode.addChild(incomingSprite)
+
+        // Immediate: old text fades out; outgoing fades out; incoming fades in + scales up.
+        for node in textNodes {
+            node.run(.fadeOut(withDuration: textOutDuration))
+        }
+        bgSprite.run(.fadeOut(withDuration: dissolveDuration))
+        incomingSprite.run(.group([
+            .fadeIn(withDuration: dissolveDuration),
+            .scale(to: targetScale, duration: dissolveDuration)
+        ]))
+
+        // At textInDelay: update text content for next beat, begin fade-in.
+        run(.sequence([
+            .wait(forDuration: textInDelay),
+            .run { [weak self] in
+                guard let self = self else { return }
+                self.currentBeatIndex = nextIndex
+                self.updateTextForCurrentBeat(in: container)
+                for node in textNodes {
+                    node.run(.fadeIn(withDuration: textInDuration))
+                }
+            }
+        ]))
+
+        // At dissolveDuration: promote incoming sprite, clean up, unlock.
+        run(.sequence([
+            .wait(forDuration: dissolveDuration),
+            .run { [weak self] in
+                guard let self = self else { return }
+                bgSprite.removeFromParent()
+                incomingSprite.name = "background-sprite"
+                // Composed beats always keep the standalone Mori sprite hidden.
+                if let mori = container.childNode(withName: "artwork-layer/mori-sprite")
+                    as? SKSpriteNode {
+                    mori.isHidden = true
+                    mori.isPaused = true
+                }
+                self.isTransitioningBeat = false
+            }
+        ]))
+    }
+
+    // MARK: - Simple Transition (fallback / mixed beats)
+
+    private func performSimpleTransition(nextIndex: Int, container: SKNode) {
+        let artworkNode = container.childNode(withName: "artwork-layer")
+        let textNodes: [SKNode] = [
+            container.childNode(withName: "ui-layer/narration-label"),
+            container.childNode(withName: "ui-layer/narration-shadow"),
+            container.childNode(withName: "ui-layer/thought-label"),
+            container.childNode(withName: "ui-layer/thought-shadow")
+        ].compactMap { $0 }
+
+        let fadeOutDuration: TimeInterval = 0.10
+        let fadeInDuration:  TimeInterval = 0.20
+
+        artworkNode?.run(.fadeOut(withDuration: fadeOutDuration))
+        for node in textNodes {
+            node.run(.fadeOut(withDuration: fadeOutDuration))
+        }
+
+        run(.sequence([
+            .wait(forDuration: fadeOutDuration),
+            .run { [weak self] in
+                guard let self = self else { return }
+                self.currentBeatIndex = nextIndex
+                self.renderCurrentBeat()
+                artworkNode?.run(.fadeIn(withDuration: fadeInDuration))
+                for node in textNodes {
+                    node.run(.fadeIn(withDuration: fadeInDuration))
+                }
+            },
+            .wait(forDuration: fadeInDuration),
+            .run { [weak self] in self?.isTransitioningBeat = false }
+        ]))
+    }
+
+    // MARK: - Text-only update (used by the cross-dissolve path)
+
+    // Updates text labels for currentBeatIndex without touching artwork.
+    private func updateTextForCurrentBeat(in container: SKNode) {
+        guard let config = config else { return }
+        let beat = config.beats[currentBeatIndex]
+
+        let narrationLabel  = container.childNode(withName: "ui-layer/narration-label")  as? SKLabelNode
+        let narrationShadow = container.childNode(withName: "ui-layer/narration-shadow") as? SKLabelNode
+        let thoughtLabel    = container.childNode(withName: "ui-layer/thought-label")    as? SKLabelNode
+        let thoughtShadow   = container.childNode(withName: "ui-layer/thought-shadow")   as? SKLabelNode
+
+        narrationLabel?.text  = beat.narration
+        narrationShadow?.text = beat.narration
+        thoughtLabel?.text    = beat.thought
+        thoughtShadow?.text   = beat.thought
+
+        if let customPos = beat.customThoughtPosition {
+            let newPos = CGPoint(
+                x: sceneSize.width  * customPos.x,
+                y: sceneSize.height * customPos.y
+            )
+            thoughtLabel?.position  = newPos
+            thoughtShadow?.position = CGPoint(x: newPos.x, y: newPos.y - 2)
+        } else {
+            let textY = sceneSize.height * 0.55
+            thoughtLabel?.position  = CGPoint(x: sceneSize.width / 2, y: textY - 80)
+            thoughtShadow?.position = CGPoint(x: sceneSize.width / 2, y: textY - 82)
+        }
+    }
+
+    private func renderCurrentBeat() {
+        guard let config = config,
+              let container = narrationContainer else { return }
+        let beat = config.beats[currentBeatIndex]
+        
+        let bgSprite = container.childNode(withName: "artwork-layer/background-sprite") as? SKSpriteNode
+        let moriSprite = container.childNode(withName: "artwork-layer/mori-sprite") as? SKSpriteNode
+        
+        if let assetName = beat.assetName {
+            bgSprite?.texture = SKTexture(imageNamed: assetName)
+            moriSprite?.isHidden = true
+            moriSprite?.isPaused = true
+        } else {
+            bgSprite?.texture = SKTexture(imageNamed: config.backgroundName)
+            moriSprite?.isHidden = false
+            moriSprite?.isPaused = false
+        }
+        
+        let narrationLabel = container.childNode(withName: "ui-layer/narration-label") as? SKLabelNode
+        let narrationShadow = container.childNode(withName: "ui-layer/narration-shadow") as? SKLabelNode
+        let thoughtLabel = container.childNode(withName: "ui-layer/thought-label") as? SKLabelNode
+        let thoughtShadow = container.childNode(withName: "ui-layer/thought-shadow") as? SKLabelNode
+        
+        narrationLabel?.text = beat.narration
+        narrationShadow?.text = beat.narration
+        
+        thoughtLabel?.text = beat.thought
+        thoughtShadow?.text = beat.thought
+        
+        if let customPos = beat.customThoughtPosition {
+            let newPos = CGPoint(x: sceneSize.width * customPos.x, y: sceneSize.height * customPos.y)
+            thoughtLabel?.position = newPos
+            thoughtShadow?.position = CGPoint(x: newPos.x, y: newPos.y - 2)
+        } else {
+            let textY = sceneSize.height * 0.55
+            thoughtLabel?.position = CGPoint(x: sceneSize.width / 2, y: textY - 80)
+            thoughtShadow?.position = CGPoint(x: sceneSize.width / 2, y: textY - 82)
+        }
+    }
+    
+    private func transitionToBlooming() {
+        phase = .blooming
+        let whiteFade = SKShapeNode(rectOf: sceneSize)
+        whiteFade.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+        whiteFade.fillColor = .white
+        whiteFade.strokeColor = .clear
+        whiteFade.zPosition = 100
+        whiteFade.alpha = 0
+        addChild(whiteFade)
+        
+        whiteFade.run(.sequence([
+            .fadeIn(withDuration: 1.5),
+            .run { [weak self] in
+                self?.narrationContainer?.removeFromParent()
+                self?.narrationContainer = nil
+                self?.setupCompletionPhase()
+            },
+            .fadeOut(withDuration: 0.5),
+            .run { [weak self] in
+                self?.phase = .completion
+            },
+            .removeFromParent()
+        ]))
+    }
+
+    // MARK: - Completion Phase
+    
+    private func setupCompletionPhase() {
+        setupBackground()
+        setupHeader()
+        setupReveal()
     }
 
     private func setupBackground() {
@@ -235,3 +638,4 @@ final class ChapterCompletionView: SKNode {
         return false
     }
 }
+
