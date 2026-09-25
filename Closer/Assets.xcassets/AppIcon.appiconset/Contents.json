@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "38525BC2-6145-4233-BED3-BCF1D2B4161D.png",
+      "filename" : "mori-icon-dark.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "38525BC2-6145-4233-BED3-BCF1D2B4161D 1.png",
+      "filename" : "mori-icon-dark 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "6BED8ED9-3D21-4CA3-AE3E-ED20E82148A3.png",
+      "filename" : "mori-icon-light.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
