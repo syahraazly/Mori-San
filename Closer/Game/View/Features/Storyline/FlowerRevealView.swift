@@ -58,8 +58,11 @@ final class FlowerRevealView: SKNode {
     private var tapPromptNode: SKNode?
     private var moriNode: PlayerNode?
 
+    private let goalID: GoalID
+
     init(sceneSize: CGSize, goalID: GoalID) {
         self.sceneSize = sceneSize
+        self.goalID = goalID
         self.info = FlowerCelebrationInfo.info(for: goalID)
         super.init()
         self.name = "flower-reveal-screen"
@@ -77,13 +80,20 @@ final class FlowerRevealView: SKNode {
     // MARK: - Setup Elements
 
     private func setupAtmosphere() {
-        // Deep celestial sky background
-        let bg = SKShapeNode(rectOf: sceneSize)
-        bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
-        bg.fillColor = SKColor(red: 0.42, green: 0.55, blue: 0.72, alpha: 1.0)
-        bg.strokeColor = .clear
-        bg.zPosition = -10
-        addChild(bg)
+        if let chapter = MapChapterData.chapter(for: goalID) {
+            let bg = SKSpriteNode(imageNamed: chapter.backgroundAssetName)
+            bg.size = sceneSize
+            bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+            bg.zPosition = -10
+            addChild(bg)
+        } else {
+            let bg = SKShapeNode(rectOf: sceneSize)
+            bg.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height / 2)
+            bg.fillColor = SKColor(red: 0.42, green: 0.55, blue: 0.72, alpha: 1.0)
+            bg.strokeColor = .clear
+            bg.zPosition = -10
+            addChild(bg)
+        }
 
         // Twinkling stars in sky
         for (i, offset) in [
@@ -110,44 +120,100 @@ final class FlowerRevealView: SKNode {
     }
 
     private func setupHeader() {
+        let cardWidth = sceneSize.width * 0.90
+        // Card sits just above the flower (flower center = height * 0.55)
+        // Small top margin: card top at 0.72, bottom at 0.59 (tight above flower)
+        let cardTop: CGFloat = sceneSize.height * 0.72
+        let cardBottom: CGFloat = sceneSize.height * 0.59
+        let cardHeight = cardTop - cardBottom
+        let cardY = (cardTop + cardBottom) / 2
+        
+        let headerCard = SKShapeNode(rectOf: CGSize(width: cardWidth, height: cardHeight), cornerRadius: 16)
+        headerCard.position = CGPoint(x: sceneSize.width / 2, y: cardY)
+        headerCard.fillColor = SKColor(red: 0.12, green: 0.15, blue: 0.24, alpha: 0.65)
+        headerCard.strokeColor = SKColor.white.withAlphaComponent(0.35)
+        headerCard.lineWidth = 1.2
+        headerCard.zPosition = 3
+        addChild(headerCard)
+
+        // Chapter title: small gap from card top (0.72 - tiny margin = 0.69)
+        let tagY = sceneSize.height * 0.69
+        let chapterTitle = MapChapterData.chapter(for: goalID)?.progressionTitle.uppercased() ?? "SCARS TO YOUR BEAUTIFUL"
+        
+        let tagShadow = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        tagShadow.text = chapterTitle
+        tagShadow.fontSize = 12.5
+        tagShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
+        tagShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: tagY - 1.5)
+        tagShadow.zPosition = 5.9
+        addChild(tagShadow)
+
         let tag = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        tag.text = "A QUIET MOMENT"
-        tag.fontSize = 13
+        tag.text = chapterTitle
+        tag.fontSize = 12.5
         tag.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.50, alpha: 1.0)
-        tag.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.88)
+        tag.position = CGPoint(x: sceneSize.width / 2, y: tagY)
+        tag.zPosition = 6
         addChild(tag)
+
+        // Narrative text below chapter title, still inside card
+        let titleY = sceneSize.height * 0.64
+        if let narrative = info.endingNarrative {
+            let titleShadow = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            titleShadow.text = narrative
+            titleShadow.fontSize = 17.5
+            titleShadow.numberOfLines = 2
+            titleShadow.preferredMaxLayoutWidth = cardWidth - 28
+            titleShadow.fontColor = SKColor.black.withAlphaComponent(0.75)
+            titleShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: titleY - 1.5)
+            titleShadow.zPosition = 5.9
+            addChild(titleShadow)
+        }
 
         let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
         title.text = info.endingNarrative
-        title.fontSize = 18
+        title.fontSize = 17.5
         title.numberOfLines = 2
-        title.preferredMaxLayoutWidth = sceneSize.width * 0.82
+        title.preferredMaxLayoutWidth = cardWidth - 28
         title.fontColor = .white
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.80)
+        title.position = CGPoint(x: sceneSize.width / 2, y: titleY)
+        title.zPosition = 6
         addChild(title)
         self.titleLabel = title
 
+        // Subtitle (post-bloom: "Forget-me-not Bloomed!") — placed above flower
+        let subtitleY = sceneSize.height * 0.69
         let subtitle = SKLabelNode(fontNamed: "AvenirNext-Medium")
-        subtitle.text = "Mori: \(info.moriResponse)"
-        subtitle.fontSize = 16
-        subtitle.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
-        subtitle.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.72)
+        subtitle.fontSize = 15
+        subtitle.fontColor = SKColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 0.92)
+        subtitle.position = CGPoint(x: sceneSize.width / 2, y: subtitleY)
+        subtitle.zPosition = 6
         addChild(subtitle)
         self.subtitleLabel = subtitle
 
         if let endingFollowUp = info.endingFollowUp {
+            let followUpY = sceneSize.height * 0.61
+            let followUpShadow = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            followUpShadow.text = endingFollowUp
+            followUpShadow.fontSize = 13
+            followUpShadow.fontColor = SKColor.black.withAlphaComponent(0.7)
+            followUpShadow.position = CGPoint(x: sceneSize.width / 2 + 1, y: followUpY - 1.5)
+            followUpShadow.zPosition = 5.9
+            addChild(followUpShadow)
+
             let followUp = SKLabelNode(fontNamed: "AvenirNext-Medium")
             followUp.text = endingFollowUp
-            followUp.fontSize = 14
-            followUp.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.88)
-            followUp.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.67)
+            followUp.fontSize = 13.5
+            followUp.fontColor = SKColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 0.88)
+            followUp.position = CGPoint(x: sceneSize.width / 2, y: followUpY)
+            followUp.zPosition = 6
             addChild(followUp)
             self.followUpLabel = followUp
         }
     }
 
     private func setupPlatformAndMori() {
-        let platformY = sceneSize.height * 0.44
+        let platformY = sceneSize.height * 0.48
 
         // Stone pedestal
         let stoneBase = SKShapeNode(rectOf: CGSize(width: sceneSize.width * 0.72, height: 38), cornerRadius: 14)
@@ -176,7 +242,7 @@ final class FlowerRevealView: SKNode {
     }
 
     private func setupPetalConvergence() {
-        let flowerCenter = CGPoint(x: sceneSize.width * 0.62, y: sceneSize.height * 0.51)
+        let flowerCenter = CGPoint(x: sceneSize.width * 0.62, y: sceneSize.height * 0.55)
 
         // Center glow orb (grows as petals merge)
         let orb = SKShapeNode(circleOfRadius: 20)
@@ -404,7 +470,7 @@ final class FlowerRevealView: SKNode {
         subtitleLabel?.text = "Touch the flower to receive its memory"
 
         // Tap prompt badge
-        showTapPrompt(near: CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.22))
+        showTapPrompt(near: CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.26))
         HapticManager.playSnapFeedback()
     }
 
@@ -480,7 +546,7 @@ final class FlowerRevealView: SKNode {
     func fastForwardToBloomed() {
         removeAction(forKey: "convergenceSequence")
         removeAction(forKey: "bloomAction")
-        let center = CGPoint(x: sceneSize.width * 0.62, y: sceneSize.height * 0.51)
+        let center = CGPoint(x: sceneSize.width * 0.62, y: sceneSize.height * 0.55)
         triggerFlowerBloom(at: center)
     }
 
