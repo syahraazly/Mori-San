@@ -7,7 +7,7 @@ struct StorylineScreen: View {
     init(appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
         _viewModel = StateObject(wrappedValue: StorylineViewModel(
-            onComplete: { appFlow.openMap() }
+            onComplete: { appFlow.completeStoryline() }
         ))
     }
 

@@ -3,7 +3,6 @@ import SwiftUI
 final class AppFlowViewModel: ObservableObject {
     enum Screen: Equatable {
         case splash
-        case onboarding
         case storyline
         case map
         case goal(GoalID)
@@ -22,7 +21,7 @@ final class AppFlowViewModel: ObservableObject {
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
     private let userDefaults: UserDefaults
-    private static let hasBegunKey = "hasBegunGame"
+    private static let hasCompletedStorylineKey = "hasCompletedStoryline"
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -31,11 +30,10 @@ final class AppFlowViewModel: ObservableObject {
     }
 
     func begin() {
-        if userDefaults.bool(forKey: Self.hasBegunKey) {
+        if userDefaults.bool(forKey: Self.hasCompletedStorylineKey) {
             openMap()
         } else {
-            userDefaults.set(true, forKey: Self.hasBegunKey)
-            screen = .onboarding
+            openStoryline()
         }
     }
 
@@ -45,6 +43,11 @@ final class AppFlowViewModel: ObservableObject {
 
     func openStoryline() {
         screen = .storyline
+    }
+
+    func completeStoryline() {
+        userDefaults.set(true, forKey: Self.hasCompletedStorylineKey)
+        openMap()
     }
 
     func startGameplay() {

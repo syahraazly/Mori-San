@@ -11,8 +11,6 @@ struct ContentView: View {
             switch appFlow.screen {
             case .splash:
                 SplashScreenView(appFlow: appFlow)
-            case .onboarding:
-                OnboardingScreen(appFlow: appFlow)
             case .storyline:
                 StorylineScreen(appFlow: appFlow)
             case .goal(let goalID):

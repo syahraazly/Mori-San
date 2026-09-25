@@ -79,7 +79,7 @@ final class GameScene: SKScene {
         renderedScreen = screen
         
         switch screen {
-        case .splash, .onboarding, .storyline:
+        case .splash, .storyline:
             removeAllChildren()
         case .map:
             renderMap()
@@ -283,7 +283,7 @@ final class GameScene: SKScene {
             mapView?.handleTouchBegan(at: touch.location(in: self))
         case .gameplay:
             handleGameplayTouch(touch)
-        case .splash, .onboarding, .storyline:
+        case .splash, .storyline:
             return
         }
     }
