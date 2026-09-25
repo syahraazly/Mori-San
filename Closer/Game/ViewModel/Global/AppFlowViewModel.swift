@@ -12,13 +12,18 @@ final class AppFlowViewModel: ObservableObject {
         case congratulations(GoalID)
     }
 
-    @Published private(set) var screen: Screen = .onboarding
-    @Published private(set) var progress: GoalProgress
+    @Published private(set) var screen: Screen = .onboarding {
+        didSet {
+            AudioManager.shared.updateMusic(for: screen)
+        }
+    }
+    @Published private(set) var progress = GoalProgress()
     private(set) var pendingLevelID: LevelID?
     private(set) var activeGoalID: GoalID?
 
     init() {
         progress = GoalProgress.load()
+        AudioManager.shared.updateMusic(for: screen)
     }
 
     func openStoryline() {
