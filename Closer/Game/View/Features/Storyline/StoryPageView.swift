@@ -101,11 +101,7 @@ struct StoryPageView: View {
             if let narration = beat.narration {
                 Text(narration)
                     .font(
-                        .system(
-                            size: 18,
-                            weight: .medium,
-                            design: .rounded
-                        )
+                        .custom("Montserrat-Medium", size: 18)
                     )
                     .foregroundStyle(Color.storySoftWhite)
                     .multilineTextAlignment(.leading)
@@ -120,13 +116,8 @@ struct StoryPageView: View {
             if let thought = beat.thought {
                 Text("\"\(thought)\"")
                     .font(
-                        .system(
-                            size: 17,
-                            weight: .regular,
-                            design: .rounded
-                        )
+                        .custom("Montserrat-Italic", size: 17)
                     )
-                    .italic()
                     .foregroundStyle(Color.storyAccent)
                     .multilineTextAlignment(.leading)
                     .lineSpacing(4)

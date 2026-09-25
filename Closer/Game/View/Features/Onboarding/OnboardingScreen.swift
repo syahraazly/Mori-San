@@ -16,14 +16,14 @@ struct OnboardingScreen: View {
                     Text("Until the paths drifted apart.")
                 } else {
                     Text("MORI-SAN")
-                        .font(.system(size: 42, weight: .bold))
+                        .font(.custom("Montserrat-Bold", size: 42))
                     Text("Bring the world closer.")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.custom("Montserrat-Medium", size: 18))
 
                     Button("Begin") {
                         appFlow.openStoryline()
                     }
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.custom("Montserrat-Bold", size: 18))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 34)
                     .padding(.vertical, 14)

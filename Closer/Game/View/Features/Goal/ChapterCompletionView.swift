@@ -133,7 +133,7 @@ final class ChapterCompletionView: SKNode {
         
         let textY = sceneSize.height * 0.55
         
-        let narrationLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let narrationLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
         narrationLabel.name = "narration-label"
         narrationLabel.fontSize = 18
         narrationLabel.fontColor = .white
@@ -142,7 +142,7 @@ final class ChapterCompletionView: SKNode {
         narrationLabel.horizontalAlignmentMode = .center
         narrationLabel.position = CGPoint(x: sceneSize.width / 2, y: textY)
         
-        let shadow1 = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let shadow1 = SKLabelNode(fontNamed: "Montserrat-Medium")
         shadow1.name = "narration-shadow"
         shadow1.fontSize = 18
         shadow1.fontColor = SKColor.black.withAlphaComponent(0.6)
@@ -152,7 +152,7 @@ final class ChapterCompletionView: SKNode {
         shadow1.position = CGPoint(x: sceneSize.width / 2, y: textY - 2)
         shadow1.zPosition = -0.1
         
-        let thoughtLabel = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        let thoughtLabel = SKLabelNode(fontNamed: "Montserrat-Italic")
         thoughtLabel.name = "thought-label"
         thoughtLabel.fontSize = 18
         thoughtLabel.fontColor = .white
@@ -161,7 +161,7 @@ final class ChapterCompletionView: SKNode {
         thoughtLabel.horizontalAlignmentMode = .center
         thoughtLabel.position = CGPoint(x: sceneSize.width / 2, y: textY - 80)
         
-        let shadow2 = SKLabelNode(fontNamed: "AvenirNext-Italic")
+        let shadow2 = SKLabelNode(fontNamed: "Montserrat-Italic")
         shadow2.name = "thought-shadow"
         shadow2.fontSize = 18
         shadow2.fontColor = SKColor.black.withAlphaComponent(0.6)
@@ -176,7 +176,7 @@ final class ChapterCompletionView: SKNode {
         uiNode.addChild(shadow2)
         uiNode.addChild(thoughtLabel)
         
-        let skipLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let skipLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
         skipLabel.name = "narration-skip"
         skipLabel.text = "Skip"
         skipLabel.fontSize = 15
@@ -455,14 +455,14 @@ final class ChapterCompletionView: SKNode {
     }
 
     private func setupHeader() {
-        let label = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        let label = SKLabelNode(fontNamed: "Montserrat-SemiBold")
         label.text = "A QUIET MOMENT"
         label.fontSize = 15
         label.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
         label.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.91)
         addChild(label)
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let title = SKLabelNode(fontNamed: "Montserrat-Medium")
         title.text = FlowerCelebrationInfo.info(for: goal.id).endingNarrative
         title.numberOfLines = 2
         title.preferredMaxLayoutWidth = sceneSize.width * 0.82
@@ -473,7 +473,7 @@ final class ChapterCompletionView: SKNode {
         title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.84)
         addChild(title)
 
-        let response = SKLabelNode(fontNamed: "AvenirNext-MediumItalic")
+        let response = SKLabelNode(fontNamed: "Montserrat-MediumItalic")
         response.text = "Mori: \(FlowerCelebrationInfo.info(for: goal.id).moriResponse)"
         response.fontSize = 15
         response.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 1)
@@ -481,7 +481,7 @@ final class ChapterCompletionView: SKNode {
         addChild(response)
 
         if let followUp = FlowerCelebrationInfo.info(for: goal.id).endingFollowUp {
-            let followUpLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            let followUpLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
             followUpLabel.text = followUp
             followUpLabel.fontSize = 13
             followUpLabel.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 0.86)
@@ -515,7 +515,7 @@ final class ChapterCompletionView: SKNode {
         flower.zPosition = 2
         addChild(flower)
 
-        let flowerName = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        let flowerName = SKLabelNode(fontNamed: "Montserrat-SemiBold")
         flowerName.text = chapter.flowerDisplayName
         flowerName.fontSize = 28
         flowerName.fontColor = SKColor(red: 0.25, green: 0.20, blue: 0.31, alpha: 1)
@@ -523,7 +523,7 @@ final class ChapterCompletionView: SKNode {
         flowerName.alpha = 0
         addChild(flowerName)
 
-        let message = SKLabelNode(fontNamed: "AvenirNext-Regular")
+        let message = SKLabelNode(fontNamed: "Montserrat-Regular")
         message.text = completionMessage
         message.fontSize = 14
         message.fontColor = SKColor(red: 0.35, green: 0.29, blue: 0.42, alpha: 1)
@@ -583,7 +583,7 @@ final class ChapterCompletionView: SKNode {
         ])), withKey: "flowerPulse")
 
         for index in 0..<5 {
-            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let sparkle = SKLabelNode(fontNamed: "Montserrat-Bold")
             sparkle.text = index.isMultiple(of: 2) ? "✦" : "✧"
             sparkle.fontSize = 12
             sparkle.fontColor = SKColor(red: 0.74, green: 0.55, blue: 0.23, alpha: 0.9)
@@ -618,7 +618,7 @@ final class ChapterCompletionView: SKNode {
         button.strokeColor = .clear
         container.addChild(button)
 
-        let label = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        let label = SKLabelNode(fontNamed: "Montserrat-SemiBold")
         label.name = "chapter-completion-continue"
         label.text = isFinalChapter ? "To Be Continued" : "Continue"
         label.fontSize = 16

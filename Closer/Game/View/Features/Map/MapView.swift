@@ -85,7 +85,7 @@ final class MapView: SKNode {
         overlay.alpha = 0
         overlay.run(.fadeIn(withDuration: 0.35))
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = "MORI JOURNEY"
         title.fontSize = 20
         title.fontColor = .white
@@ -137,7 +137,7 @@ final class MapView: SKNode {
         hint.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.075)
         hint.zPosition = 10
 
-        let leftChevron = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let leftChevron = SKLabelNode(fontNamed: "Montserrat-Medium")
         leftChevron.text = "‹"
         leftChevron.fontSize = 28
         leftChevron.fontColor = .white.withAlphaComponent(0.82)
@@ -145,14 +145,14 @@ final class MapView: SKNode {
         leftChevron.position = CGPoint(x: -88, y: 1)
         hint.addChild(leftChevron)
 
-        let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let label = SKLabelNode(fontNamed: "Montserrat-Medium")
         label.text = "SWIPE TO EXPLORE"
         label.fontSize = 13
         label.fontColor = .white.withAlphaComponent(0.82)
         label.verticalAlignmentMode = .center
         hint.addChild(label)
 
-        let rightChevron = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let rightChevron = SKLabelNode(fontNamed: "Montserrat-Medium")
         rightChevron.text = "›"
         rightChevron.fontSize = 28
         rightChevron.fontColor = .white.withAlphaComponent(0.82)
@@ -223,14 +223,14 @@ final class MapView: SKNode {
             page.addChild(lockCrop)
         }
 
-        let chapterNumber = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let chapterNumber = SKLabelNode(fontNamed: "Montserrat-Bold")
         chapterNumber.text = "CHAPTER \(romanNumeral(chapter.order))"
         chapterNumber.fontSize = 17
         chapterNumber.fontColor = .white
         chapterNumber.position = CGPoint(x: 0, y: sceneSize.height * 0.20)
         page.addChild(chapterNumber)
 
-        let chapterTitle = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        let chapterTitle = SKLabelNode(fontNamed: "Montserrat-SemiBold")
         chapterTitle.text = chapter.progressionTitle
         chapterTitle.fontSize = 18
         chapterTitle.fontColor = .white.withAlphaComponent(0.95)
@@ -279,7 +279,7 @@ final class MapView: SKNode {
             page.addChild(flower)
             animateCompletedFlower(flower, in: page)
 
-            let flowerName = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let flowerName = SKLabelNode(fontNamed: "Montserrat-Bold")
             flowerName.text = chapter.flowerDisplayName
             flowerName.fontSize = 16
             flowerName.fontColor = .white
@@ -301,7 +301,7 @@ final class MapView: SKNode {
         let startY = y + CGFloat(lines.count - 1) * lineSpacing / 2
 
         for (index, line) in lines.enumerated() {
-            let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
+            let label = SKLabelNode(fontNamed: "Montserrat-Medium")
             label.text = line
             label.fontSize = 17
             label.fontColor = .white.withAlphaComponent(0.92)
@@ -350,7 +350,7 @@ final class MapView: SKNode {
         flower.run(pulse, withKey: "mapFlowerPulse")
 
         for index in 0..<4 {
-            let sparkle = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let sparkle = SKLabelNode(fontNamed: "Montserrat-Bold")
             sparkle.text = index.isMultiple(of: 2) ? "✦" : "✧"
             sparkle.fontSize = index.isMultiple(of: 2) ? 13 : 10
             sparkle.fontColor = SKColor(red: 1.0, green: 0.88, blue: 0.55, alpha: 0.9)
@@ -398,7 +398,7 @@ final class MapView: SKNode {
         color: SKColor,
         size: CGFloat = 18
     ) {
-        let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let label = SKLabelNode(fontNamed: "Montserrat-Medium")
         label.text = text
         label.fontSize = size
         label.fontColor = color
@@ -423,7 +423,7 @@ final class MapView: SKNode {
         button.position = CGPoint(x: 0, y: y)
         page.addChild(button)
 
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.text = text
         label.fontSize = 15
         label.verticalAlignmentMode = .center
