@@ -56,13 +56,22 @@ final class StorylineViewModel: ObservableObject {
 
     static let defaultBeats: [StoryBeat] = [
 
+        // Intro
+        StoryBeat(
+            id: 0,
+            imageName: "storyboard-minimalist-background",
+            narration: "The world was once connected... \nUntil the paths drifted apart...",
+            thought: nil,
+            layout: .centerLeading
+        ),
+
         // 01 — A Small World
         StoryBeat(
             id: 1,
-            imageName: "story-scene-01",
+            imageName: "storyboard-1",
             narration: """
             Mori's world has always been small.
-            Everything he knows is right here.
+            Everything Mori knows is right here.
             """,
             thought: "I like it this way.",
             layout: .topLeading
@@ -71,7 +80,7 @@ final class StorylineViewModel: ObservableObject {
         // 02 — Little Moments
         StoryBeat(
             id: 2,
-            imageName: "story-scene-02",
+            imageName: "storyboard-2",
             narration: """
             Mori's days are simple and familiar.
             And that's enough for Mori.
@@ -83,18 +92,19 @@ final class StorylineViewModel: ObservableObject {
         // 03 — Something Changes
         StoryBeat(
             id: 3,
-            imageName: "story-scene-03",
+            imageName: "storyboard-3",
             narration: """
             Until one night, something feels different.
             """,
             thought: "...Was that always there?",
-            layout: .topLeading
+            layout: .topLeading,
+            textTopPadding: 160
         ),
 
         // 04 — The World Breaks
         StoryBeat(
             id: 4,
-            imageName: "story-scene-04",
+            imageName: "storyboard-4",
             narration: """
             One by one, the things that were always close begin to drift away.
             """,
@@ -102,26 +112,45 @@ final class StorylineViewModel: ObservableObject {
             layout: .centerLeading
         ),
 
-        // 05 — Pulled In
+        // 05 — Pulled In (Beat 1)
         StoryBeat(
             id: 5,
-            imageName: "story-scene-05",
-            narration: """
-            Mori tries to hold on. But Mori's little world is already slipping away.
-            """,
-            thought: "No—!",
-            layout: .bottomLeading
+            imageName: "storyboard-5",
+            narration: "Mori tries to hold on. But the little world is already slipping away.",
+            thought: nil,
+            layout: .topLeading,
+            textTopPadding: 350
         ),
 
-        // 06 — Waking Up
+        // 05 — Pulled In (Beat 2)
         StoryBeat(
             id: 6,
-            imageName: "story-scene-06",
-            narration: """
-            When Mori opens eyes, the world Mori's knows is gone.
-            """,
+            imageName: "storyboard-6",
+            narration: nil,
+            thought: "No-!",
+            layout: .topLeading,
+            textTopPadding: 280,
+            textLeadingPadding: 40
+        ),
+
+        // 06 — Waking Up (Beat 1)
+        StoryBeat(
+            id: 7,
+            imageName: "storyboard-mori-jatuh-2",
+            narration: "When Mori opens the eyes, \nthe world Mori's knows is gone.",
+            thought: nil,
+            layout: .topLeading,
+            textTopPadding: 260
+        ),
+        
+        // 06 — Waking Up (Beat 2)
+        StoryBeat(
+            id: 8,
+            imageName: "storyboard-mori-jatuh-4",
+            narration: nil,
             thought: "...Where am I?",
-            layout: .topLeading
+            layout: .topLeading,
+            textTopPadding: 340
         )
     ]
 }

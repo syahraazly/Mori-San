@@ -9,7 +9,7 @@ final class OnboardingView: SKNode {
         blackHole = ExitNode()
         super.init()
 
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = "MORI"
         title.fontSize = 42
         title.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)

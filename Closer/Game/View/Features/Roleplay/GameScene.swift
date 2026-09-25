@@ -79,7 +79,7 @@ final class GameScene: SKScene {
         renderedScreen = screen
         
         switch screen {
-        case .onboarding, .storyline:
+        case .splash, .storyline:
             removeAllChildren()
         case .map:
             renderMap()
@@ -283,7 +283,7 @@ final class GameScene: SKScene {
             mapView?.handleTouchBegan(at: touch.location(in: self))
         case .gameplay:
             handleGameplayTouch(touch)
-        case .onboarding, .storyline:
+        case .splash, .storyline:
             return
         }
     }
@@ -1174,7 +1174,7 @@ final class GameScene: SKScene {
         petal.position = CGPoint(x: -30, y: 0)
         hud.addChild(petal)
         
-        let count = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let count = SKLabelNode(fontNamed: "Montserrat-Bold")
         count.text = "\(appFlow.progress.petalCount(for: goal))/\(goal.totalPetals)"
         count.fontSize = 16
         count.horizontalAlignmentMode = .left
@@ -1212,7 +1212,7 @@ final class GameScene: SKScene {
         backIcon.position = CGPoint(x: -42, y: 0)
         button.addChild(backIcon)
         
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.text = "Chapter"
         label.fontSize = 16
         label.verticalAlignmentMode = .center
@@ -1591,7 +1591,7 @@ final class GameScene: SKScene {
     }
     
     private func showLevelComplete() {
-        let message = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let message = SKLabelNode(fontNamed: "Montserrat-Bold")
         message.text = "Path restored."
         message.fontSize = 28
         message.fontColor = SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
@@ -1786,7 +1786,7 @@ final class GameScene: SKScene {
     }
     
     private func createInstructionLabel() {
-        let label = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let label = SKLabelNode(fontNamed: "Montserrat-Medium")
         let isTutorial = viewModel.currentLevel.category == .tutorial
         label.fontSize = isTutorial ? 17 : 16
         label.fontColor = isTutorial ? .white : SKColor(red: 0.22, green: 0.24, blue: 0.30, alpha: 1.0)
@@ -1799,7 +1799,7 @@ final class GameScene: SKScene {
         addChild(label)
         instructionLabel = label
         
-        let extraLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let extraLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
         extraLabel.fontSize = 14
         extraLabel.fontColor = .white
         extraLabel.horizontalAlignmentMode = .center
@@ -1901,7 +1901,7 @@ final class GameScene: SKScene {
 
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
-        let font = UIFont(name: label.fontName ?? "AvenirNext-Medium", size: label.fontSize)
+        let font = UIFont(name: label.fontName ?? "Montserrat-Medium", size: label.fontSize)
             ?? UIFont.systemFont(ofSize: label.fontSize, weight: .medium)
         label.attributedText = NSAttributedString(
             string: text,
@@ -1928,7 +1928,7 @@ final class GameScene: SKScene {
         paragraphStyle.alignment = .center
 
         let font = UIFont(
-            name: "AvenirNext-Medium",
+            name: "Montserrat-Medium",
             size: 14
         ) ?? UIFont.systemFont(
             ofSize: 14,

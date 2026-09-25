@@ -46,7 +46,7 @@ final class CongratulationsView: SKNode {
             CGPoint(x: sceneSize.width * 0.24, y: sceneSize.height * 0.84),
             CGPoint(x: sceneSize.width * 0.76, y: sceneSize.height * 0.84)
         ].enumerated() {
-            let star = SKLabelNode(fontNamed: "AvenirNext-Bold")
+            let star = SKLabelNode(fontNamed: "Montserrat-Bold")
             star.text = i.isMultiple(of: 2) ? "✦" : "✧"
             star.fontSize = i.isMultiple(of: 2) ? 18 : 14
             star.fontColor = SKColor(red: 1.0, green: 0.94, blue: 0.70, alpha: 0.9)
@@ -66,28 +66,28 @@ final class CongratulationsView: SKNode {
     private func setupTitleSection() {
         let titleY = sceneSize.height * 0.865
 
-        let congrats = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let congrats = SKLabelNode(fontNamed: "Montserrat-Bold")
         congrats.text = "Congratulations!"
         congrats.fontSize = 30
         congrats.fontColor = .white
         congrats.position = CGPoint(x: sceneSize.width / 2, y: titleY)
         addChild(congrats)
 
-        let youGot = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let youGot = SKLabelNode(fontNamed: "Montserrat-Medium")
         youGot.text = "You got"
         youGot.fontSize = 13.5
         youGot.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.92)
         youGot.position = CGPoint(x: sceneSize.width / 2, y: titleY - 24)
         addChild(youGot)
 
-        let flowerName = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let flowerName = SKLabelNode(fontNamed: "Montserrat-Bold")
         flowerName.text = info.flowerName
         flowerName.fontSize = 24
         flowerName.fontColor = .white
         flowerName.position = CGPoint(x: sceneSize.width / 2, y: titleY - 50)
         addChild(flowerName)
 
-        let chapterLabel = SKLabelNode(fontNamed: "AvenirNext-Medium")
+        let chapterLabel = SKLabelNode(fontNamed: "Montserrat-Medium")
         chapterLabel.text = info.chapterSubtitle
         chapterLabel.fontSize = 13.5
         chapterLabel.fontColor = SKColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 0.92)
@@ -236,7 +236,7 @@ final class CongratulationsView: SKNode {
         addChild(card)
 
         // Header: About Forget Me Not (enlarged font: 17)
-        let title = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let title = SKLabelNode(fontNamed: "Montserrat-Bold")
         title.text = info.aboutTitle
         title.fontSize = 17
         title.fontColor = SKColor(red: 0.22, green: 0.26, blue: 0.38, alpha: 1.0)
@@ -244,7 +244,7 @@ final class CongratulationsView: SKNode {
         card.addChild(title)
 
         // Lore paragraph (enlarged font: 13, tighter spacing to remove excess gap)
-        let lore = SKLabelNode(fontNamed: "AvenirNext-Regular")
+        let lore = SKLabelNode(fontNamed: "Montserrat-Regular")
         lore.text = info.aboutDescription
         lore.fontSize = 13
         lore.fontColor = SKColor(red: 0.36, green: 0.38, blue: 0.44, alpha: 1.0)
@@ -273,7 +273,7 @@ final class CongratulationsView: SKNode {
         banner.addChild(avatar)
 
         // Quote text (enlarged font: 11.5)
-        let quote = SKLabelNode(fontNamed: "AvenirNext-MediumItalic")
+        let quote = SKLabelNode(fontNamed: "Montserrat-MediumItalic")
         quote.text = info.moriLearnedQuote
         quote.fontSize = 11.5
         quote.fontColor = SKColor(red: 0.30, green: 0.36, blue: 0.52, alpha: 1.0)
@@ -336,7 +336,7 @@ final class CongratulationsView: SKNode {
         container.addChild(shape)
 
         // Pure centered label
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.name = name
         label.text = title
         label.fontSize = 15
@@ -368,7 +368,7 @@ final class CongratulationsView: SKNode {
         container.addChild(shape)
 
         // Pure centered label
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let label = SKLabelNode(fontNamed: "Montserrat-Bold")
         label.name = name
         label.text = title
         label.fontSize = 15
@@ -382,7 +382,7 @@ final class CongratulationsView: SKNode {
     // MARK: - Footer
 
     private func setupFooter() {
-        let footer = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        let footer = SKLabelNode(fontNamed: "Montserrat-Bold")
         footer.text = "🌸   SAME STEPS. A BRIGHTER YOU."
         footer.fontSize = 10.5
         footer.fontColor = .white

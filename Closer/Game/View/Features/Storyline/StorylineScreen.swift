@@ -7,7 +7,7 @@ struct StorylineScreen: View {
     init(appFlow: AppFlowViewModel) {
         self.appFlow = appFlow
         _viewModel = StateObject(wrappedValue: StorylineViewModel(
-            onComplete: { appFlow.openMap() }
+            onComplete: { appFlow.completeStoryline() }
         ))
     }
 
@@ -21,7 +21,7 @@ struct StorylineScreen: View {
                 Button("Skip") {
                     viewModel.skipStory()
                 }
-                .font(.system(size: 15, weight: .medium))
+                .font(.custom("Montserrat-Medium", size: 15))
                 .foregroundStyle(Color(.white))
                 .padding(20)
             }
