@@ -1815,8 +1815,19 @@ final class GameScene: SKScene {
             return
         }
 
+        if let lightReveal = level.lightRevealConfiguration,
+           viewModel.moriPlatformID == lightReveal.lampPlatformID,
+           !viewModel.isLightRevealed {
+            setTutorialInstruction("Tap the platform to reveal the path")
+            showTutorialGesture(.tap(platformID: lightReveal.lampPlatformID))
+            return
+        } else {
+            hideTutorialGesture()
+        }
+
         if viewModel.hasPetalToCollect && !viewModel.hasCollectedPetal {
             instructionLabel?.text = nil
+            instructionLabel?.attributedText = nil
             return
         }
         
@@ -1944,11 +1955,16 @@ final class GameScene: SKScene {
         case swipe
     }
 
-    private func showTutorialGesture(_ gesture: TutorialGesture) {
+    private func hideTutorialGesture() {
         tutorialGestureNode?.removeFromParent()
+        tutorialGestureNode = nil
         enumerateChildNodes(withName: "tutorial-gesture") { node, _ in
             node.removeFromParent()
         }
+    }
+
+    private func showTutorialGesture(_ gesture: TutorialGesture) {
+        hideTutorialGesture()
 
         let node = SKNode()
         node.name = "tutorial-gesture"
