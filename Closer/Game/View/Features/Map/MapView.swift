@@ -89,7 +89,7 @@ final class MapView: SKNode {
         title.text = "MORI JOURNEY"
         title.fontSize = 20
         title.fontColor = .white
-        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.80)
+        title.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height * 0.85)
         addChild(title)
 
         let mori = SKSpriteNode(imageNamed: "mori-idle-1")
@@ -116,21 +116,17 @@ final class MapView: SKNode {
     }
 
     private func addTutorialButton() {
-        let button = SKShapeNode(rectOf: CGSize(width: 116, height: 38), cornerRadius: 14)
+        let button = SKSpriteNode(imageNamed: "hint-tutorial")
         button.name = "map-tutorial"
-        button.fillColor = SKColor(red: 0.38, green: 0.31, blue: 0.52, alpha: 0.94)
-        button.strokeColor = .white.withAlphaComponent(0.35)
-        button.lineWidth = 1.5
-        button.position = CGPoint(x: sceneSize.width - 72, y: sceneSize.height * 0.87)
+        let textureSize = button.texture?.size() ?? CGSize(width: 1, height: 1)
+        let iconHeight: CGFloat = 52
+        button.size = CGSize(
+            width: iconHeight * textureSize.width / max(textureSize.height, 1),
+            height: iconHeight
+        )
+        button.position = CGPoint(x: sceneSize.width - 72, y: sceneSize.height * 0.86)
         button.zPosition = 10
         addChild(button)
-
-        let label = SKLabelNode(fontNamed: "AvenirNext-Bold")
-        label.text = "Tutorial"
-        label.fontSize = 14
-        label.fontColor = .white
-        label.verticalAlignmentMode = .center
-        button.addChild(label)
     }
 
     private func buildSwipeHint() {
