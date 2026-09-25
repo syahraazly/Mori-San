@@ -5,7 +5,12 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
+            Color(red: 0.173, green: 0.165, blue: 0.322)
+                .ignoresSafeArea()
+
             switch appFlow.screen {
+            case .splash:
+                SplashScreenView(appFlow: appFlow)
             case .onboarding:
                 OnboardingScreen(appFlow: appFlow)
             case .storyline:
